@@ -58,14 +58,12 @@ import com.example.login.ui.theme.BeatTreatTheme
 
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
-// ── Estado de ProfileScreen (State Hoisting) ──
 data class ProfileState(
     val perfil: PerfilUI = PerfilData.perfilActual,
     val albumesFavoritos: List<AlbumPerfilUI> = PerfilData.albumesFavoritos,
     val resenas: List<ResenaUI> = PerfilData.resenasRecientes
 )
 
-// ── Stateful ──
 @Composable
 fun ProfileScreen(
     onSearchClick: () -> Unit = {},
@@ -74,10 +72,10 @@ fun ProfileScreen(
     onMessageClick: () -> Unit = {},
     onAlbumClick: (Int) -> Unit = {},
     onVerTodasResenasClick: () -> Unit = {},
+    onResenaClick: (ResenaUI) -> Unit = {},        // ✅ NUEVO
     modifier: Modifier = Modifier
 ) {
     val state = remember { ProfileState() }
-
     ProfileScreenContent(
         state = state,
         onSearchClick = onSearchClick,
@@ -86,11 +84,11 @@ fun ProfileScreen(
         onMessageClick = onMessageClick,
         onAlbumClick = onAlbumClick,
         onVerTodasResenasClick = onVerTodasResenasClick,
+        onResenaClick = onResenaClick,
         modifier = modifier
     )
 }
 
-// ── Stateless ──
 @Composable
 fun ProfileScreenContent(
     state: ProfileState,
@@ -100,15 +98,11 @@ fun ProfileScreenContent(
     onMessageClick: () -> Unit,
     onAlbumClick: (Int) -> Unit,
     onVerTodasResenasClick: () -> Unit,
+    onResenaClick: (ResenaUI) -> Unit,             // ✅ NUEVO
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
+    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         TopBarProfile(onSearchClick = onSearchClick)
-
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
                 ProfileHeader(
@@ -122,68 +116,44 @@ fun ProfileScreenContent(
                 AlbumSection(albumes = state.albumesFavoritos, onAlbumClick = onAlbumClick)
                 Spacer(modifier = Modifier.height(22.dp))
             }
-            item { ReviewsSection(resenas = state.resenas, onVerTodasClick = onVerTodasResenasClick) }
+            item {
+                ReviewsSection(
+                    resenas = state.resenas,
+                    onVerTodasClick = onVerTodasResenasClick,
+                    onResenaClick = onResenaClick   // ✅ NUEVO
+                )
+            }
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
 
-// ── TopBar ──
 @Composable
-fun TopBarProfile(
-    onSearchClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun TopBarProfile(onSearchClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier = Modifier
-                .size(80.dp)
-                .clip(RoundedCornerShape(bottomEnd = 12.dp))
-                .background(Color(0xFF1A1A1A)),
+            modifier = Modifier.size(80.dp).clip(RoundedCornerShape(bottomEnd = 12.dp)).background(Color(0xFF1A1A1A)),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo_beattreat),
-                contentDescription = "Logo BeatTreat",
-                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Fit
-            )
+            Image(painter = painterResource(id = R.drawable.logo_beattreat), contentDescription = "Logo", modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)), contentScale = ContentScale.Fit)
         }
         Row(
-            modifier = Modifier
-                .weight(1f)
-                .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(bottomStart = 12.dp))
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.weight(1f).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(bottomStart = 12.dp)).padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "BeatTreat", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Normal, fontFamily = JaroFont, modifier = Modifier.weight(1f))
+            Text("BeatTreat", color = Color.White, fontSize = 28.sp, fontFamily = JaroFont, modifier = Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                IconButton(onClick = onSearchClick) {
-                    Icon(Icons.Filled.Search, contentDescription = "Buscar", tint = Color.White, modifier = Modifier.size(28.dp))
-                }
-                IconButton(onClick = {}) {
-                    Icon(Icons.Filled.AccountCircle, contentDescription = "Perfil", tint = Color.White, modifier = Modifier.size(32.dp))
-                }
+                IconButton(onClick = onSearchClick) { Icon(Icons.Filled.Search, contentDescription = "Buscar", tint = Color.White, modifier = Modifier.size(28.dp)) }
+                IconButton(onClick = {}) { Icon(Icons.Filled.AccountCircle, contentDescription = "Perfil", tint = Color.White, modifier = Modifier.size(32.dp)) }
             }
         }
     }
 }
 
-// ── Header del Perfil ──
 @Composable
-fun ProfileHeader(
-    perfil: PerfilUI,
-    onEditProfileClick: () -> Unit,
-    onSiguiendoClick: () -> Unit,
-    onMessageClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-        border = BorderStroke(2.dp, Color.Gray),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
+fun ProfileHeader(perfil: PerfilUI, onEditProfileClick: () -> Unit, onSiguiendoClick: () -> Unit, onMessageClick: () -> Unit, modifier: Modifier = Modifier) {
+    Card(modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), border = BorderStroke(2.dp, Color.Gray), colors = CardDefaults.cardColors(containerColor = Color.Transparent)) {
         Column(modifier = Modifier.fillMaxWidth().background(Color(0xFF1A1230))) {
             PerfilBanner(fotoBannerRes = perfil.fotoBannerRes)
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -202,59 +172,34 @@ fun ProfileHeader(
     }
 }
 
-// ── Banner del perfil extraído ──  ✅ composable pequeño
 @Composable
-fun PerfilBanner(
-    fotoBannerRes: Int,
-    modifier: Modifier = Modifier
-) {
+fun PerfilBanner(fotoBannerRes: Int, modifier: Modifier = Modifier) {
     if (fotoBannerRes != 0) {
-        Image(
-            painter = painterResource(id = fotoBannerRes),
-            contentDescription = "Banner",
-            modifier = modifier.fillMaxWidth().height(130.dp),
-            contentScale = ContentScale.Crop
-        )
+        Image(painter = painterResource(id = fotoBannerRes), contentDescription = "Banner", modifier = modifier.fillMaxWidth().height(130.dp), contentScale = ContentScale.Crop)
     } else {
         Box(modifier = modifier.fillMaxWidth().height(130.dp).background(BeatTreatColors.SurfaceVariant))
     }
 }
 
-// ── Avatar del perfil extraído ──  ✅ composable pequeño
 @Composable
-fun PerfilAvatar(
-    perfil: PerfilUI,
-    modifier: Modifier = Modifier
-) {
+fun PerfilAvatar(perfil: PerfilUI, modifier: Modifier = Modifier) {
     Box(modifier = modifier.padding(start = 16.dp)) {
         if (perfil.fotoPerfilRes != 0) {
-            Image(
-                painter = painterResource(id = perfil.fotoPerfilRes),
-                contentDescription = perfil.nombre,
-                modifier = Modifier.size(80.dp).clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
+            Image(painter = painterResource(id = perfil.fotoPerfilRes), contentDescription = perfil.nombre, modifier = Modifier.size(80.dp).clip(CircleShape), contentScale = ContentScale.Crop)
         } else {
-            Icon(imageVector = Icons.Filled.AccountCircle, contentDescription = perfil.nombre, tint = Color.White, modifier = Modifier.size(80.dp).clip(CircleShape))
+            Icon(Icons.Filled.AccountCircle, contentDescription = perfil.nombre, tint = Color.White, modifier = Modifier.size(80.dp).clip(CircleShape))
         }
-        Box(
-            modifier = Modifier.size(22.dp).align(Alignment.BottomEnd).background(Color.Black, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(imageVector = Icons.Filled.Edit, contentDescription = "Editar", tint = Color.White, modifier = Modifier.size(13.dp))
+        Box(modifier = Modifier.size(22.dp).align(Alignment.BottomEnd).background(Color.Black, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(Icons.Filled.Edit, contentDescription = "Editar", tint = Color.White, modifier = Modifier.size(13.dp))
         }
     }
 }
 
-// ── Info del perfil extraída ──  ✅ composable pequeño
 @Composable
-fun PerfilInfo(
-    perfil: PerfilUI,
-    modifier: Modifier = Modifier
-) {
+fun PerfilInfo(perfil: PerfilUI, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-        Text(text = perfil.nombre, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Text(text = perfil.usuario, color = Color.LightGray, fontSize = 14.sp)
+        Text(perfil.nombre, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text(perfil.usuario, color = Color.LightGray, fontSize = 14.sp)
         Spacer(modifier = Modifier.height(12.dp))
         Row {
             Text("${perfil.siguiendo} Siguiendo", color = Color.White, fontSize = 14.sp)
@@ -264,77 +209,46 @@ fun PerfilInfo(
     }
 }
 
-// ── Botón pequeño ──
 @Composable
-fun ButtonSmall(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5B1FA6))
-    ) {
+fun ButtonSmall(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Button(onClick = onClick, modifier = modifier, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5B1FA6))) {
         Text(text = text, color = Color.White, fontSize = 12.sp)
     }
 }
 
-// ── Sección de Álbumes ──
 @Composable
-fun AlbumSection(
-    albumes: List<AlbumPerfilUI>,
-    onAlbumClick: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun AlbumSection(albumes: List<AlbumPerfilUI>, onAlbumClick: (Int) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
-        Text(text = "Álbumes Favoritos", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("Álbumes Favoritos", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(12.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            items(albumes) { album ->
-                AlbumPerfilItem(album = album, onClick = { onAlbumClick(album.id) })
-            }
+            items(albumes) { album -> AlbumPerfilItem(album = album, onClick = { onAlbumClick(album.id) }) }
         }
     }
 }
 
-// ── Item de Álbum del Perfil extraído ──  ✅ composable pequeño
 @Composable
-fun AlbumPerfilItem(
-    album: AlbumPerfilUI,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun AlbumPerfilItem(album: AlbumPerfilUI, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.clickable { onClick() }) {
         if (album.imagenRes != 0) {
-            Image(
-                painter = painterResource(id = album.imagenRes),
-                contentDescription = album.nombre,
-                modifier = Modifier.size(105.dp).clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+            Image(painter = painterResource(id = album.imagenRes), contentDescription = album.nombre, modifier = Modifier.size(105.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
         } else {
             Box(modifier = Modifier.size(105.dp).clip(RoundedCornerShape(8.dp)).background(BeatTreatColors.SurfaceVariant))
         }
-        Text(
-            text = album.nombre,
-            color = Color.White,
-            fontSize = 11.sp,
-            modifier = Modifier.width(105.dp).background(Color(0xFF24124A)).padding(vertical = 5.dp, horizontal = 6.dp)
-        )
+        Text(album.nombre, color = Color.White, fontSize = 11.sp, modifier = Modifier.width(105.dp).background(Color(0xFF24124A)).padding(vertical = 5.dp, horizontal = 6.dp))
     }
 }
 
-// ── Sección de Reseñas ──
 @Composable
 fun ReviewsSection(
     resenas: List<ResenaUI>,
     onVerTodasClick: () -> Unit,
+    onResenaClick: (ResenaUI) -> Unit = {},        // ✅ NUEVO
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = "Reseñas recientes", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Reseñas recientes", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onVerTodasClick() }) {
                 Text("Ver todas", color = Color.White, fontSize = 12.sp)
                 Spacer(modifier = Modifier.width(4.dp))
@@ -343,20 +257,16 @@ fun ReviewsSection(
         }
         Spacer(modifier = Modifier.height(12.dp))
         resenas.forEach { resena ->
-            ReviewCard(resena = resena)
+            ReviewCard(resena = resena, onClick = { onResenaClick(resena) })
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
-// ── Card de Reseña ──
 @Composable
-fun ReviewCard(
-    resena: ResenaUI,
-    modifier: Modifier = Modifier
-) {
+fun ReviewCard(resena: ResenaUI, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().clickable { onClick() }, // ✅ clickeable
         border = BorderStroke(1.dp, Color.Gray),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF2A0A57))
     ) {
@@ -364,14 +274,9 @@ fun ReviewCard(
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (resena.autorFotoRes != 0) {
-                        Image(
-                            painter = painterResource(id = resena.autorFotoRes),
-                            contentDescription = resena.autorNombre,
-                            modifier = Modifier.size(42.dp).clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
+                        Image(painter = painterResource(id = resena.autorFotoRes), contentDescription = resena.autorNombre, modifier = Modifier.size(42.dp).clip(CircleShape), contentScale = ContentScale.Crop)
                     } else {
-                        Icon(imageVector = Icons.Filled.AccountCircle, contentDescription = resena.autorNombre, tint = Color.White, modifier = Modifier.size(42.dp))
+                        Icon(Icons.Filled.AccountCircle, contentDescription = resena.autorNombre, tint = Color.White, modifier = Modifier.size(42.dp))
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
@@ -380,29 +285,17 @@ fun ReviewCard(
                     }
                 }
                 ReviewStats(comentarios = resena.comentarios, likes = resena.likes)
-                IconButton(onClick = {}) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(18.dp))
-                }
+                IconButton(onClick = {}) { Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(18.dp)) }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = resena.texto, color = Color.White, fontSize = 12.sp)
+            Text(resena.texto, color = Color.White, fontSize = 12.sp)
         }
     }
 }
 
-// ── Stats de reseña (comentarios + likes) ──
 @Composable
-fun ReviewStats(
-    comentarios: Int,
-    likes: Int,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .background(Color.Black, CircleShape)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+fun ReviewStats(comentarios: Int, likes: Int, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.background(Color.Black, CircleShape).padding(horizontal = 10.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(" $comentarios", color = Color.White, fontSize = 11.sp)
         Spacer(modifier = Modifier.width(8.dp))
         Text(" $likes", color = Color.White, fontSize = 11.sp)

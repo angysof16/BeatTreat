@@ -3,10 +3,13 @@ package com.example.login.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.login.screens.BibliotecaScreen
 import com.example.login.screens.ChatScreen
+import com.example.login.screens.ComentariosScreen
 import com.example.login.screens.DescubreScreen
 import com.example.login.screens.EscribirResenaScreen
 import com.example.login.screens.HomeScreen
@@ -26,6 +29,11 @@ object Rutas {
     const val RESENA          = "resena"
     const val ESCRIBIR_RESENA = "escribir_resena"
     const val PERFIL          = "perfil"
+    // ── Nueva ruta con argumento ──
+    const val COMENTARIOS     = "comentarios/{resenaId}"
+
+    // Helper para construir la ruta con el id real
+    fun comentarios(resenaId: Int) = "comentarios/$resenaId"
 }
 
 @Composable
@@ -47,9 +55,7 @@ fun AppNavegacion(
                         popUpTo(Rutas.LOGIN) { inclusive = true }
                     }
                 },
-                onSignUpClick = {
-                    navController.navigate(Rutas.REGISTRO)
-                },
+                onSignUpClick = { navController.navigate(Rutas.REGISTRO) },
                 onForgotPasswordClick = { }
             )
         }
@@ -67,95 +73,65 @@ fun AppNavegacion(
                         popUpTo(Rutas.LOGIN) { inclusive = true }
                     }
                 },
-                onSignInClick = {
-                    navController.popBackStack()
-                }
+                onSignInClick = { navController.popBackStack() }
             )
         }
 
         // ── 3. Home ──
         composable(Rutas.HOME) {
             HomeScreen(
-                onAlbumClick = { albumId ->
-                    // TODO: Navegar a detalle de álbum
+                onAlbumClick = {
+                    // Un álbum lleva a ver sus reseñas
+                    navController.navigate(Rutas.RESENA)
                 },
-                onArtistaClick = { artistaId ->
-                    // TODO: Navegar a detalle de artista
-                },
-                onSearchClick = {
-                    // TODO: Navegar a búsqueda
-                },
-                onProfileClick = {
-                    navController.navigate(Rutas.PERFIL)
-                }
+                onArtistaClick = { /* TODO: detalle artista */ },
+                onSearchClick  = { /* TODO: búsqueda */ },
+                onProfileClick = { navController.navigate(Rutas.PERFIL) }
             )
         }
 
         // ── 4. Biblioteca ──
         composable(Rutas.BIBLIOTECA) {
             BibliotecaScreen(
-                onPlaylistClick = { playlist ->
-                    // TODO: Navegar a detalle de playlist
-                },
-                onCrearPlaylistClick = {
-                    // TODO: Navegar a crear playlist
-                }
+                onPlaylistClick      = { /* TODO: detalle playlist */ },
+                onCrearPlaylistClick = { /* TODO: crear playlist */ }
             )
         }
 
         // ── 5. Descubre ──
         composable(Rutas.DESCUBRE) {
             DescubreScreen(
-                onCategoriaClick = { categoria ->
-                    // TODO: Navegar a categoría
-                },
-                onGeneroClick = { genero ->
-                    // TODO: Navegar a género
-                },
-                onAlbumClick = { album ->
-                    // TODO: Navegar a detalle de álbum
-                },
-                onSearchClick = {
-                    // TODO: Navegar a búsqueda
-                },
-                onProfileClick = {
-                    navController.navigate(Rutas.PERFIL)
-                }
+                onCategoriaClick = { /* TODO: categoría */ },
+                onGeneroClick    = { /* TODO: género */ },
+                onAlbumClick     = { navController.navigate(Rutas.RESENA) },
+                onSearchClick    = { /* TODO: búsqueda */ },
+                onProfileClick   = { navController.navigate(Rutas.PERFIL) }
             )
         }
 
         // ── 6. Chat ──
         composable(Rutas.CHAT) {
-            ChatScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                }
-            )
+            ChatScreen(onBackClick = { navController.popBackStack() })
         }
 
         // ── 7. Reseñas ──
+        // Entrada 1 (desde Home) y entrada 2 (desde Descubre) llegan aquí
         composable(Rutas.RESENA) {
             ResenaScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
+                onBackClick = { navController.popBackStack() },
                 onResenaClick = { resena ->
-                    // TODO: Navegar a detalle de reseña con comentarios
+                    navController.navigate(Rutas.comentarios(resena.id))
                 },
-                onEscribirResenaClick = {
-                    navController.navigate(Rutas.ESCRIBIR_RESENA)
-                }
+                onEscribirResenaClick = { navController.navigate(Rutas.ESCRIBIR_RESENA) }
             )
         }
 
         // ── 8. Escribir Reseña ──
         composable(Rutas.ESCRIBIR_RESENA) {
             EscribirResenaScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onPublicarClick = { texto, calificacion ->
-                    // TODO: Guardar reseña en base de datos
+                onBackClick = { navController.popBackStack() },
+                onPublicarClick = { _, _ ->
+                    // TODO: guardar en base de datos
                     navController.popBackStack()
                 }
             )
@@ -164,24 +140,29 @@ fun AppNavegacion(
         // ── 9. Perfil ──
         composable(Rutas.PERFIL) {
             ProfileScreen(
-                onSearchClick = {
-                    // TODO: Navegar a búsqueda
-                },
-                onEditProfileClick = {
-                    // TODO: Navegar a editar perfil
-                },
-                onSiguiendoClick = {
-                    // TODO: Ver lista de siguiendo
-                },
-                onMessageClick = {
-                    navController.navigate(Rutas.CHAT)
-                },
-                onAlbumClick = { albumId ->
-                    // TODO: Navegar a detalle de álbum
-                },
-                onVerTodasResenasClick = {
-                    navController.navigate(Rutas.RESENA)
+                onSearchClick          = { /* TODO */ },
+                onEditProfileClick     = { /* TODO */ },
+                onSiguiendoClick       = { /* TODO */ },
+                onMessageClick         = { navController.navigate(Rutas.CHAT) },
+                onAlbumClick           = { navController.navigate(Rutas.RESENA) },
+                onVerTodasResenasClick = { navController.navigate(Rutas.RESENA) },
+                onResenaClick = { resena ->
+                    navController.navigate(Rutas.comentarios(resena.id))
                 }
+            )
+        }
+
+        // ── 10. Comentarios ──
+        composable(
+            route = Rutas.COMENTARIOS,
+            arguments = listOf(
+                navArgument("resenaId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val resenaId = backStackEntry.arguments?.getInt("resenaId") ?: 0
+            ComentariosScreen(
+                resenaId  = resenaId,
+                onBackClick = { navController.popBackStack() }
             )
         }
     }

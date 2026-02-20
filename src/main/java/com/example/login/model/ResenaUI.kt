@@ -1,6 +1,6 @@
 package com.example.login.model
 
-// ── Entidades UI para Reseñas ──
+import com.example.login.R
 
 data class ResenaDetalladaUI(
     val id: Int,
@@ -27,7 +27,6 @@ data class ComentarioUI(
     val fecha: String
 )
 
-// ── Datos locales quemados de Reseñas ──
 object ResenaData {
 
     val resenasDestacadas = listOf(
@@ -35,10 +34,10 @@ object ResenaData {
             id = 1,
             autorNombre = "Alex Morrison",
             autorUsuario = "@alexmrrsn",
-            autorFotoRes = 0, // R.drawable.foto_perfil
+            autorFotoRes = R.drawable.foto_perfil,
             albumNombre = "Nevermind",
             albumArtista = "Nirvana",
-            albumRes = 0, // R.drawable.album_nevermind
+            albumRes = R.drawable.album_nevermind,
             calificacion = 4.5f,
             texto = "One of the best CDs I own. Un álbum que revolucionó el rock alternativo y definió una generación. La producción es impecable y cada canción es memorable.",
             likes = 24,
@@ -52,7 +51,7 @@ object ResenaData {
             autorFotoRes = 0,
             albumNombre = "Un Verano Sin Ti",
             albumArtista = "Bad Bunny",
-            albumRes = 0,
+            albumRes = R.drawable.album5,
             calificacion = 5.0f,
             texto = "El mejor álbum del año sin duda. Bad Bunny superó todas las expectativas con este trabajo. Perfecto para el verano.",
             likes = 156,
@@ -66,7 +65,8 @@ object ResenaData {
             autorFotoRes = 0,
             albumNombre = "The Dark Side of the Moon",
             albumArtista = "Pink Floyd",
-            albumRes = 0,
+            // ✅ Descargar: busca "Dark Side of the Moon Pink Floyd album cover" → guardar como album_dark_side
+            albumRes = R.drawable.album_dark_side,
             calificacion = 5.0f,
             texto = "Una obra maestra atemporal. Cada vez que lo escucho descubro algo nuevo. La experiencia sonora es simplemente perfecta.",
             likes = 89,
