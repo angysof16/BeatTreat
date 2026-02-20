@@ -91,49 +91,68 @@ fun BibliotecaScreenContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFF3A5A7C), Color(0xFF1A1A1A))
-                )
-            )
+            .background(Color(0xFF1A1A1A))
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.subtract),
-            contentDescription = "Fondo",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            alpha = 0.2f
-        )
-
         LazyColumn(modifier = Modifier.fillMaxSize()) {
 
-            // ── Buscador ──
+            // ── Header con imagen en la parte superior ──
             item {
-                TextField(
-                    value = state.searchQuery,
-                    onValueChange = onSearchChange,
-                    placeholder = {
-                        Text(
-                            "Buscar playlists en tu biblioteca",
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 14.sp
-                        )
-                    },
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
-                        .clip(RoundedCornerShape(24.dp)),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor   = Color.White.copy(alpha = 0.2f),
-                        unfocusedContainerColor = Color.White.copy(alpha = 0.2f),
-                        focusedIndicatorColor   = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedTextColor        = Color.White,
-                        unfocusedTextColor      = Color.White,
-                        cursorColor             = MaterialTheme.colorScheme.primary
-                    ),
-                    singleLine = true
-                )
+                        .height(280.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.subtract),
+                        contentDescription = "Header",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp),
+                        contentScale = ContentScale.Crop,
+                        alignment = Alignment.TopCenter
+                    )
+                    // Degradado inferior para transición suave hacia el fondo oscuro
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colorStops = arrayOf(
+                                        0.0f to Color.Black.copy(alpha = 1f),
+                                        0.6f to Color.Transparent,
+                                        1.0f to Color(0xFF1A1A1A)
+                                    )
+                                )
+                            )
+                    )
+                    // Buscador encima de la imagen
+                    TextField(
+                        value = state.searchQuery,
+                        onValueChange = onSearchChange,
+                        placeholder = {
+                            Text(
+                                "Buscar playlists en tu biblioteca",
+                                color = Color.White.copy(alpha = 0.8f),
+                                fontSize = 14.sp
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .align(Alignment.TopCenter),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor   = Color.White.copy(alpha = 0.4f),
+                            unfocusedContainerColor = Color.White.copy(alpha = 0.4f),
+                            focusedIndicatorColor   = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedTextColor        = Color.White,
+                            unfocusedTextColor      = Color.White,
+                            cursorColor             = MaterialTheme.colorScheme.primary
+                        ),
+                        singleLine = true
+                    )
+                }
             }
 
             // ── Título Biblioteca ──
