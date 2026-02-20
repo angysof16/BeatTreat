@@ -50,30 +50,32 @@ data class LoginFormState(
     val selectedTab: Int = 0
 )
 
-// ── Stateful: contiene el estado ──
+// ── Stateful ──
 @Composable
 fun LoginScreen(
     onLoginClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {}
+    onForgotPasswordClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     var formState by remember { mutableStateOf(LoginFormState()) }
 
     LoginScreenContent(
-        formState         = formState,
-        onEmailChange     = { formState = formState.copy(email = it) },
-        onPasswordChange  = { formState = formState.copy(password = it) },
+        formState = formState,
+        onEmailChange = { formState = formState.copy(email = it) },
+        onPasswordChange = { formState = formState.copy(password = it) },
         onRememberMeChange = { formState = formState.copy(rememberMe = it) },
-        onTabChange       = { tab ->
+        onTabChange = { tab ->
             formState = formState.copy(selectedTab = tab)
             if (tab == 1) onSignUpClick()
         },
-        onLoginClick          = onLoginClick,
-        onForgotPasswordClick = onForgotPasswordClick
+        onLoginClick = onLoginClick,
+        onForgotPasswordClick = onForgotPasswordClick,
+        modifier = modifier
     )
 }
 
-// ── Stateless: solo recibe datos y emite eventos ──
+// ── Stateless ──
 @Composable
 fun LoginScreenContent(
     formState: LoginFormState,
@@ -82,10 +84,11 @@ fun LoginScreenContent(
     onRememberMeChange: (Boolean) -> Unit,
     onTabChange: (Int) -> Unit,
     onLoginClick: () -> Unit,
-    onForgotPasswordClick: () -> Unit
+    onForgotPasswordClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
@@ -97,118 +100,55 @@ fun LoginScreenContent(
             verticalArrangement = Arrangement.Center
         ) {
             // ── Logo + Nombre ──
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo_beattreat),
-                    contentDescription = "Logo BeatTreat",
-                    modifier = Modifier.size(64.dp)
-                )
-                Spacer(modifier = Modifier.width(14.dp))
-                Text(
-                    text = "BeatTreat",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            LogoBeatTreat()
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // ── Tabs Sign In / Sign Up ──
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
+            // ── Tabs ──
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TabItem(texto = "Sign In", seleccionado = formState.selectedTab == 0, onClick = { onTabChange(0) })
                 TabItem(texto = "Sign Up", seleccionado = formState.selectedTab == 1, onClick = { onTabChange(1) })
             }
 
             Spacer(modifier = Modifier.height(36.dp))
 
-            // ── Campo Email ──
+            // ── Campos del formulario ──
             TextField(
                 value = formState.email,
                 onValueChange = onEmailChange,
                 placeholder = { Text("Email", color = BeatTreatColors.TextGray) },
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor   = BeatTreatColors.FieldBackground,
-                    unfocusedContainerColor = BeatTreatColors.FieldBackground,
-                    focusedIndicatorColor   = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor        = BeatTreatColors.TextDark,
-                    unfocusedTextColor      = BeatTreatColors.TextDark,
-                    cursorColor             = MaterialTheme.colorScheme.primary
-                ),
+                colors = campoColores(),
                 singleLine = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Campo Password ──
             TextField(
                 value = formState.password,
                 onValueChange = onPasswordChange,
                 placeholder = { Text("Password", color = BeatTreatColors.TextGray) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor   = BeatTreatColors.FieldBackground,
-                    unfocusedContainerColor = BeatTreatColors.FieldBackground,
-                    focusedIndicatorColor   = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor        = BeatTreatColors.TextDark,
-                    unfocusedTextColor      = BeatTreatColors.TextDark,
-                    cursorColor             = MaterialTheme.colorScheme.primary
-                ),
+                colors = campoColores(),
                 singleLine = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Checkbox Recuerda mi usuario ──
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Recuerda mi usuario",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Checkbox(
-                    checked = formState.rememberMe,
-                    onCheckedChange = onRememberMeChange,
-                    colors = CheckboxDefaults.colors(
-                        checkedColor   = MaterialTheme.colorScheme.primary,
-                        uncheckedColor = MaterialTheme.colorScheme.onBackground,
-                        checkmarkColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                )
-            }
+            // ── Checkbox ──
+            RecuerdameRow(checked = formState.rememberMe, onCheckedChange = onRememberMeChange)
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Botón Iniciar Sesión ──
+            // ── Botón ──
             Button(
                 onClick = onLoginClick,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text(
-                    text = "Iniciar Sesión",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                Text(text = "Iniciar Sesión", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
             }
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -223,12 +163,61 @@ fun LoginScreenContent(
     }
 }
 
-// ── Componente reutilizable Tab ──
+// ── Logo BeatTreat ──
 @Composable
-fun TabItem(texto: String, seleccionado: Boolean, onClick: () -> Unit) {
+fun LogoBeatTreat(modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+        Image(painter = painterResource(id = R.drawable.logo_beattreat), contentDescription = "Logo BeatTreat", modifier = Modifier.size(64.dp))
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(text = "BeatTreat", color = MaterialTheme.colorScheme.onBackground, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+// ── Fila Recuérdame ──
+@Composable
+fun RecuerdameRow(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
+        Text(text = "Recuerda mi usuario", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Spacer(modifier = Modifier.width(8.dp))
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = CheckboxDefaults.colors(
+                checkedColor = MaterialTheme.colorScheme.primary,
+                uncheckedColor = MaterialTheme.colorScheme.onBackground,
+                checkmarkColor = MaterialTheme.colorScheme.onPrimary
+            )
+        )
+    }
+}
+
+// ── Colores comunes de campo de texto ──
+@Composable
+private fun campoColores() = TextFieldDefaults.colors(
+    focusedContainerColor   = BeatTreatColors.FieldBackground,
+    unfocusedContainerColor = BeatTreatColors.FieldBackground,
+    focusedIndicatorColor   = Color.Transparent,
+    unfocusedIndicatorColor = Color.Transparent,
+    focusedTextColor        = BeatTreatColors.TextDark,
+    unfocusedTextColor      = BeatTreatColors.TextDark,
+    cursorColor             = MaterialTheme.colorScheme.primary
+)
+
+// ── Tab reutilizable ──
+@Composable
+fun TabItem(
+    texto: String,
+    seleccionado: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { onClick() }
+        modifier = modifier.clickable { onClick() }
     ) {
         Text(
             text = texto,

@@ -27,7 +27,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,14 +45,15 @@ import com.example.login.ui.theme.BeatTreatTheme
 data class EscribirResenaState(
     val textoResena: String = "",
     val calificacion: Float = 0f,
-    val albumSeleccionado: String = "" // Placeholder
+    val albumSeleccionado: String = ""
 )
 
 // ── Stateful ──
 @Composable
 fun EscribirResenaScreen(
     onBackClick: () -> Unit = {},
-    onPublicarClick: (String, Float) -> Unit = { _, _ -> }
+    onPublicarClick: (String, Float) -> Unit = { _, _ -> },
+    modifier: Modifier = Modifier
 ) {
     var state by remember { mutableStateOf(EscribirResenaState()) }
 
@@ -66,7 +66,8 @@ fun EscribirResenaScreen(
             if (state.textoResena.isNotBlank() && state.calificacion > 0) {
                 onPublicarClick(state.textoResena, state.calificacion)
             }
-        }
+        },
+        modifier = modifier
     )
 }
 
@@ -77,14 +78,14 @@ fun EscribirResenaScreenContent(
     onTextoChange: (String) -> Unit,
     onCalificacionChange: (Float) -> Unit,
     onBackClick: () -> Unit,
-    onPublicarClick: () -> Unit
+    onPublicarClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // TopBar
         TopBarEscribirResena(
             onBackClick = onBackClick,
             onPublicarClick = onPublicarClick,
@@ -96,107 +97,90 @@ fun EscribirResenaScreenContent(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Título
-            Text(
-                text = "Escribe tu reseña",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
-
+            Text(text = "Escribe tu reseña", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Seleccionar álbum (placeholder)
-            Text(
-                text = "Álbum",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(BeatTreatColors.SurfaceVariant)
-                    .clickable { /* TODO: Abrir selector de álbumes */ }
-                    .padding(16.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Text(
-                    text = if (state.albumSeleccionado.isBlank()) "Seleccionar álbum" else state.albumSeleccionado,
-                    color = if (state.albumSeleccionado.isBlank()) Color.White.copy(alpha = 0.5f) else Color.White,
-                    fontSize = 16.sp
-                )
-            }
-
+            // ── Selector de álbum ──
+            SelectorAlbum(albumSeleccionado = state.albumSeleccionado, onClick = { /* TODO */ })
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Calificación
-            Text(
-                text = "Calificación",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-
+            // ── Calificación ──
+            Text(text = "Calificación", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(12.dp))
-
-            CalificacionSelector(
-                calificacion = state.calificacion,
-                onCalificacionChange = onCalificacionChange
-            )
-
+            CalificacionSelector(calificacion = state.calificacion, onCalificacionChange = onCalificacionChange)
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Campo de texto
-            Text(
-                text = "Tu opinión",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-
+            // ── Opinión ──
+            Text(text = "Tu opinión", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(8.dp))
+            CampoOpinion(texto = state.textoResena, onTextoChange = onTextoChange)
+        }
+    }
+}
 
-            TextField(
-                value = state.textoResena,
-                onValueChange = onTextoChange,
-                placeholder = {
-                    Text(
-                        "¿Qué te pareció este álbum? Comparte tu opinión...",
-                        color = Color.White.copy(alpha = 0.5f)
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = BeatTreatColors.SurfaceVariant,
-                    unfocusedContainerColor = BeatTreatColors.SurfaceVariant,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    cursorColor = MaterialTheme.colorScheme.primary
-                ),
-                maxLines = 8
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Contador de caracteres
+// ── Selector de Álbum ──
+@Composable
+fun SelectorAlbum(
+    albumSeleccionado: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(text = "Álbum", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(BeatTreatColors.SurfaceVariant)
+                .clickable { onClick() }
+                .padding(16.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
             Text(
-                text = "${state.textoResena.length} / 500",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.End)
+                text = if (albumSeleccionado.isBlank()) "Seleccionar álbum" else albumSeleccionado,
+                color = if (albumSeleccionado.isBlank()) Color.White.copy(alpha = 0.5f) else Color.White,
+                fontSize = 16.sp
             )
         }
+    }
+}
+
+// ── Campo de Opinión ──
+@Composable
+fun CampoOpinion(
+    texto: String,
+    onTextoChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        TextField(
+            value = texto,
+            onValueChange = onTextoChange,
+            placeholder = { Text("¿Qué te pareció este álbum? Comparte tu opinión...", color = Color.White.copy(alpha = 0.5f)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(12.dp)),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor   = BeatTreatColors.SurfaceVariant,
+                unfocusedContainerColor = BeatTreatColors.SurfaceVariant,
+                focusedIndicatorColor   = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedTextColor        = Color.White,
+                unfocusedTextColor      = Color.White,
+                cursorColor             = MaterialTheme.colorScheme.primary
+            ),
+            maxLines = 8
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "${texto.length} / 500",
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 12.sp,
+            modifier = Modifier.align(Alignment.End)
+        )
     }
 }
 
@@ -205,10 +189,11 @@ fun EscribirResenaScreenContent(
 fun TopBarEscribirResena(
     onBackClick: () -> Unit,
     onPublicarClick: () -> Unit,
-    habilitarPublicar: Boolean
+    habilitarPublicar: Boolean,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary)
             .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -216,21 +201,9 @@ fun TopBarEscribirResena(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = onBackClick) {
-            Icon(
-                imageVector = Icons.Filled.ArrowBack,
-                contentDescription = "Volver",
-                tint = Color.White,
-                modifier = Modifier.size(28.dp)
-            )
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(28.dp))
         }
-
-        Text(
-            text = "Nueva Reseña",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-
+        Text(text = "Nueva Reseña", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Button(
             onClick = onPublicarClick,
             enabled = habilitarPublicar,
@@ -242,11 +215,7 @@ fun TopBarEscribirResena(
             ),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text(
-                text = "Publicar",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = "Publicar", fontSize = 14.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -255,49 +224,39 @@ fun TopBarEscribirResena(
 @Composable
 fun CalificacionSelector(
     calificacion: Float,
-    onCalificacionChange: (Float) -> Unit
+    onCalificacionChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        repeat(5) { index ->
-            val estrellaLlena = index < calificacion.toInt()
-            IconButton(
-                onClick = { onCalificacionChange((index + 1).toFloat()) },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    imageVector = if (estrellaLlena) Icons.Filled.Star else Icons.Filled.StarBorder,
-                    contentDescription = "Estrella ${index + 1}",
-                    tint = if (estrellaLlena) Color(0xFFFFC107) else Color.White.copy(alpha = 0.3f),
-                    modifier = Modifier.size(36.dp)
-                )
+    Column(modifier = modifier) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            repeat(5) { index ->
+                val llena = index < calificacion.toInt()
+                IconButton(onClick = { onCalificacionChange((index + 1).toFloat()) }, modifier = Modifier.size(48.dp)) {
+                    Icon(
+                        imageVector = if (llena) Icons.Filled.Star else Icons.Filled.StarBorder,
+                        contentDescription = "Estrella ${index + 1}",
+                        tint = if (llena) Color(0xFFFFC107) else Color.White.copy(alpha = 0.3f),
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
             }
         }
-    }
-
-    if (calificacion > 0) {
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = when (calificacion.toInt()) {
-                1 -> "Muy malo"
-                2 -> "Malo"
-                3 -> "Regular"
-                4 -> "Bueno"
-                5 -> "Excelente"
-                else -> ""
-            },
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
+        if (calificacion > 0) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = when (calificacion.toInt()) {
+                    1 -> "Muy malo"; 2 -> "Malo"; 3 -> "Regular"; 4 -> "Bueno"; 5 -> "Excelente"; else -> ""
+                },
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun EscribirResenaScreenPreview() {
-    BeatTreatTheme {
-        EscribirResenaScreen()
-    }
+    BeatTreatTheme { EscribirResenaScreen() }
 }

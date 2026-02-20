@@ -37,7 +37,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.login.screens.TabItem
 import com.example.login.R
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
@@ -54,20 +53,22 @@ data class RegistroFormState(
 fun RegistroScreen(
     onRegistroClick: () -> Unit = {},
     onGoogleClick: () -> Unit = {},
-    onSignInClick: () -> Unit = {}
+    onSignInClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     var formState by remember { mutableStateOf(RegistroFormState()) }
 
     RegistroScreenContent(
-        formState        = formState,
-        onEmailChange    = { formState = formState.copy(email = it) },
+        formState = formState,
+        onEmailChange = { formState = formState.copy(email = it) },
         onPasswordChange = { formState = formState.copy(password = it) },
-        onTabChange      = { tab ->
+        onTabChange = { tab ->
             formState = formState.copy(selectedTab = tab)
             if (tab == 0) onSignInClick()
         },
-        onRegistroClick  = onRegistroClick,
-        onGoogleClick    = onGoogleClick
+        onRegistroClick = onRegistroClick,
+        onGoogleClick = onGoogleClick,
+        modifier = modifier
     )
 }
 
@@ -79,53 +80,33 @@ fun RegistroScreenContent(
     onPasswordChange: (String) -> Unit,
     onTabChange: (Int) -> Unit,
     onRegistroClick: () -> Unit,
-    onGoogleClick: () -> Unit
+    onGoogleClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // ── Logo + Nombre ──
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo_beattreat),
-                    contentDescription = "Logo BeatTreat",
-                    modifier = Modifier.size(64.dp)
-                )
-                Spacer(modifier = Modifier.width(14.dp))
-                Text(
-                    text = "BeatTreat",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            // ── Logo ──
+            LogoBeatTreat()
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // ── Tabs Sign In / Sign Up ──
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
+            // ── Tabs ──
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TabItem(texto = "Sign In", seleccionado = formState.selectedTab == 0, onClick = { onTabChange(0) })
                 TabItem(texto = "Sign Up", seleccionado = formState.selectedTab == 1, onClick = { onTabChange(1) })
             }
 
             Spacer(modifier = Modifier.height(36.dp))
 
-            // ── Campo Email ──
+            // ── Campos ──
             TextField(
                 value = formState.email,
                 onValueChange = onEmailChange,
@@ -145,7 +126,6 @@ fun RegistroScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Campo Password ──
             TextField(
                 value = formState.password,
                 onValueChange = onPasswordChange,
@@ -171,49 +151,38 @@ fun RegistroScreenContent(
                 onClick = onRegistroClick,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text(
-                    text = "Regístrate",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                Text(text = "Regístrate", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // ── Botón Google ──
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .clip(RoundedCornerShape(28.dp))
-                    .border(1.5.dp, BeatTreatColors.TextGray, RoundedCornerShape(28.dp))
-                    .clickable { onGoogleClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "G",
-                        color = Color(0xFF4285F4),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Sign up with Google",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
+            GoogleSignUpButton(onClick = onGoogleClick)
+        }
+    }
+}
+
+// ── Botón Google extraído ──
+@Composable
+fun GoogleSignUpButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .border(1.5.dp, BeatTreatColors.TextGray, RoundedCornerShape(28.dp))
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            Text(text = "G", color = Color(0xFF4285F4), fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(text = "Sign up with Google", color = MaterialTheme.colorScheme.onBackground, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         }
     }
 }

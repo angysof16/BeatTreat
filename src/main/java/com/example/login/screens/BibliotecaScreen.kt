@@ -65,7 +65,8 @@ data class BibliotecaState(
 @Composable
 fun BibliotecaScreen(
     onPlaylistClick: (PlaylistUI) -> Unit = {},
-    onCrearPlaylistClick: () -> Unit = {}
+    onCrearPlaylistClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     var state by remember { mutableStateOf(BibliotecaState()) }
 
@@ -73,7 +74,8 @@ fun BibliotecaScreen(
         state = state,
         onSearchChange = { state = state.copy(searchQuery = it) },
         onPlaylistClick = onPlaylistClick,
-        onCrearPlaylistClick = onCrearPlaylistClick
+        onCrearPlaylistClick = onCrearPlaylistClick,
+        modifier = modifier
     )
 }
 
@@ -83,32 +85,28 @@ fun BibliotecaScreenContent(
     state: BibliotecaState,
     onSearchChange: (String) -> Unit,
     onPlaylistClick: (PlaylistUI) -> Unit,
-    onCrearPlaylistClick: () -> Unit
+    onCrearPlaylistClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF3A5A7C),
-                        Color(0xFF1A1A1A)
-                    )
+                    colors = listOf(Color(0xFF3A5A7C), Color(0xFF1A1A1A))
                 )
             )
     ) {
-        // Imagen de fondo
         Image(
             painter = painterResource(id = R.drawable.subtract),
             contentDescription = "Fondo",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
-            alpha = 0.3f
+            alpha = 0.2f
         )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+
             // ── Buscador ──
             item {
                 TextField(
@@ -126,13 +124,13 @@ fun BibliotecaScreenContent(
                         .padding(16.dp)
                         .clip(RoundedCornerShape(24.dp)),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.White.copy(alpha = 0.2f),
+                        focusedContainerColor   = Color.White.copy(alpha = 0.2f),
                         unfocusedContainerColor = Color.White.copy(alpha = 0.2f),
-                        focusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor   = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = MaterialTheme.colorScheme.primary
+                        focusedTextColor        = Color.White,
+                        unfocusedTextColor      = Color.White,
+                        cursorColor             = MaterialTheme.colorScheme.primary
                     ),
                     singleLine = true
                 )
@@ -216,41 +214,11 @@ fun BibliotecaScreenContent(
 
             // ── Crear Playlist ──
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onCrearPlaylistClick() }
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF2A2A2A)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Crear playlist",
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Crear playlist",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                CrearPlaylistItem(onClick = onCrearPlaylistClick)
             }
 
             // Espacio para el BottomBar
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
-            }
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
@@ -262,16 +230,16 @@ fun ItemBiblioteca(
     titulo: String,
     subtitulo: String,
     showCloud: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Imagen
         Image(
             painter = painterResource(id = imagenRes),
             contentDescription = titulo,
@@ -280,25 +248,11 @@ fun ItemBiblioteca(
                 .clip(RoundedCornerShape(8.dp)),
             contentScale = ContentScale.Crop
         )
-
         Spacer(modifier = Modifier.width(12.dp))
-
-        // Texto
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = titulo,
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = subtitulo,
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 14.sp
-            )
+            Text(text = titulo, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Text(text = subtitulo, color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp)
         }
-
-        // Ícono de nube (solo para canciones guardadas)
         if (showCloud) {
             Icon(
                 imageVector = Icons.Filled.Cloud,
@@ -310,14 +264,47 @@ fun ItemBiblioteca(
     }
 }
 
+// ── Fila de "Crear Playlist" ──
+@Composable
+fun CrearPlaylistItem(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color(0xFF2A2A2A)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Crear playlist",
+                tint = Color.White,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(text = "Crear playlist", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
 // ── Item de Playlist ──
 @Composable
 fun PlaylistItem(
     playlist: PlaylistUI,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -328,47 +315,13 @@ fun PlaylistItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.weight(1f)
         ) {
-            // Imagen placeholder
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF2A2A2A))
-            ) {
-                if (playlist.imagenRes != 0) {
-                    Image(
-                        painter = painterResource(id = playlist.imagenRes),
-                        contentDescription = playlist.nombre,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFF3A3A3A))
-                    )
-                }
-            }
-
+            PlaylistThumbnail(playlist = playlist)
             Spacer(modifier = Modifier.width(12.dp))
-
             Column {
-                Text(
-                    text = playlist.nombre,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = playlist.descripcion,
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 14.sp
-                )
+                Text(text = playlist.nombre, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                Text(text = playlist.descripcion, color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp)
             }
         }
-
-        // Tres puntos
         IconButton(onClick = {}) {
             Icon(
                 imageVector = Icons.Filled.MoreVert,
@@ -380,10 +333,33 @@ fun PlaylistItem(
     }
 }
 
+// ── Miniatura de Playlist ──
+@Composable
+fun PlaylistThumbnail(
+    playlist: PlaylistUI,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(60.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF2A2A2A))
+    ) {
+        if (playlist.imagenRes != 0) {
+            Image(
+                painter = painterResource(id = playlist.imagenRes),
+                contentDescription = playlist.nombre,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(modifier = Modifier.fillMaxSize().background(Color(0xFF3A3A3A)))
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun BibliotecaScreenPreview() {
-    BeatTreatTheme {
-        BibliotecaScreen()
-    }
+    BeatTreatTheme { BibliotecaScreen() }
 }

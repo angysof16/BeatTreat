@@ -51,10 +51,7 @@ import com.example.login.model.GeneroUI
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
-// ── Fuente Jaro ──
-private val JaroFont = FontFamily(
-    Font(R.font.jaro_regular, FontWeight.Normal)
-)
+private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
 // ── Estado de DescubreScreen (State Hoisting) ──
 data class DescubreState(
@@ -70,7 +67,8 @@ fun DescubreScreen(
     onGeneroClick: (GeneroUI) -> Unit = {},
     onAlbumClick: (AlbumDescubreUI) -> Unit = {},
     onSearchClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     val state = remember { DescubreState() }
 
@@ -80,7 +78,8 @@ fun DescubreScreen(
         onGeneroClick = onGeneroClick,
         onAlbumClick = onAlbumClick,
         onSearchClick = onSearchClick,
-        onProfileClick = onProfileClick
+        onProfileClick = onProfileClick,
+        modifier = modifier
     )
 }
 
@@ -92,23 +91,18 @@ fun DescubreScreenContent(
     onGeneroClick: (GeneroUI) -> Unit,
     onAlbumClick: (AlbumDescubreUI) -> Unit,
     onSearchClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // TopBar
-        TopBarDescubre(
-            onSearchClick = onSearchClick,
-            onProfileClick = onProfileClick
-        )
+        TopBarDescubre(onSearchClick = onSearchClick, onProfileClick = onProfileClick)
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Título
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+
             item {
                 Text(
                     text = "Descubre",
@@ -119,45 +113,26 @@ fun DescubreScreenContent(
                 )
             }
 
-            // Categorías horizontales
             item {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(state.categorias) { categoria ->
-                        CategoriaCard(
-                            categoria = categoria,
-                            onClick = { onCategoriaClick(categoria) }
-                        )
+                        CategoriaCard(categoria = categoria, onClick = { onCategoriaClick(categoria) })
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Sección Géneros
-            item {
-                SectionHeader(
-                    titulo = "Géneros",
-                    onVerMasClick = {}
-                )
-            }
+            item { SectionHeader(titulo = "Géneros", onVerMasClick = {}) }
 
             item {
-                GeneroGrid(
-                    generos = state.generos,
-                    onGeneroClick = onGeneroClick
-                )
+                GeneroGrid(generos = state.generos, onGeneroClick = onGeneroClick)
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Sección Nuevos Lanzamientos
-            item {
-                SectionHeader(
-                    titulo = "Nuevos lanzamientos",
-                    onVerMasClick = {}
-                )
-            }
+            item { SectionHeader(titulo = "Nuevos lanzamientos", onVerMasClick = {}) }
 
             item {
                 LazyRow(
@@ -165,18 +140,12 @@ fun DescubreScreenContent(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(state.nuevosLanzamientos) { album ->
-                        AlbumCard(
-                            album = album,
-                            onClick = { onAlbumClick(album) }
-                        )
+                        AlbumCard(album = album, onClick = { onAlbumClick(album) })
                     }
                 }
             }
 
-            // Espacio para BottomBar
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
-            }
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
@@ -185,12 +154,10 @@ fun DescubreScreenContent(
 @Composable
 fun TopBarDescubre(
     onSearchClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
                 .size(80.dp)
@@ -201,20 +168,14 @@ fun TopBarDescubre(
             Image(
                 painter = painterResource(id = R.drawable.logo_beattreat),
                 contentDescription = "Logo BeatTreat",
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Fit
             )
         }
-
         Row(
             modifier = Modifier
                 .weight(1f)
-                .background(
-                    MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(bottomStart = 12.dp)
-                )
+                .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(bottomStart = 12.dp))
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -227,23 +188,12 @@ fun TopBarDescubre(
                 fontFamily = JaroFont,
                 modifier = Modifier.weight(1f)
             )
-
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 IconButton(onClick = onSearchClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Buscar",
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
+                    Icon(Icons.Filled.Search, contentDescription = "Buscar", tint = Color.White, modifier = Modifier.size(28.dp))
                 }
                 IconButton(onClick = onProfileClick) {
-                    Icon(
-                        imageVector = Icons.Filled.AccountCircle,
-                        contentDescription = "Perfil",
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)
-                    )
+                    Icon(Icons.Filled.AccountCircle, contentDescription = "Perfil", tint = Color.White, modifier = Modifier.size(32.dp))
                 }
             }
         }
@@ -254,19 +204,17 @@ fun TopBarDescubre(
 @Composable
 fun CategoriaCard(
     categoria: CategoriaUI,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .width(120.dp)
             .height(100.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        Color(categoria.colorFondo),
-                        Color(categoria.colorFondo).copy(alpha = 0.7f)
-                    )
+                    colors = listOf(Color(categoria.colorFondo), Color(categoria.colorFondo).copy(alpha = 0.7f))
                 )
             )
             .clickable { onClick() },
@@ -287,31 +235,22 @@ fun CategoriaCard(
 @Composable
 fun SectionHeader(
     titulo: String,
-    onVerMasClick: () -> Unit
+    onVerMasClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = titulo,
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Text(text = titulo, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.clickable { onVerMasClick() }
         ) {
-            Icon(
-                imageVector = Icons.Filled.ArrowForward,
-                contentDescription = "Ver más",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(Icons.Filled.ArrowForward, contentDescription = "Ver más", tint = Color.White, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -320,27 +259,19 @@ fun SectionHeader(
 @Composable
 fun GeneroGrid(
     generos: List<GeneroUI>,
-    onGeneroClick: (GeneroUI) -> Unit
+    onGeneroClick: (GeneroUI) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         generos.chunked(2).forEach { rowGeneros ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 rowGeneros.forEach { genero ->
-                    GeneroChip(
-                        genero = genero,
-                        onClick = { onGeneroClick(genero) },
-                        modifier = Modifier.weight(1f)
-                    )
+                    GeneroChip(genero = genero, onClick = { onGeneroClick(genero) }, modifier = Modifier.weight(1f))
                 }
-                if (rowGeneros.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+                if (rowGeneros.size == 1) Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
@@ -361,23 +292,9 @@ fun GeneroChip(
             .clickable { onClick() },
         contentAlignment = Alignment.CenterStart
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 4.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .clip(CircleShape)
-                    .background(Color(genero.colorChip))
-            )
-            Text(
-                text = genero.nombre,
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp)) {
+            Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(Color(genero.colorChip)))
+            Text(text = genero.nombre, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(horizontal = 12.dp))
         }
     }
 }
@@ -386,51 +303,39 @@ fun GeneroChip(
 @Composable
 fun AlbumCard(
     album: AlbumDescubreUI,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    if (album.imagenRes != 0) {
-        Image(
-            painter = painterResource(id = album.imagenRes),
-            contentDescription = album.nombre,
-            modifier = Modifier
-                .size(140.dp)
-                .clip(RoundedCornerShape(12.dp)),
-            contentScale = ContentScale.Crop
-        )
-    } else {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .width(140.dp)
             .clickable { onClick() }
     ) {
-        Box(
-            modifier = Modifier
-                .size(140.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(BeatTreatColors.SurfaceVariant)
-        )
-    }
+        if (album.imagenRes != 0) {
+            Image(
+                painter = painterResource(id = album.imagenRes),
+                contentDescription = album.nombre,
+                modifier = Modifier
+                    .size(140.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(140.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(BeatTreatColors.SurfaceVariant)
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = album.nombre,
-            color = Color.White,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1
-        )
-        Text(
-            text = album.artista,
-            color = Color.White.copy(alpha = 0.6f),
-            fontSize = 12.sp,
-            maxLines = 1
-        )
+        Text(text = album.nombre, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+        Text(text = album.artista, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp, maxLines = 1)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun DescubreScreenPreview() {
-    BeatTreatTheme {
-        DescubreScreen()
-    }
+    BeatTreatTheme { DescubreScreen() }
 }

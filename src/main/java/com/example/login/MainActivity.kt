@@ -46,27 +46,26 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppScaffold() {
+fun AppScaffold(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val currentRoute by navController.currentBackStackEntryAsState()
     val rutaActual = currentRoute?.destination?.route
 
-    // Pantallas donde NO se muestra el BottomBar
     val pantallasOcultas = listOf(Rutas.LOGIN, Rutas.REGISTRO)
     val mostrarBottomBar = rutaActual !in pantallasOcultas
 
     // ── Único Scaffold de toda la app ──
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         bottomBar = {
             if (mostrarBottomBar) {
                 BottomBarGlobal(
                     rutaActual = rutaActual ?: "",
-                    onHomeClick     = { navController.navigate(Rutas.HOME) },
+                    onHomeClick = { navController.navigate(Rutas.HOME) },
                     onBibliotecaClick = { navController.navigate(Rutas.BIBLIOTECA) },
                     onDescubreClick = { navController.navigate(Rutas.DESCUBRE) },
-                    onChatClick     = { navController.navigate(Rutas.CHAT) },
-                    onAddClick      = { /* Acción de agregar */ }
+                    onChatClick = { navController.navigate(Rutas.CHAT) },
+                    onAddClick = { /* Acción de agregar */ }
                 )
             }
         }
@@ -86,10 +85,11 @@ fun BottomBarGlobal(
     onBibliotecaClick: () -> Unit,
     onDescubreClick: () -> Unit,
     onChatClick: () -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(BeatTreatColors.BottomBar)
             .padding(vertical = 12.dp),

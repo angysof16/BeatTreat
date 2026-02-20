@@ -64,7 +64,8 @@ data class ResenaScreenState(
 fun ResenaScreen(
     onBackClick: () -> Unit = {},
     onResenaClick: (ResenaDetalladaUI) -> Unit = {},
-    onEscribirResenaClick: () -> Unit = {}
+    onEscribirResenaClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     var state by remember { mutableStateOf(ResenaScreenState()) }
 
@@ -79,7 +80,8 @@ fun ResenaScreen(
                 state.copy(resenasLikeadas = state.resenasLikeadas + resenaId)
             }
         },
-        onEscribirResenaClick = onEscribirResenaClick
+        onEscribirResenaClick = onEscribirResenaClick,
+        modifier = modifier
     )
 }
 
@@ -90,23 +92,17 @@ fun ResenaScreenContent(
     onBackClick: () -> Unit,
     onResenaClick: (ResenaDetalladaUI) -> Unit,
     onLikeClick: (Int) -> Unit,
-    onEscribirResenaClick: () -> Unit
+    onEscribirResenaClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // TopBar
-        TopBarResena(
-            onBackClick = onBackClick,
-            onEscribirClick = onEscribirResenaClick
-        )
+        TopBarResena(onBackClick = onBackClick, onEscribirClick = onEscribirResenaClick)
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Título
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
                 Text(
                     text = "Reseñas destacadas",
@@ -116,8 +112,6 @@ fun ResenaScreenContent(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
             }
-
-            // Lista de reseñas
             items(state.resenas) { resena ->
                 ResenaDetalladaCard(
                     resena = resena,
@@ -127,11 +121,7 @@ fun ResenaScreenContent(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
-
-            // Espacio para BottomBar
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
-            }
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
@@ -140,10 +130,11 @@ fun ResenaScreenContent(
 @Composable
 fun TopBarResena(
     onBackClick: () -> Unit,
-    onEscribirClick: () -> Unit
+    onEscribirClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary)
             .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -151,27 +142,10 @@ fun TopBarResena(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = onBackClick) {
-            Icon(
-                imageVector = Icons.Filled.ArrowBack,
-                contentDescription = "Volver",
-                tint = Color.White,
-                modifier = Modifier.size(28.dp)
-            )
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(28.dp))
         }
-
-        Text(
-            text = "Reseñas",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            text = "Escribir",
-            color = Color.White,
-            fontSize = 16.sp,
-            modifier = Modifier.clickable { onEscribirClick() }
-        )
+        Text(text = "Reseñas", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(text = "Escribir", color = Color.White, fontSize = 16.sp, modifier = Modifier.clickable { onEscribirClick() })
     }
 }
 
@@ -181,184 +155,131 @@ fun ResenaDetalladaCard(
     resena: ResenaDetalladaUI,
     isLiked: Boolean,
     onClick: () -> Unit,
-    onLikeClick: () -> Unit
+    onLikeClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = BeatTreatColors.SurfaceVariant
-        ),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Header: Usuario + Menú
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (resena.autorFotoRes != 0) {
-                        Image(
-                            painter = painterResource(id = resena.autorFotoRes),
-                            contentDescription = resena.autorNombre,
-                            modifier = Modifier
-                                .size(42.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Filled.AccountCircle,
-                            contentDescription = resena.autorNombre,
-                            tint = Color.White,
-                            modifier = Modifier.size(42.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = resena.autorNombre,
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = resena.autorUsuario,
-                            color = Color.White.copy(alpha = 0.6f),
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = "Opciones",
-                        tint = Color.White
-                    )
-                }
-            }
-
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            ResenaAutorRow(resena = resena)
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Álbum info
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (resena.albumRes != 0) {
-                    Image(
-                        painter = painterResource(id = resena.albumRes),
-                        contentDescription = resena.albumNombre,
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(BeatTreatColors.Purple40)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = resena.albumNombre,
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = resena.albumArtista,
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 14.sp
-                    )
-                }
-            }
-
+            ResenaAlbumRow(resena = resena)
             Spacer(modifier = Modifier.height(12.dp))
+            ResenaEstrellas(calificacion = resena.calificacion)
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = resena.texto, color = Color.White, fontSize = 14.sp, lineHeight = 20.sp)
+            Spacer(modifier = Modifier.height(12.dp))
+            ResenaFooter(resena = resena, isLiked = isLiked, onLikeClick = onLikeClick)
+        }
+    }
+}
 
-            // Calificación
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                repeat(5) { index ->
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = null,
-                        tint = if (index < resena.calificacion) Color(0xFFFFC107) else Color.Gray,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = resena.calificacion.toString(),
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+// ── Fila de autor ──
+@Composable
+fun ResenaAutorRow(
+    resena: ResenaDetalladaUI,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (resena.autorFotoRes != 0) {
+                Image(
+                    painter = painterResource(id = resena.autorFotoRes),
+                    contentDescription = resena.autorNombre,
+                    modifier = Modifier.size(42.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
+            } else {
+                Icon(Icons.Filled.AccountCircle, contentDescription = resena.autorNombre, tint = Color.White, modifier = Modifier.size(42.dp))
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Texto de la reseña
-            Text(
-                text = resena.texto,
-                color = Color.White,
-                fontSize = 14.sp,
-                lineHeight = 20.sp
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Footer: Likes, Comentarios, Fecha
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onLikeClick) {
-                        Icon(
-                            imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = "Like",
-                            tint = if (isLiked) Color.Red else Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Text(
-                        text = resena.likes.toString(),
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = " ${resena.comentarios}",
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                }
-
-                Text(
-                    text = resena.fecha,
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 12.sp
-                )
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(text = resena.autorNombre, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text(text = resena.autorUsuario, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
             }
         }
+        IconButton(onClick = {}) {
+            Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = Color.White)
+        }
+    }
+}
+
+// ── Fila de álbum  ──
+@Composable
+fun ResenaAlbumRow(
+    resena: ResenaDetalladaUI,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        if (resena.albumRes != 0) {
+            Image(
+                painter = painterResource(id = resena.albumRes),
+                contentDescription = resena.albumNombre,
+                modifier = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(modifier = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)).background(BeatTreatColors.Purple40))
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(text = resena.albumNombre, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(text = resena.albumArtista, color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+        }
+    }
+}
+
+// ── Estrellas de calificación ──
+@Composable
+fun ResenaEstrellas(
+    calificacion: Float,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        repeat(5) { index ->
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                tint = if (index < calificacion) Color(0xFFFFC107) else Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = calificacion.toString(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+// ── Footer de la card ──
+@Composable
+fun ResenaFooter(
+    resena: ResenaDetalladaUI,
+    isLiked: Boolean,
+    onLikeClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onLikeClick) {
+                Icon(
+                    imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                    contentDescription = "Like",
+                    tint = if (isLiked) Color.Red else Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Text(text = resena.likes.toString(), color = Color.White, fontSize = 14.sp)
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(text = " ${resena.comentarios}", color = Color.White, fontSize = 14.sp)
+        }
+        Text(text = resena.fecha, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ResenaScreenPreview() {
-    BeatTreatTheme {
-        ResenaScreen()
-    }
+    BeatTreatTheme { ResenaScreen() }
 }

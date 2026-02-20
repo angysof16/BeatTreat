@@ -64,7 +64,8 @@ data class ChatState(
 // ── Stateful ──
 @Composable
 fun ChatScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     var state by remember { mutableStateOf(ChatState()) }
 
@@ -73,11 +74,11 @@ fun ChatScreen(
         onMensajeChange = { state = state.copy(mensajeTexto = it) },
         onEnviarClick = {
             if (state.mensajeTexto.isNotBlank()) {
-                // Aquí se agregaría el mensaje a la lista
                 state = state.copy(mensajeTexto = "")
             }
         },
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
+        modifier = modifier
     )
 }
 
@@ -87,22 +88,18 @@ fun ChatScreenContent(
     state: ChatState,
     onMensajeChange: (String) -> Unit,
     onEnviarClick: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // TopBar
-        TopBarChat(
-            nombreGrupo = state.nombreGrupo,
-            onBackClick = onBackClick
-        )
+        TopBarChat(nombreGrupo = state.nombreGrupo, onBackClick = onBackClick)
 
-        // Lista de mensajes
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -112,15 +109,10 @@ fun ChatScreenContent(
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
             items(state.mensajes) { mensaje ->
-                if (mensaje.esPropio) {
-                    MensajePropio(mensaje)
-                } else {
-                    MensajeOtro(mensaje)
-                }
+                if (mensaje.esPropio) MensajePropio(mensaje) else MensajeOtro(mensaje)
             }
         }
 
-        // Input de mensaje
         InputMensaje(
             texto = state.mensajeTexto,
             onTextoChange = onMensajeChange,
@@ -133,57 +125,27 @@ fun ChatScreenContent(
 @Composable
 fun TopBarChat(
     nombreGrupo: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onBackClick) {
-            Icon(
-                imageVector = Icons.Filled.ArrowBack,
-                contentDescription = "Volver",
-                tint = Color.White,
-                modifier = Modifier.size(28.dp)
-            )
+            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(28.dp))
         }
-
-        Icon(
-            imageVector = Icons.Filled.Group,
-            contentDescription = "Grupo",
-            tint = Color.White,
-            modifier = Modifier.size(32.dp)
-        )
-
+        Icon(Icons.Filled.Group, contentDescription = "Grupo", tint = Color.White, modifier = Modifier.size(32.dp))
         Spacer(modifier = Modifier.width(12.dp))
-
-        Text(
-            text = nombreGrupo,
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
-        )
-
+        Text(text = nombreGrupo, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
         IconButton(onClick = {}) {
-            Icon(
-                Icons.Filled.VideoCall,
-                contentDescription = "Videollamada",
-                tint = Color.White,
-                modifier = Modifier.size(28.dp)
-            )
+            Icon(Icons.Filled.VideoCall, contentDescription = "Videollamada", tint = Color.White, modifier = Modifier.size(28.dp))
         }
-
         IconButton(onClick = {}) {
-            Icon(
-                Icons.Filled.Call,
-                contentDescription = "Llamar",
-                tint = Color.White,
-                modifier = Modifier.size(28.dp)
-            )
+            Icon(Icons.Filled.Call, contentDescription = "Llamar", tint = Color.White, modifier = Modifier.size(28.dp))
         }
     }
 }
@@ -193,10 +155,11 @@ fun TopBarChat(
 fun InputMensaje(
     texto: String,
     onTextoChange: (String) -> Unit,
-    onEnviarClick: () -> Unit
+    onEnviarClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -205,73 +168,69 @@ fun InputMensaje(
         TextField(
             value = texto,
             onValueChange = onTextoChange,
-            placeholder = {
-                Text(
-                    text = "Mensaje",
-                    color = BeatTreatColors.TextGray
-                )
-            },
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(28.dp)),
+            placeholder = { Text(text = "Mensaje", color = BeatTreatColors.TextGray) },
+            modifier = Modifier.weight(1f).clip(RoundedCornerShape(28.dp)),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedContainerColor   = MaterialTheme.colorScheme.surfaceVariant,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                focusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor   = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                cursorColor = MaterialTheme.colorScheme.primary
+                focusedTextColor        = Color.White,
+                unfocusedTextColor      = Color.White,
+                cursorColor             = MaterialTheme.colorScheme.primary
             ),
             singleLine = true
         )
-
         Spacer(modifier = Modifier.width(10.dp))
+        EnviarButton(enabled = texto.isNotBlank(), onClick = onEnviarClick)
+    }
+}
 
-        // Botón enviar
-        Box(
-            modifier = Modifier
-                .size(52.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
-                .clickable(enabled = texto.isNotBlank()) { onEnviarClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Send,
-                contentDescription = "Enviar",
-                tint = Color.White,
-                modifier = Modifier.size(26.dp)
-            )
-        }
+// ── Botón Enviar──
+@Composable
+fun EnviarButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(52.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary)
+            .clickable(enabled = enabled) { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(imageVector = Icons.Filled.Send, contentDescription = "Enviar", tint = Color.White, modifier = Modifier.size(26.dp))
+    }
+}
+
+// ── Avatar de chat ──
+@Composable
+fun AvatarChat(
+    contentDescription: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(imageVector = Icons.Filled.AccountCircle, contentDescription = contentDescription, tint = Color.White, modifier = Modifier.size(36.dp))
     }
 }
 
 // ── Mensaje de Otro Usuario ──
 @Composable
-fun MensajeOtro(mensaje: MensajeUI) {
-    Row(
-        verticalAlignment = Alignment.Bottom,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        // Avatar (sin cambios)
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.AccountCircle,
-                contentDescription = mensaje.autor,
-                tint = Color.White,
-                modifier = Modifier.size(36.dp)
-            )
-        }
-
+fun MensajeOtro(
+    mensaje: MensajeUI,
+    modifier: Modifier = Modifier
+) {
+    Row(verticalAlignment = Alignment.Bottom, modifier = modifier.fillMaxWidth()) {
+        AvatarChat(contentDescription = mensaje.autor)
         Spacer(modifier = Modifier.width(8.dp))
-
         Box(
             modifier = Modifier
                 .widthIn(max = 260.dp)
@@ -280,28 +239,7 @@ fun MensajeOtro(mensaje: MensajeUI) {
                 .padding(12.dp)
         ) {
             Column {
-
-                if (mensaje.tieneImagen && mensaje.imagenRes != null && mensaje.imagenRes != 0) {
-                    Image(
-                        painter = painterResource(id = mensaje.imagenRes),
-                        contentDescription = "Imagen del mensaje",
-                        modifier = Modifier
-                            .size(180.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                } else if (mensaje.tieneImagen) {
-
-                    Box(
-                        modifier = Modifier
-                            .size(180.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.Gray.copy(alpha = 0.4f))
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                }
-
+                MensajeImagenOtro(mensaje = mensaje)
                 if (mensaje.texto.isNotEmpty()) {
                     Text(text = mensaje.texto, color = BeatTreatColors.TextDark, fontSize = 15.sp, fontWeight = FontWeight.Medium)
                     Spacer(modifier = Modifier.height(4.dp))
@@ -312,84 +250,57 @@ fun MensajeOtro(mensaje: MensajeUI) {
     }
 }
 
+// ── Imagen dentro de burbuja ajena ──
+@Composable
+fun MensajeImagenOtro(
+    mensaje: MensajeUI,
+    modifier: Modifier = Modifier
+) {
+    if (!mensaje.tieneImagen) return
+    if (mensaje.imagenRes != null && mensaje.imagenRes != 0) {
+        Image(
+            painter = painterResource(id = mensaje.imagenRes),
+            contentDescription = "Imagen del mensaje",
+            modifier = modifier.size(180.dp).clip(RoundedCornerShape(8.dp)),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Box(modifier = modifier.size(180.dp).clip(RoundedCornerShape(8.dp)).background(Color.Gray.copy(alpha = 0.4f)))
+    }
+    Spacer(modifier = Modifier.height(4.dp))
+}
+
 // ── Mensaje Propio ──
 @Composable
-fun MensajePropio(mensaje: MensajeUI) {
+fun MensajePropio(
+    mensaje: MensajeUI,
+    modifier: Modifier = Modifier
+) {
     Row(
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.End,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
-        // Burbuja propia
         Box(
             modifier = Modifier
                 .widthIn(max = 260.dp)
-                .clip(
-                    RoundedCornerShape(
-                        topStart = 20.dp,
-                        topEnd = 4.dp,
-                        bottomStart = 20.dp,
-                        bottomEnd = 20.dp
-                    )
-                )
+                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp))
                 .background(MaterialTheme.colorScheme.primary)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Column {
-                Text(
-                    text = mensaje.texto,
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text(text = mensaje.texto, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = mensaje.hora,
-                    color = Color.White.copy(alpha = 0.7f),
-                    fontSize = 11.sp,
-                    modifier = Modifier.align(Alignment.End)
-                )
+                Text(text = mensaje.hora, color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, modifier = Modifier.align(Alignment.End))
             }
         }
-
         Spacer(modifier = Modifier.width(8.dp))
-
-        // Avatar propio
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.AccountCircle,
-                contentDescription = "Yo",
-                tint = Color.White,
-                modifier = Modifier.size(36.dp)
-            )
-        }
+        AvatarChat(contentDescription = "Yo")
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ChatScreenPreview() {
-    BeatTreatTheme {
-        ChatScreen()
-    }
+    BeatTreatTheme { ChatScreen() }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
