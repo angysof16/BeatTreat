@@ -1,5 +1,6 @@
 package com.example.login.EditarPerfil
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,12 +15,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.login.R
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
+
+private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
 // ── Stateful ──
 @Composable
@@ -39,13 +47,13 @@ fun EditarPerfilScreen(
     }
 
     EditarPerfilScreenContent(
-        uiState           = uiState,
-        onBackClick       = onBackClick,
-        onNombreChange    = { viewModel.onNombreChange(it) },
-        onUsuarioChange   = { viewModel.onUsuarioChange(it) },
-        onBioChange       = { viewModel.onBioChange(it) },
-        onGuardarClick    = { viewModel.guardar() },
-        modifier          = modifier
+        uiState         = uiState,
+        onBackClick     = onBackClick,
+        onNombreChange  = { viewModel.onNombreChange(it) },
+        onUsuarioChange = { viewModel.onUsuarioChange(it) },
+        onBioChange     = { viewModel.onBioChange(it) },
+        onGuardarClick  = { viewModel.guardar() },
+        modifier        = modifier
     )
 }
 
@@ -61,25 +69,10 @@ fun EditarPerfilScreenContent(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // ── TopBar ──
-        Row(
-            modifier          = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary).padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(28.dp))
-            }
-            Text(
-                text       = "Editar perfil",
-                color      = Color.White,
-                fontSize   = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier   = Modifier.weight(1f).padding(start = 8.dp)
-            )
-            TextButton(onClick = onGuardarClick) {
-                Text(text = "Guardar", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-        }
+        TopBarEditarPerfil(
+            onBackClick    = onBackClick,
+            onGuardarClick = onGuardarClick
+        )
 
         Column(
             modifier            = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
@@ -125,11 +118,16 @@ fun EditarPerfilScreenContent(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo bio multilínea
-            Text(text = "Biografía", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp))
+            Text(
+                text     = "Biografía",
+                color    = Color.White.copy(alpha = 0.7f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)
+            )
             Card(
-                colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
-                shape  = RoundedCornerShape(12.dp),
+                colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+                shape    = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 TextField(
@@ -164,6 +162,67 @@ fun EditarPerfilScreenContent(
     }
 }
 
+// ── TopBar consistente con el resto de la app ──
+@Composable
+fun TopBarEditarPerfil(
+    onBackClick: () -> Unit,
+    onGuardarClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier         = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(bottomEnd = 12.dp))
+                .background(Color(0xFF1A1A1A)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter            = painterResource(id = R.drawable.logo_beattreat),
+                contentDescription = "Logo BeatTreat",
+                modifier           = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)),
+                contentScale       = ContentScale.Fit
+            )
+        }
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(bottomStart = 12.dp)
+                )
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    Icons.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint               = Color.White,
+                    modifier           = Modifier.size(26.dp)
+                )
+            }
+            Text(
+                text       = "BeatTreat",
+                color      = Color.White,
+                fontSize   = 28.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = JaroFont,
+                modifier   = Modifier.weight(1f).padding(start = 4.dp)
+            )
+            TextButton(onClick = onGuardarClick) {
+                Text(
+                    text       = "Guardar",
+                    color      = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize   = 15.sp
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun CampoEditable(
     label: String,
@@ -174,10 +233,16 @@ fun CampoEditable(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(text = label, color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 6.dp))
+        Text(
+            text     = label,
+            color    = Color.White.copy(alpha = 0.7f),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
         Card(
-            colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
-            shape  = RoundedCornerShape(12.dp),
+            colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+            shape    = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             TextField(
@@ -193,9 +258,9 @@ fun CampoEditable(
                     unfocusedTextColor      = Color.White,
                     cursorColor             = BeatTreatColors.Purple60
                 ),
-                singleLine    = true,
-                leadingIcon   = { Icon(icono, contentDescription = null, tint = Color.White.copy(alpha = 0.5f)) },
-                prefix        = if (prefijo.isNotEmpty()) { { Text(prefijo, color = Color.White.copy(alpha = 0.5f)) } } else null
+                singleLine  = true,
+                leadingIcon = { Icon(icono, contentDescription = null, tint = Color.White.copy(alpha = 0.5f)) },
+                prefix      = if (prefijo.isNotEmpty()) { { Text(prefijo, color = Color.White.copy(alpha = 0.5f)) } } else null
             )
         }
     }

@@ -15,7 +15,6 @@ class EscribirResenaViewModel @Inject constructor(): ViewModel() {
     val uiState: StateFlow<EscribirResenaUIState> = _uiState.asStateFlow()
 
     fun onTextoChange(texto: String) {
-        // Limita a 500 caracteres
         if (texto.length <= 500) {
             _uiState.update { it.copy(textoResena = texto) }
         }
@@ -32,7 +31,6 @@ class EscribirResenaViewModel @Inject constructor(): ViewModel() {
     fun publicarResena() {
         val state = _uiState.value
         if (state.textoResena.isBlank() || state.calificacion == 0f) return
-        // En una app real aquí se llamaría al repositorio
         _uiState.update { it.copy(publicadoExitoso = true) }
     }
 

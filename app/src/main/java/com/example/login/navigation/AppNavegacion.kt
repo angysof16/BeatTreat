@@ -170,8 +170,10 @@ fun AppNavegacion(
         composable(Screen.Grupos.route) {
             val viewModel: GruposViewModel = hiltViewModel()
             GruposScreen(
-                viewModel    = viewModel,
-                onGrupoClick = { navController.navigate(Screen.Chat.route) }
+                viewModel      = viewModel,
+                onGrupoClick   = { navController.navigate(Screen.Chat.route) },
+                onSearchClick  = { navController.navigate(Screen.Buscar.route) },
+                onProfileClick = { navController.navigate(Screen.Perfil.route) }
             )
         }
 
@@ -250,6 +252,9 @@ fun AppNavegacion(
                 onSiguiendoClick       = {
                     navController.navigate(Screen.Seguidores.createRoute("siguiendo"))
                 },
+                onSeguidoresClick      = {
+                    navController.navigate(Screen.Seguidores.createRoute("seguidores"))
+                },
                 onMessageClick         = {
                     navController.navigate(Screen.Chat.route)
                 },
@@ -257,7 +262,6 @@ fun AppNavegacion(
                     navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
                 },
                 onVerTodasResenasClick = {
-                    // Muestra las reseñas del usuario (álbum 7 como ejemplo)
                     navController.navigate(Screen.Resena.createRoute(7))
                 },
                 onResenaClick          = { resena ->
@@ -336,7 +340,6 @@ fun AppNavegacion(
         }
 
         // ── 16. Detalle de Categoría ──
-        // Reutiliza GeneroDetalleScreen con datos de categoría por ahora
         composable(
             route     = Screen.CategoriaDetalle.route,
             arguments = listOf(navArgument("categoriaId") { type = NavType.IntType })
@@ -396,9 +399,8 @@ fun AppNavegacion(
 
         // ── 20. Crear Playlist ──
         composable(Screen.CrearPlaylist.route) {
-            // Pantalla simple de placeholder hasta implementar
             androidx.compose.foundation.layout.Box(
-                modifier = Modifier
+                modifier         = Modifier
                     .fillMaxSize()
                     .background(androidx.compose.material3.MaterialTheme.colorScheme.background),
                 contentAlignment = androidx.compose.ui.Alignment.Center

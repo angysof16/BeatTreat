@@ -42,7 +42,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.login.R
 import com.example.login.Grupos.GrupoChatUI
 import com.example.login.ui.theme.BeatTreatColors
@@ -54,15 +53,19 @@ private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 @Composable
 fun GruposScreen(
     onGrupoClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: GruposViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     GruposScreenContent(
-        uiState      = uiState,
-        onGrupoClick = onGrupoClick,
-        modifier     = modifier
+        uiState        = uiState,
+        onGrupoClick   = onGrupoClick,
+        onSearchClick  = onSearchClick,
+        onProfileClick = onProfileClick,
+        modifier       = modifier
     )
 }
 
@@ -71,6 +74,8 @@ fun GruposScreen(
 fun GruposScreenContent(
     uiState: GruposUIState,
     onGrupoClick: () -> Unit,
+    onSearchClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -79,11 +84,10 @@ fun GruposScreenContent(
             .background(MaterialTheme.colorScheme.background)
     ) {
         // ── TopBar igual al resto de la app ──
-        TopBarGrupos()
+        TopBarGrupos(onSearchClick = onSearchClick, onProfileClick = onProfileClick)
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
 
-            // ── Header con título y contador ──
             item {
                 Row(
                     modifier          = Modifier
@@ -122,7 +126,6 @@ fun GruposScreenContent(
                 }
             }
 
-            // ── Lista de grupos ──
             items(uiState.grupos) { grupo ->
                 GrupoCard(grupo = grupo, onClick = onGrupoClick)
                 Spacer(modifier = Modifier.height(10.dp))
@@ -133,9 +136,13 @@ fun GruposScreenContent(
     }
 }
 
-// ── TopBar estilo BeatTreat ──
+// ── TopBar consistente con el resto de la app ──
 @Composable
-fun TopBarGrupos(modifier: Modifier = Modifier) {
+fun TopBarGrupos(
+    onSearchClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier         = Modifier
@@ -170,21 +177,23 @@ fun TopBarGrupos(modifier: Modifier = Modifier) {
                 fontFamily = JaroFont,
                 modifier   = Modifier.weight(1f)
             )
-            IconButton(onClick = {}) {
-                Icon(
-                    Icons.Filled.Search,
-                    contentDescription = "Buscar",
-                    tint               = Color.White,
-                    modifier           = Modifier.size(28.dp)
-                )
-            }
-            IconButton(onClick = {}) {
-                Icon(
-                    Icons.Filled.AccountCircle,
-                    contentDescription = "Perfil",
-                    tint               = Color.White,
-                    modifier           = Modifier.size(32.dp)
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                IconButton(onClick = onSearchClick) {
+                    Icon(
+                        Icons.Filled.Search,
+                        contentDescription = "Buscar",
+                        tint               = Color.White,
+                        modifier           = Modifier.size(28.dp)
+                    )
+                }
+                IconButton(onClick = onProfileClick) {
+                    Icon(
+                        Icons.Filled.AccountCircle,
+                        contentDescription = "Perfil",
+                        tint               = Color.White,
+                        modifier           = Modifier.size(32.dp)
+                    )
+                }
             }
         }
     }
@@ -205,7 +214,6 @@ fun GrupoCard(
             .background(BeatTreatColors.SurfaceVariant)
             .clickable { onClick() }
     ) {
-        // Acento de color del grupo en el borde izquierdo
         Box(
             modifier = Modifier
                 .width(4.dp)
@@ -224,7 +232,6 @@ fun GrupoCard(
                 .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar del grupo con gradiente del color del grupo
             Box(
                 modifier         = Modifier
                     .size(52.dp)
@@ -246,7 +253,6 @@ fun GrupoCard(
 
             Spacer(modifier = Modifier.width(14.dp))
 
-            // Nombre y último mensaje
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text       = grupo.nombre,
@@ -265,14 +271,11 @@ fun GrupoCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Hora
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text     = grupo.hora,
-                    color    = Color.White.copy(alpha = 0.4f),
-                    fontSize = 11.sp
-                )
-            }
+            Text(
+                text     = grupo.hora,
+                color    = Color.White.copy(alpha = 0.4f),
+                fontSize = 11.sp
+            )
         }
     }
 }

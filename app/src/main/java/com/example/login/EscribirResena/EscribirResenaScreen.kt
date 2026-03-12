@@ -11,22 +11,29 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +44,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,14 +60,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.login.AlbumDetalle.AlbumDetalleData
 import com.example.login.R
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
-// ── Etiquetas descriptivas por calificación ──
 private fun etiquetaCalificacion(valor: Int) = when (valor) {
     1    -> "Muy malo"
     2    -> "Malo"
@@ -88,6 +97,7 @@ fun EscribirResenaScreen(
         uiState              = uiState,
         onTextoChange        = { viewModel.onTextoChange(it) },
         onCalificacionChange = { viewModel.onCalificacionChange(it) },
+        onAlbumSeleccionado  = { viewModel.onAlbumSeleccionado(it) },
         onBackClick          = onBackClick,
         onPublicarClick      = { viewModel.publicarResena() },
         modifier             = modifier
@@ -100,6 +110,7 @@ fun EscribirResenaScreenContent(
     uiState: EscribirResenaUIState,
     onTextoChange: (String) -> Unit,
     onCalificacionChange: (Float) -> Unit,
+    onAlbumSeleccionado: (String) -> Unit,
     onBackClick: () -> Unit,
     onPublicarClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -111,7 +122,6 @@ fun EscribirResenaScreenContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // ── TopBar ──
         TopBarEscribirResena(
             onBackClick       = onBackClick,
             onPublicarClick   = onPublicarClick,
@@ -126,7 +136,6 @@ fun EscribirResenaScreenContent(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Título de sección ──
             Text(
                 text       = "Nueva reseña",
                 color      = Color.White,
@@ -141,7 +150,6 @@ fun EscribirResenaScreenContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Selector de álbum ──
             Text(
                 text       = "Álbum",
                 color      = Color.White,
@@ -149,14 +157,13 @@ fun EscribirResenaScreenContent(
                 fontWeight = FontWeight.SemiBold,
                 modifier   = Modifier.padding(bottom = 8.dp)
             )
-            SelectorAlbumMejorado(
+            SelectorAlbum(
                 albumSeleccionado = uiState.albumSeleccionado,
-                onClick           = { /* TODO: abrir buscador */ }
+                onAlbumSeleccionado = onAlbumSeleccionado
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Calificación ──
             Text(
                 text       = "Calificación",
                 color      = Color.White,
@@ -164,14 +171,13 @@ fun EscribirResenaScreenContent(
                 fontWeight = FontWeight.SemiBold,
                 modifier   = Modifier.padding(bottom = 12.dp)
             )
-            CalificacionSelectorMejorado(
+            CalificacionSelector(
                 calificacion         = uiState.calificacion,
                 onCalificacionChange = onCalificacionChange
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Campo de opinión ──
             Text(
                 text       = "Tu opinión",
                 color      = Color.White,
@@ -179,14 +185,13 @@ fun EscribirResenaScreenContent(
                 fontWeight = FontWeight.SemiBold,
                 modifier   = Modifier.padding(bottom = 8.dp)
             )
-            CampoOpinionMejorado(
+            CampoOpinion(
                 texto         = uiState.textoResena,
                 onTextoChange = onTextoChange
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ── Botón publicar al fondo ──
             Button(
                 onClick  = onPublicarClick,
                 enabled  = puedePublicar,
@@ -220,7 +225,6 @@ fun TopBarEscribirResena(
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        // Logo box igual al resto de la app
         Box(
             modifier         = Modifier
                 .size(80.dp)
@@ -257,12 +261,11 @@ fun TopBarEscribirResena(
             Text(
                 text       = "BeatTreat",
                 color      = Color.White,
-                fontSize   = 24.sp,
+                fontSize   = 28.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = JaroFont,
-                modifier   = Modifier.weight(1f).padding(start = 8.dp)
+                modifier   = Modifier.weight(1f).padding(start = 4.dp)
             )
-            // Botón publicar pequeño en la topbar
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
@@ -283,83 +286,129 @@ fun TopBarEscribirResena(
     }
 }
 
-// ── Selector de álbum mejorado ──
+// ── Selector de álbum con dropdown ──
 @Composable
-fun SelectorAlbumMejorado(
+fun SelectorAlbum(
     albumSeleccionado: String,
-    onClick: () -> Unit,
+    onAlbumSeleccionado: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
-        shape  = RoundedCornerShape(14.dp)
-    ) {
-        Row(
-            modifier          = Modifier
+    var expandido by remember { mutableStateOf(false) }
+    var busqueda  by remember { mutableStateOf("") }
+
+    val todosLosAlbumes = remember {
+        AlbumDetalleData.todos().map { "${it.nombre} — ${it.artista}" }
+    }
+    val albumesFiltrados = remember(busqueda) {
+        if (busqueda.isBlank()) todosLosAlbumes
+        else todosLosAlbumes.filter { it.lowercase().contains(busqueda.lowercase()) }
+    }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .clickable { expandido = !expandido },
+            colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+            shape  = if (expandido) RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 0.dp, bottomEnd = 0.dp) else RoundedCornerShape(14.dp)
         ) {
-            // Icono de álbum
-            Box(
-                modifier         = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(BeatTreatColors.Purple60, BeatTreatColors.PurpleDark)
-                        )
-                    ),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier          = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Box(
+                    modifier         = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Brush.radialGradient(colors = listOf(BeatTreatColors.Purple60, BeatTreatColors.PurpleDark))),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Album, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    if (albumSeleccionado.isBlank()) {
+                        Text(text = "Seleccionar álbum",   color = Color.White.copy(alpha = 0.5f), fontSize = 15.sp)
+                        Text(text = "Toca para buscar",    color = Color.White.copy(alpha = 0.3f), fontSize = 12.sp)
+                    } else {
+                        Text(text = albumSeleccionado,     color = Color.White,                    fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
                 Icon(
-                    imageVector        = Icons.Filled.Album,
+                    imageVector        = if (expandido) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
                     contentDescription = null,
-                    tint               = Color.White,
-                    modifier           = Modifier.size(26.dp)
+                    tint               = Color.White.copy(alpha = 0.5f),
+                    modifier           = Modifier.size(22.dp)
                 )
             }
+        }
 
-            Spacer(modifier = Modifier.width(14.dp))
+        if (expandido) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+                shape    = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 14.dp, bottomEnd = 14.dp)
+            ) {
+                Column {
+                    // Campo de búsqueda dentro del dropdown
+                    Row(
+                        modifier          = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.Search, contentDescription = null, tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextField(
+                            value         = busqueda,
+                            onValueChange = { busqueda = it },
+                            placeholder   = { Text("Buscar...", color = Color.White.copy(alpha = 0.35f), fontSize = 14.sp) },
+                            modifier      = Modifier.fillMaxWidth(),
+                            colors        = TextFieldDefaults.colors(
+                                focusedContainerColor   = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor   = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                focusedTextColor        = Color.White,
+                                unfocusedTextColor      = Color.White,
+                                cursorColor             = BeatTreatColors.Purple60
+                            ),
+                            singleLine = true
+                        )
+                    }
+                    Divider(color = Color.White.copy(alpha = 0.08f))
 
-            Column(modifier = Modifier.weight(1f)) {
-                if (albumSeleccionado.isBlank()) {
-                    Text(
-                        text     = "Seleccionar álbum",
-                        color    = Color.White.copy(alpha = 0.5f),
-                        fontSize = 15.sp
-                    )
-                    Text(
-                        text     = "Toca para buscar",
-                        color    = Color.White.copy(alpha = 0.3f),
-                        fontSize = 12.sp
-                    )
-                } else {
-                    Text(
-                        text       = albumSeleccionado,
-                        color      = Color.White,
-                        fontSize   = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    // Lista de álbumes (máximo 5 visibles)
+                    LazyColumn(modifier = Modifier.heightIn(max = 220.dp)) {
+                        items(albumesFiltrados) { item ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onAlbumSeleccionado(item)
+                                        expandido = false
+                                        busqueda  = ""
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier.size(8.dp).clip(RoundedCornerShape(4.dp))
+                                        .background(BeatTreatColors.Purple60)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(text = item, color = Color.White, fontSize = 14.sp)
+                            }
+                            Divider(color = Color.White.copy(alpha = 0.05f))
+                        }
+                    }
                 }
             }
-
-            Icon(
-                imageVector        = Icons.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint               = Color.White.copy(alpha = 0.4f),
-                modifier           = Modifier.size(22.dp)
-            )
         }
     }
 }
 
-// ── Selector de calificación mejorado ──
+// ── Selector de calificación ──
 @Composable
-fun CalificacionSelectorMejorado(
+fun CalificacionSelector(
     calificacion: Float,
     onCalificacionChange: (Float) -> Unit,
     modifier: Modifier = Modifier
@@ -373,7 +422,6 @@ fun CalificacionSelectorMejorado(
             modifier            = Modifier.fillMaxWidth().padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Estrellas grandes y táctiles
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment     = Alignment.CenterVertically
@@ -394,17 +442,12 @@ fun CalificacionSelectorMejorado(
                 }
             }
 
-            // Etiqueta de calificación
             if (calificacion > 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(BeatTreatColors.Purple60, Color(0xFF8B5CF6))
-                            )
-                        )
+                        .background(Brush.horizontalGradient(colors = listOf(BeatTreatColors.Purple60, Color(0xFF8B5CF6))))
                         .padding(horizontal = 20.dp, vertical = 6.dp)
                 ) {
                     Text(
@@ -419,17 +462,17 @@ fun CalificacionSelectorMejorado(
     }
 }
 
-// ── Campo de opinión mejorado ──
+// ── Campo de opinión ──
 @Composable
-fun CampoOpinionMejorado(
+fun CampoOpinion(
     texto: String,
     onTextoChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
-            shape  = RoundedCornerShape(14.dp),
+            colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+            shape    = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             TextField(
@@ -442,9 +485,7 @@ fun CampoOpinionMejorado(
                         fontSize = 14.sp
                     )
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
+                modifier = Modifier.fillMaxWidth().height(180.dp),
                 colors   = TextFieldDefaults.colors(
                     focusedContainerColor   = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
@@ -458,14 +499,13 @@ fun CampoOpinionMejorado(
             )
         }
 
-        // Contador de caracteres
         Row(
             modifier              = Modifier.fillMaxWidth().padding(top = 6.dp, end = 4.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Text(
-                text  = "${texto.length} / 500",
-                color = if (texto.length > 450) Color(0xFFFFC107) else Color.White.copy(alpha = 0.4f),
+                text     = "${texto.length} / 500",
+                color    = if (texto.length > 450) Color(0xFFFFC107) else Color.White.copy(alpha = 0.4f),
                 fontSize = 12.sp
             )
         }
@@ -480,6 +520,7 @@ fun EscribirResenaScreenPreview() {
             uiState              = EscribirResenaUIState(),
             onTextoChange        = {},
             onCalificacionChange = {},
+            onAlbumSeleccionado  = {},
             onBackClick          = {},
             onPublicarClick      = {}
         )

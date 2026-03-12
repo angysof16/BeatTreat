@@ -19,8 +19,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
@@ -42,13 +42,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.login.R
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
+
+private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
 // ── Stateful ──
 @Composable
@@ -92,7 +96,6 @@ fun ResenaScreenContent(
             .background(MaterialTheme.colorScheme.background)
     ) {
         TopBarResena(
-            titulo          = if (uiState.albumNombre.isNotBlank()) uiState.albumNombre else "Reseñas",
             onBackClick     = onBackClick,
             onEscribirClick = onEscribirResenaClick
         )
@@ -100,7 +103,7 @@ fun ResenaScreenContent(
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
                 Text(
-                    text       = "Reseñas del álbum",
+                    text       = if (uiState.albumNombre.isNotBlank()) uiState.albumNombre else "Reseñas",
                     color      = Color.White,
                     fontSize   = 28.sp,
                     fontWeight = FontWeight.Bold,
@@ -157,41 +160,63 @@ fun SinResenasAun(onEscribirClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-// ── TopBar ──
+// ── TopBar consistente con el resto de la app ──
 @Composable
 fun TopBarResena(
-    titulo: String,
     onBackClick: () -> Unit,
     onEscribirClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier              = modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment     = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        IconButton(onClick = onBackClick) {
-            Icon(
-                imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Volver",
-                tint               = Color.White,
-                modifier           = Modifier.size(28.dp)
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier         = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(bottomEnd = 12.dp))
+                .background(Color(0xFF1A1A1A)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter            = painterResource(id = R.drawable.logo_beattreat),
+                contentDescription = "Logo BeatTreat",
+                modifier           = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)),
+                contentScale       = ContentScale.Fit
             )
         }
-        Text(
-            text       = titulo,
-            color      = Color.White,
-            fontSize   = 18.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines   = 1,
-            modifier   = Modifier.weight(1f).padding(horizontal = 8.dp)
-        )
-        Text(
-            text     = "Escribir",
-            color    = Color.White,
-            fontSize = 16.sp,
-            modifier = Modifier.clickable { onEscribirClick() }
-        )
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(bottomStart = 12.dp)
+                )
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    Icons.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint               = Color.White,
+                    modifier           = Modifier.size(26.dp)
+                )
+            }
+            Text(
+                text       = "BeatTreat",
+                color      = Color.White,
+                fontSize   = 28.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = JaroFont,
+                modifier   = Modifier.weight(1f).padding(start = 4.dp)
+            )
+            Text(
+                text       = "Escribir",
+                color      = Color.White,
+                fontSize   = 15.sp,
+                fontWeight = FontWeight.Medium,
+                modifier   = Modifier.clickable { onEscribirClick() }
+            )
+        }
     }
 }
 
@@ -322,6 +347,13 @@ fun ResenaFooter(
             }
             Text(text = resena.likes.toString(), color = Color.White, fontSize = 14.sp)
             Spacer(modifier = Modifier.width(16.dp))
+            Icon(
+                imageVector        = Icons.Filled.MusicNote,
+                contentDescription = "Comentarios",
+                tint               = Color.White.copy(alpha = 0.6f),
+                modifier           = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
             Text(text = "${resena.comentarios}", color = Color.White, fontSize = 14.sp)
         }
         Text(text = resena.fecha, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)

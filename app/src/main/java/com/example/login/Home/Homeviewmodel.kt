@@ -1,7 +1,6 @@
 package com.example.login.Home
 
 import androidx.lifecycle.ViewModel
-import com.example.login.Home.HomeData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +28,9 @@ class HomeViewModel @Inject constructor(): ViewModel() {
     }
 
     fun onBannerChange(index: Int) {
-        _uiState.update { it.copy(bannerActual = index) }
+        val max = HomeData.banners.lastIndex
+        val bounded = index.coerceIn(0, max)
+        _uiState.update { it.copy(bannerActual = bounded) }
     }
 
     fun bannerAnterior() {
@@ -38,6 +39,8 @@ class HomeViewModel @Inject constructor(): ViewModel() {
     }
 
     fun bannerSiguiente() {
-        _uiState.update { it.copy(bannerActual = it.bannerActual + 1) }
+        val actual = _uiState.value.bannerActual
+        val max    = HomeData.banners.lastIndex
+        if (actual < max) _uiState.update { it.copy(bannerActual = actual + 1) }
     }
 }

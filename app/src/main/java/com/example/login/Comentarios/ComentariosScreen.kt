@@ -1,5 +1,6 @@
 package com.example.login.Comentarios
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,15 +41,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.login.R
 import com.example.login.Resena.ComentarioUI
 import com.example.login.Resena.ResenaDetalladaUI
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
+
+private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
 // ── Stateful ──
 @Composable
@@ -114,8 +121,8 @@ fun ComentariosScreenContent(
             } else {
                 items(uiState.comentarios) { comentario ->
                     ComentarioCard(
-                        comentario = comentario,
-                        isLiked    = comentario.id in uiState.comentariosLikeados,
+                        comentario  = comentario,
+                        isLiked     = comentario.id in uiState.comentariosLikeados,
                         onLikeClick = { onLikeComentario(comentario.id) }
                     )
                 }
@@ -132,21 +139,59 @@ fun ComentariosScreenContent(
     }
 }
 
-// ── TopBar ──
+// ── TopBar consistente con el resto de la app ──
 @Composable
 fun TopBarComentarios(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier          = modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = onBackClick) {
-            Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(28.dp))
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier         = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(bottomEnd = 12.dp))
+                .background(Color(0xFF1A1A1A)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter            = painterResource(id = R.drawable.logo_beattreat),
+                contentDescription = "Logo BeatTreat",
+                modifier           = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)),
+                contentScale       = ContentScale.Fit
+            )
         }
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "Comentarios", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(bottomStart = 12.dp)
+                )
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    Icons.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint               = Color.White,
+                    modifier           = Modifier.size(26.dp)
+                )
+            }
+            Text(
+                text       = "BeatTreat",
+                color      = Color.White,
+                fontSize   = 28.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = JaroFont,
+                modifier   = Modifier.weight(1f).padding(start = 4.dp)
+            )
+            Text(
+                text     = "Comentarios",
+                color    = Color.White.copy(alpha = 0.7f),
+                fontSize = 14.sp
+            )
+        }
     }
 }
 
@@ -166,18 +211,18 @@ fun ResenaEncabezado(
                 Icon(Icons.Filled.AccountCircle, contentDescription = resena.autorNombre, tint = Color.White, modifier = Modifier.size(36.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
-                    Text(text = resena.autorNombre,   color = Color.White,                    fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                    Text(text = resena.autorUsuario,  color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+                    Text(text = resena.autorNombre,  color = Color.White,                    fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    Text(text = resena.autorUsuario, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text     = "${resena.albumNombre} — ${resena.albumArtista}",
-                    color    = Color.White.copy(alpha = 0.8f),
-                    fontSize = 13.sp,
+                    text       = "${resena.albumNombre} — ${resena.albumArtista}",
+                    color      = Color.White.copy(alpha = 0.8f),
+                    fontSize   = 13.sp,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.weight(1f)
+                    modifier   = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 ResenaEstrellasCompactas(calificacion = resena.calificacion)
@@ -240,8 +285,8 @@ fun ComentarioCard(
             ) {
                 Column {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(text = comentario.autorNombre,   color = Color.White,                    fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                        Text(text = comentario.fecha,         color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
+                        Text(text = comentario.autorNombre, color = Color.White,                    fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(text = comentario.fecha,       color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
                     }
                     Text(text = comentario.autorUsuario, color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
                     Spacer(modifier = Modifier.height(6.dp))
@@ -271,8 +316,8 @@ fun ComentarioLikeRow(
             )
         }
         Text(
-            text  = if (isLiked) "${likes + 1}" else "$likes",
-            color = Color.White.copy(alpha = 0.6f),
+            text     = if (isLiked) "${likes + 1}" else "$likes",
+            color    = Color.White.copy(alpha = 0.6f),
             fontSize = 12.sp
         )
     }
@@ -310,7 +355,8 @@ fun InputComentario(
         )
         Spacer(modifier = Modifier.width(8.dp))
         Box(
-            modifier         = Modifier.size(44.dp).clip(CircleShape).background(if (texto.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+            modifier         = Modifier.size(44.dp).clip(CircleShape)
+                .background(if (texto.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = onEnviarClick, enabled = texto.isNotBlank()) {

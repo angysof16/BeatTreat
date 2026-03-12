@@ -1,5 +1,6 @@
 package com.example.login.Seguidores
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,17 +16,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.login.R
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
+
+private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
 // ── Stateful ──
 @Composable
 fun SeguidoresScreen(
-    tipo: String,                          // "siguiendo" | "seguidores"
+    tipo: String,
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SeguidoresViewModel
@@ -35,10 +43,10 @@ fun SeguidoresScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     SeguidoresScreenContent(
-        uiState     = uiState,
-        onBackClick = onBackClick,
+        uiState        = uiState,
+        onBackClick    = onBackClick,
         onToggleSeguir = { id -> viewModel.toggleSeguir(id) },
-        modifier    = modifier
+        modifier       = modifier
     )
 }
 
@@ -51,31 +59,29 @@ fun SeguidoresScreenContent(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // ── TopBar ──
-        Row(
-            modifier          = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary).padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(28.dp))
-            }
-            Text(
-                text       = if (uiState.tipo == "siguiendo") "Siguiendo" else "Seguidores",
-                color      = Color.White,
-                fontSize   = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier   = Modifier.padding(start = 8.dp)
-            )
-        }
+        TopBarSeguidores(
+            tipo        = uiState.tipo,
+            onBackClick = onBackClick
+        )
 
         LazyColumn(
             modifier       = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            item {
+                Text(
+                    text       = if (uiState.tipo == "siguiendo") "Siguiendo" else "Seguidores",
+                    color      = Color.White,
+                    fontSize   = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier   = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
             if (uiState.usuarios.isEmpty()) {
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().padding(top = 60.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
                         Text(
                             text     = if (uiState.tipo == "siguiendo") "Aún no sigues a nadie" else "Aún no tienes seguidores",
                             color    = Color.White.copy(alpha = 0.4f),
@@ -86,13 +92,70 @@ fun SeguidoresScreenContent(
             } else {
                 items(uiState.usuarios) { usuario ->
                     UsuarioItem(
-                        usuario        = usuario,
-                        esSiguiendo    = usuario.id in uiState.siguiendoIds,
-                        onSeguirClick  = { onToggleSeguir(usuario.id) }
+                        usuario       = usuario,
+                        esSiguiendo   = usuario.id in uiState.siguiendoIds,
+                        onSeguirClick = { onToggleSeguir(usuario.id) }
                     )
                 }
             }
             item { Spacer(modifier = Modifier.height(80.dp)) }
+        }
+    }
+}
+
+// ── TopBar consistente con el resto de la app ──
+@Composable
+fun TopBarSeguidores(
+    tipo: String,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier         = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(bottomEnd = 12.dp))
+                .background(Color(0xFF1A1A1A)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter            = painterResource(id = R.drawable.logo_beattreat),
+                contentDescription = "Logo BeatTreat",
+                modifier           = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)),
+                contentScale       = ContentScale.Fit
+            )
+        }
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(bottomStart = 12.dp)
+                )
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(
+                    Icons.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint               = Color.White,
+                    modifier           = Modifier.size(26.dp)
+                )
+            }
+            Text(
+                text       = "BeatTreat",
+                color      = Color.White,
+                fontSize   = 28.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = JaroFont,
+                modifier   = Modifier.weight(1f).padding(start = 4.dp)
+            )
+            Text(
+                text     = if (tipo == "siguiendo") "Siguiendo" else "Seguidores",
+                color    = Color.White.copy(alpha = 0.7f),
+                fontSize = 14.sp
+            )
         }
     }
 }
@@ -116,8 +179,8 @@ fun UsuarioItem(
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = usuario.nombre,   color = Color.White,                    fontSize = 15.sp, fontWeight = FontWeight.Medium)
-            Text(text = usuario.usuario,  color = Color.White.copy(alpha = 0.55f), fontSize = 13.sp)
+            Text(text = usuario.nombre,  color = Color.White,                     fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            Text(text = usuario.usuario, color = Color.White.copy(alpha = 0.55f), fontSize = 13.sp)
         }
         Box(
             modifier = Modifier
