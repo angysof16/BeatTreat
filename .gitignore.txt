@@ -1,0 +1,16 @@
+# Gradle
+.gradle/
+**/build/
+build/
+local.properties
+
+# IDE
+.idea/
+*.iml
+
+# Android
+*.apk
+*.aab
+
+# Firebase (opcional pero recomendado)
+# google-services.json
