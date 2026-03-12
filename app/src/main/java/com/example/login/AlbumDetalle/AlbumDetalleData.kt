@@ -2,9 +2,6 @@ package com.example.login.AlbumDetalle
 
 import com.example.login.R
 
-// ── Datos locales quemados de Detalle de Álbum ──
-// IDs 1-9  → álbumes de HomeData
-// IDs 101-105 → álbumes de DescubreData (offset +100 sobre su id original)
 object AlbumDetalleData {
 
     private val todos = listOf(
@@ -38,7 +35,7 @@ object AlbumDetalleData {
             artista = "Quiet Riot",
             año = "1983",
             genero = "Heavy Metal",
-            descripcion = "Versión potente del clásico de Slade que se convirtió en himno del metal de los 80. Un álbum crudo y enérgico que consolida el sonido característico de la banda.",
+            descripcion = "Versión potente del clásico de Slade que se convirtió en himno del metal de los 80.",
             imagenRes = R.drawable.album2,
             duracionTotal = "41 min",
             calificacionPromedio = 4.0f,
@@ -58,7 +55,7 @@ object AlbumDetalleData {
             artista = "Quiet Riot",
             año = "1984",
             genero = "Glam Metal",
-            descripcion = "Álbum de seguimiento que muestra la madurez musical del grupo con composiciones más elaboradas y producción de alta calidad.",
+            descripcion = "Álbum de seguimiento que muestra la madurez musical del grupo.",
             imagenRes = R.drawable.album3,
             duracionTotal = "43 min",
             calificacionPromedio = 3.8f,
@@ -79,7 +76,7 @@ object AlbumDetalleData {
             artista = "Bad Bunny",
             año = "2018",
             genero = "Reggaetón / Trap Latino",
-            descripcion = "Álbum debut de Bad Bunny que redefinió el reggaetón moderno. Con 21 canciones, el proyecto mezcla trap, R&B y ritmos latinos en una propuesta fresca y auténtica.",
+            descripcion = "Álbum debut de Bad Bunny que redefinió el reggaetón moderno.",
             imagenRes = R.drawable.album4,
             duracionTotal = "56 min",
             calificacionPromedio = 4.6f,
@@ -103,7 +100,7 @@ object AlbumDetalleData {
             artista = "Bad Bunny",
             año = "2022",
             genero = "Reggaetón / Latin Pop",
-            descripcion = "Obra maestra que celebra la cultura puertorriqueña. El álbum más escuchado del mundo en 2022 en Spotify, con 23 canciones que van del reggaetón al dembow, cumbia y R&B.",
+            descripcion = "Obra maestra que celebra la cultura puertorriqueña.",
             imagenRes = R.drawable.album5,
             duracionTotal = "81 min",
             calificacionPromedio = 4.9f,
@@ -127,7 +124,7 @@ object AlbumDetalleData {
             artista = "Bad Bunny",
             año = "2020",
             genero = "Reggaetón / Trap",
-            descripcion = "EP sorpresa lanzado durante la pandemia con 8 canciones introspectivas. Un proyecto íntimo que muestra el lado más personal del artista.",
+            descripcion = "EP sorpresa lanzado durante la pandemia con 8 canciones introspectivas.",
             imagenRes = R.drawable.album6,
             duracionTotal = "27 min",
             calificacionPromedio = 4.4f,
@@ -151,7 +148,7 @@ object AlbumDetalleData {
             artista = "Queen",
             año = "1975",
             genero = "Rock Clásico",
-            descripcion = "Considerado uno de los mejores álbumes de la historia. Contiene 'Bohemian Rhapsody', una de las canciones más innovadoras jamás grabadas. Un viaje épico por el rock, la ópera y el music-hall.",
+            descripcion = "Considerado uno de los mejores álbumes de la historia. Contiene 'Bohemian Rhapsody'.",
             imagenRes = 0,
             duracionTotal = "43 min",
             calificacionPromedio = 5.0f,
@@ -174,7 +171,7 @@ object AlbumDetalleData {
             artista = "Queen",
             año = "1980",
             genero = "Rock / Pop Rock",
-            descripcion = "El álbum más exitoso comercialmente de Queen. Incluye 'Crazy Little Thing Called Love' y 'Another One Bites the Dust', demostrando la versatilidad del grupo.",
+            descripcion = "El álbum más exitoso comercialmente de Queen.",
             imagenRes = 0,
             duracionTotal = "48 min",
             calificacionPromedio = 4.8f,
@@ -198,7 +195,7 @@ object AlbumDetalleData {
             artista = "Queen",
             año = "1977",
             genero = "Rock / Arena Rock",
-            descripcion = "Hogar de los himnos deportivos definitivos. 'We Will Rock You' y 'We Are the Champions' se convirtieron en canciones universales que trascienden generaciones.",
+            descripcion = "Hogar de los himnos deportivos definitivos.",
             imagenRes = 0,
             duracionTotal = "44 min",
             calificacionPromedio = 4.9f,
@@ -225,7 +222,7 @@ object AlbumDetalleData {
             artista = "Taylor Swift",
             año = "2022",
             genero = "Synth-Pop / Indie Pop",
-            descripcion = "Un viaje por 13 noches de insomnio donde Taylor Swift explora sus miedos, deseos y reflexiones más íntimas. Un álbum oscuro y hipnótico que redefine su sonido.",
+            descripcion = "Un viaje por 13 noches de insomnio donde Taylor Swift explora sus miedos y reflexiones más íntimas.",
             imagenRes = R.drawable.album_midnights,
             duracionTotal = "44 min",
             calificacionPromedio = 4.7f,
@@ -252,7 +249,7 @@ object AlbumDetalleData {
             artista = "Beyoncé",
             año = "2022",
             genero = "Dance / House / R&B",
-            descripcion = "Tributo a la música dance y house de la comunidad LGBTQ+. Un álbum continuo y bailable que celebra la libertad, la identidad y la danza sin parar.",
+            descripcion = "Tributo a la música dance y house de la comunidad LGBTQ+.",
             imagenRes = R.drawable.album_renaissance,
             duracionTotal = "62 min",
             calificacionPromedio = 4.8f,
@@ -282,7 +279,7 @@ object AlbumDetalleData {
             artista = "Bad Bunny",
             año = "2022",
             genero = "Reggaetón / Latin Pop",
-            descripcion = "El álbum más escuchado del año. Obra maestra de la cultura puertorriqueña que fusiona reggaetón, dembow, cumbia y R&B.",
+            descripcion = "El álbum más escuchado del año.",
             imagenRes = R.drawable.album5,
             duracionTotal = "81 min",
             calificacionPromedio = 4.9f,
@@ -302,7 +299,7 @@ object AlbumDetalleData {
             artista = "Harry Styles",
             año = "2022",
             genero = "Pop / Indie Pop / Funk",
-            descripcion = "Tercer álbum de Harry Styles, un proyecto íntimo y ecléctico que mezcla pop japonés, funk y rock. Ganador del Grammy al Álbum del Año 2023.",
+            descripcion = "Tercer álbum de Harry Styles, ganador del Grammy al Álbum del Año 2023.",
             imagenRes = R.drawable.album_harrys_house,
             duracionTotal = "42 min",
             calificacionPromedio = 4.6f,
@@ -329,7 +326,7 @@ object AlbumDetalleData {
             artista = "The Weeknd",
             año = "2022",
             genero = "Synth-Pop / R&B",
-            descripcion = "Experiencia conceptual que simula una emisora de radio en el purgatorio. The Weeknd guía al oyente a través de su muerte y renacimiento con producción impecable.",
+            descripcion = "Experiencia conceptual que simula una emisora de radio en el purgatorio.",
             imagenRes = R.drawable.album_dawn_fm,
             duracionTotal = "52 min",
             calificacionPromedio = 4.7f,
@@ -355,6 +352,19 @@ object AlbumDetalleData {
         )
     )
 
-    /** Busca un álbum por su id único. Devuelve null si no existe. */
+    /** Devuelve todos los álbumes disponibles. */
+    fun todos(): List<AlbumDetalleUI> = todos
+
+    /** Busca un álbum por su id único. */
     fun findById(id: Int): AlbumDetalleUI? = todos.find { it.id == id }
+
+    /**
+     * Filtra álbumes cuyo género contenga la palabra buscada (case-insensitive).
+     * Si la cadena está vacía devuelve todos.
+     */
+    fun porGenero(generoNombre: String): List<AlbumDetalleUI> {
+        if (generoNombre.isBlank()) return todos
+        val q = generoNombre.trim().lowercase()
+        return todos.filter { it.genero.lowercase().contains(q) }
+    }
 }

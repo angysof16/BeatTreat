@@ -1,5 +1,7 @@
 package com.example.login.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -11,31 +13,43 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.login.AlbumDetalle.AlbumDetalleScreen
+import com.example.login.AlbumDetalle.AlbumDetalleViewModel
+import com.example.login.ArtistaDetalle.ArtistaDetalleScreen
+import com.example.login.ArtistaDetalle.ArtistaDetalleViewModel
 import com.example.login.Biblioteca.BibliotecaScreen
+import com.example.login.Biblioteca.BibliotecaViewModel
+import com.example.login.Buscar.BuscarScreen
+import com.example.login.Buscar.BuscarViewModel
 import com.example.login.Chat.ChatScreen
+import com.example.login.Chat.ChatViewModel
 import com.example.login.Comentarios.ComentariosScreen
+import com.example.login.Comentarios.ComentariosViewModel
 import com.example.login.Descubre.DescubreScreen
+import com.example.login.Descubre.DescubreViewModel
+import com.example.login.EditarPerfil.EditarPerfilScreen
+import com.example.login.EditarPerfil.EditarPerfilViewModel
 import com.example.login.EscribirResena.EscribirResenaScreen
+import com.example.login.EscribirResena.EscribirResenaViewModel
+import com.example.login.GeneroDetalle.GeneroDetalleScreen
+import com.example.login.GeneroDetalle.GeneroDetalleViewModel
 import com.example.login.Grupos.GruposScreen
+import com.example.login.Grupos.GruposViewModel
 import com.example.login.Home.HomeScreen
+import com.example.login.Home.HomeViewModel
 import com.example.login.Login.LoginScreen
 import com.example.login.Login.LoginViewModel
 import com.example.login.Perfil.ProfileScreen
+import com.example.login.Perfil.ProfileViewModel
+import com.example.login.PlaylistDetalle.PlaylistDetalleScreen
+import com.example.login.PlaylistDetalle.PlaylistDetalleViewModel
 import com.example.login.Registro.RegistroScreen
 import com.example.login.Registro.RegistroViewModel
 import com.example.login.Resena.ResenaScreen
+import com.example.login.Resena.ResenaViewModel
+import com.example.login.Seguidores.SeguidoresScreen
+import com.example.login.Seguidores.SeguidoresViewModel
 
 import androidx.compose.runtime.getValue
-import com.example.login.AlbumDetalle.AlbumDetalleViewModel
-import com.example.login.Biblioteca.BibliotecaViewModel
-import com.example.login.Chat.ChatViewModel
-import com.example.login.Comentarios.ComentariosViewModel
-import com.example.login.Descubre.DescubreViewModel
-import com.example.login.EscribirResena.EscribirResenaViewModel
-import com.example.login.Grupos.GruposViewModel
-import com.example.login.Home.HomeViewModel
-import com.example.login.Perfil.ProfileViewModel
-import com.example.login.Resena.ResenaViewModel
 
 @Composable
 fun AppNavegacion(
@@ -61,17 +75,15 @@ fun AppNavegacion(
                     viewModel.resetLoginExitoso()
                 }
             }
-
             LaunchedEffect(state.irARegistro) {
                 if (state.irARegistro) {
                     navController.navigate(Screen.Registro.route)
                     viewModel.resetIrARegistro()
                 }
             }
-
             LoginScreen(
                 viewModel             = viewModel,
-                onForgotPasswordClick = { /* TODO */ }
+                onForgotPasswordClick = { }
             )
         }
 
@@ -88,16 +100,12 @@ fun AppNavegacion(
                     viewModel.resetRegistroExitoso()
                 }
             }
-
             LaunchedEffect(state.selectedTab) {
-                if (state.selectedTab == 0) {
-                    navController.popBackStack()
-                }
+                if (state.selectedTab == 0) navController.popBackStack()
             }
-
             RegistroScreen(
                 viewModel     = viewModel,
-                onGoogleClick = { /* TODO: Google Sign-In */ }
+                onGoogleClick = { }
             )
         }
 
@@ -109,9 +117,15 @@ fun AppNavegacion(
                 onAlbumClick   = { albumId ->
                     navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
                 },
-                onArtistaClick = { },
-                onSearchClick  = { },
-                onProfileClick = { navController.navigate(Screen.Perfil.route) }
+                onArtistaClick = { artistaId ->
+                    navController.navigate(Screen.ArtistaDetalle.createRoute(artistaId))
+                },
+                onSearchClick  = {
+                    navController.navigate(Screen.Buscar.route)
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.Perfil.route)
+                }
             )
         }
 
@@ -120,8 +134,12 @@ fun AppNavegacion(
             val viewModel: BibliotecaViewModel = hiltViewModel()
             BibliotecaScreen(
                 viewModel            = viewModel,
-                onPlaylistClick      = { },
-                onCrearPlaylistClick = { }
+                onPlaylistClick      = { playlist ->
+                    navController.navigate(Screen.PlaylistDetalle.createRoute(playlist.id))
+                },
+                onCrearPlaylistClick = {
+                    navController.navigate(Screen.CrearPlaylist.route)
+                }
             )
         }
 
@@ -130,13 +148,21 @@ fun AppNavegacion(
             val viewModel: DescubreViewModel = hiltViewModel()
             DescubreScreen(
                 viewModel        = viewModel,
-                onCategoriaClick = { },
-                onGeneroClick    = { },
+                onCategoriaClick = { categoria ->
+                    navController.navigate(Screen.CategoriaDetalle.createRoute(categoria.id))
+                },
+                onGeneroClick    = { genero ->
+                    navController.navigate(Screen.GeneroDetalle.createRoute(genero.id))
+                },
                 onAlbumClick     = { album ->
                     navController.navigate(Screen.AlbumDetalle.createRoute(album.id + 100))
                 },
-                onSearchClick  = { },
-                onProfileClick = { navController.navigate(Screen.Perfil.route) }
+                onSearchClick    = {
+                    navController.navigate(Screen.Buscar.route)
+                },
+                onProfileClick   = {
+                    navController.navigate(Screen.Perfil.route)
+                }
             )
         }
 
@@ -149,7 +175,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 7. Chat ── (ahora tiene acceso a Perfil)
+        // ── 7. Chat ──
         composable(Screen.Chat.route) {
             val viewModel: ChatViewModel = hiltViewModel()
             ChatScreen(
@@ -159,7 +185,22 @@ fun AppNavegacion(
             )
         }
 
-        // ── 8. Reseñas ──
+        // ── 8. Buscar ──
+        composable(Screen.Buscar.route) {
+            val viewModel: BuscarViewModel = hiltViewModel()
+            BuscarScreen(
+                viewModel      = viewModel,
+                onBackClick    = { navController.popBackStack() },
+                onAlbumClick   = { albumId ->
+                    navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
+                },
+                onArtistaClick = { artistaId ->
+                    navController.navigate(Screen.ArtistaDetalle.createRoute(artistaId))
+                }
+            )
+        }
+
+        // ── 9. Reseñas ──
         composable(
             route     = Screen.Resena.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType })
@@ -178,7 +219,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 9. Escribir Reseña ──
+        // ── 10. Escribir Reseña ──
         composable(Screen.EscribirResena.route) {
             val viewModel: EscribirResenaViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
@@ -195,26 +236,37 @@ fun AppNavegacion(
             )
         }
 
-        // ── 10. Perfil ──
+        // ── 11. Perfil ──
         composable(Screen.Perfil.route) {
             val viewModel: ProfileViewModel = hiltViewModel()
             ProfileScreen(
                 viewModel              = viewModel,
-                onSearchClick          = { },
-                onEditProfileClick     = { },
-                onSiguiendoClick       = { },
-                onMessageClick         = { navController.navigate(Screen.Chat.route) },
+                onSearchClick          = {
+                    navController.navigate(Screen.Buscar.route)
+                },
+                onEditProfileClick     = {
+                    navController.navigate(Screen.EditarPerfil.route)
+                },
+                onSiguiendoClick       = {
+                    navController.navigate(Screen.Seguidores.createRoute("siguiendo"))
+                },
+                onMessageClick         = {
+                    navController.navigate(Screen.Chat.route)
+                },
                 onAlbumClick           = { albumId ->
                     navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
                 },
-                onVerTodasResenasClick = { },
+                onVerTodasResenasClick = {
+                    // Muestra las reseñas del usuario (álbum 7 como ejemplo)
+                    navController.navigate(Screen.Resena.createRoute(7))
+                },
                 onResenaClick          = { resena ->
                     navController.navigate(Screen.Comentarios.createRoute(resena.id))
                 }
             )
         }
 
-        // ── 11. Comentarios ──
+        // ── 12. Comentarios ──
         composable(
             route     = Screen.Comentarios.route,
             arguments = listOf(navArgument("resenaId") { type = NavType.IntType })
@@ -229,7 +281,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 12. Detalle de Álbum ──
+        // ── 13. Detalle de Álbum ──
         composable(
             route     = Screen.AlbumDetalle.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType })
@@ -245,6 +297,117 @@ fun AppNavegacion(
                     navController.navigate(Screen.Resena.createRoute(albumId))
                 }
             )
+        }
+
+        // ── 14. Detalle de Artista ──
+        composable(
+            route     = Screen.ArtistaDetalle.route,
+            arguments = listOf(navArgument("artistaId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val artistaId = backStackEntry.arguments?.getInt("artistaId") ?: 0
+            val viewModel: ArtistaDetalleViewModel = hiltViewModel()
+            LaunchedEffect(artistaId) { viewModel.cargarArtista(artistaId) }
+            ArtistaDetalleScreen(
+                viewModel      = viewModel,
+                artistaId      = artistaId,
+                onBackClick    = { navController.popBackStack() },
+                onAlbumClick   = { albumId ->
+                    navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
+                }
+            )
+        }
+
+        // ── 15. Detalle de Género ──
+        composable(
+            route     = Screen.GeneroDetalle.route,
+            arguments = listOf(navArgument("generoId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val generoId = backStackEntry.arguments?.getInt("generoId") ?: 0
+            val viewModel: GeneroDetalleViewModel = hiltViewModel()
+            LaunchedEffect(generoId) { viewModel.cargarGenero(generoId) }
+            GeneroDetalleScreen(
+                viewModel    = viewModel,
+                generoId     = generoId,
+                onBackClick  = { navController.popBackStack() },
+                onAlbumClick = { albumId ->
+                    navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
+                }
+            )
+        }
+
+        // ── 16. Detalle de Categoría ──
+        // Reutiliza GeneroDetalleScreen con datos de categoría por ahora
+        composable(
+            route     = Screen.CategoriaDetalle.route,
+            arguments = listOf(navArgument("categoriaId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val categoriaId = backStackEntry.arguments?.getInt("categoriaId") ?: 0
+            val viewModel: GeneroDetalleViewModel = hiltViewModel()
+            LaunchedEffect(categoriaId) { viewModel.cargarPorCategoria(categoriaId) }
+            GeneroDetalleScreen(
+                viewModel    = viewModel,
+                generoId     = categoriaId,
+                onBackClick  = { navController.popBackStack() },
+                onAlbumClick = { albumId ->
+                    navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
+                }
+            )
+        }
+
+        // ── 17. Detalle de Playlist ──
+        composable(
+            route     = Screen.PlaylistDetalle.route,
+            arguments = listOf(navArgument("playlistId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val playlistId = backStackEntry.arguments?.getInt("playlistId") ?: 0
+            val viewModel: PlaylistDetalleViewModel = hiltViewModel()
+            LaunchedEffect(playlistId) { viewModel.cargarPlaylist(playlistId) }
+            PlaylistDetalleScreen(
+                viewModel   = viewModel,
+                playlistId  = playlistId,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // ── 18. Editar Perfil ──
+        composable(Screen.EditarPerfil.route) {
+            val viewModel: EditarPerfilViewModel = hiltViewModel()
+            EditarPerfilScreen(
+                viewModel      = viewModel,
+                onBackClick    = { navController.popBackStack() },
+                onGuardarClick = { navController.popBackStack() }
+            )
+        }
+
+        // ── 19. Seguidores / Siguiendo ──
+        composable(
+            route     = Screen.Seguidores.route,
+            arguments = listOf(navArgument("tipo") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val tipo = backStackEntry.arguments?.getString("tipo") ?: "seguidores"
+            val viewModel: SeguidoresViewModel = hiltViewModel()
+            LaunchedEffect(tipo) { viewModel.cargar(tipo) }
+            SeguidoresScreen(
+                viewModel   = viewModel,
+                tipo        = tipo,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // ── 20. Crear Playlist ──
+        composable(Screen.CrearPlaylist.route) {
+            // Pantalla simple de placeholder hasta implementar
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(androidx.compose.material3.MaterialTheme.colorScheme.background),
+                contentAlignment = androidx.compose.ui.Alignment.Center
+            ) {
+                androidx.compose.material3.Text(
+                    text  = "Crear Playlist — Próximamente",
+                    color = androidx.compose.ui.graphics.Color.White
+                )
+            }
         }
     }
 }
