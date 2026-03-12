@@ -47,8 +47,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.login.Chat.MensajeUI
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
@@ -57,7 +55,8 @@ import com.example.login.ui.theme.BeatTreatTheme
 fun ChatScreen(
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier,
-    viewModel: ChatViewModel
+    viewModel: ChatViewModel,
+    onProfileClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 

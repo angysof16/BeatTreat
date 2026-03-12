@@ -6,6 +6,7 @@ data class LoginUIState(
     val rememberMe: Boolean = false,
     val selectedTab: Int = 0,
     val loginExitoso: Boolean = false,
+    val irARegistro: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )

@@ -33,7 +33,12 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onTabChange(tab: Int) {
-        _uiState.update { it.copy(selectedTab = tab) }
+        _uiState.update {
+            it.copy(
+                selectedTab = tab,
+                irARegistro = tab == 1
+            )
+        }
     }
 
     fun login() {
@@ -45,7 +50,7 @@ class LoginViewModel @Inject constructor(
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch (Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             val result = authRepository.signIn(state.email, state.password)
             if (result.isSuccess) {
                 _uiState.update { it.copy(loginExitoso = true, isLoading = false) }
@@ -58,5 +63,9 @@ class LoginViewModel @Inject constructor(
 
     fun resetLoginExitoso() {
         _uiState.update { it.copy(loginExitoso = false) }
+    }
+
+    fun resetIrARegistro() {
+        _uiState.update { it.copy(irARegistro = false) }
     }
 }

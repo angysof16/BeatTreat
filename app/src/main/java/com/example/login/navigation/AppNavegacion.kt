@@ -53,8 +53,7 @@ fun AppNavegacion(
             val viewModel: LoginViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
 
-            // La navegación la controla el estado del ViewModel
-            LaunchedEffect (state.loginExitoso) {
+            LaunchedEffect(state.loginExitoso) {
                 if (state.loginExitoso) {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
@@ -63,9 +62,10 @@ fun AppNavegacion(
                 }
             }
 
-            LaunchedEffect(state.selectedTab) {
-                if (state.selectedTab == 1) {
+            LaunchedEffect(state.irARegistro) {
+                if (state.irARegistro) {
                     navController.navigate(Screen.Registro.route)
+                    viewModel.resetIrARegistro()
                 }
             }
 
@@ -80,7 +80,6 @@ fun AppNavegacion(
             val viewModel: RegistroViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
 
-            // La navegación la controla el estado del ViewModel
             LaunchedEffect(state.registroExitoso) {
                 if (state.registroExitoso) {
                     navController.navigate(Screen.Home.route) {
@@ -101,7 +100,8 @@ fun AppNavegacion(
                 onGoogleClick = { /* TODO: Google Sign-In */ }
             )
         }
-// ── 3. Home ──
+
+        // ── 3. Home ──
         composable(Screen.Home.route) {
             val viewModel: HomeViewModel = hiltViewModel()
             HomeScreen(
@@ -115,7 +115,7 @@ fun AppNavegacion(
             )
         }
 
-// ── 4. Biblioteca ──
+        // ── 4. Biblioteca ──
         composable(Screen.Biblioteca.route) {
             val viewModel: BibliotecaViewModel = hiltViewModel()
             BibliotecaScreen(
@@ -125,7 +125,7 @@ fun AppNavegacion(
             )
         }
 
-// ── 5. Descubre ──
+        // ── 5. Descubre ──
         composable(Screen.Descubre.route) {
             val viewModel: DescubreViewModel = hiltViewModel()
             DescubreScreen(
@@ -140,7 +140,7 @@ fun AppNavegacion(
             )
         }
 
-// ── 6. Grupos ──
+        // ── 6. Grupos ──
         composable(Screen.Grupos.route) {
             val viewModel: GruposViewModel = hiltViewModel()
             GruposScreen(
@@ -149,16 +149,17 @@ fun AppNavegacion(
             )
         }
 
-// ── 7. Chat ──
+        // ── 7. Chat ── (ahora tiene acceso a Perfil)
         composable(Screen.Chat.route) {
             val viewModel: ChatViewModel = hiltViewModel()
             ChatScreen(
-                viewModel   = viewModel,
-                onBackClick = { navController.popBackStack() }
+                viewModel      = viewModel,
+                onBackClick    = { navController.popBackStack() },
+                onProfileClick = { navController.navigate(Screen.Perfil.route) }
             )
         }
 
-// ── 8. Reseñas ──
+        // ── 8. Reseñas ──
         composable(
             route     = Screen.Resena.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType })
@@ -168,7 +169,7 @@ fun AppNavegacion(
             LaunchedEffect(albumId) { viewModel.cargarResenas(albumId) }
             ResenaScreen(
                 viewModel             = viewModel,
-                albumId               = albumId,   // ← pasar explícitamente
+                albumId               = albumId,
                 onBackClick           = { navController.popBackStack() },
                 onResenaClick         = { resena ->
                     navController.navigate(Screen.Comentarios.createRoute(resena.id))
@@ -177,7 +178,7 @@ fun AppNavegacion(
             )
         }
 
-// ── 9. Escribir Reseña ──
+        // ── 9. Escribir Reseña ──
         composable(Screen.EscribirResena.route) {
             val viewModel: EscribirResenaViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
@@ -194,7 +195,7 @@ fun AppNavegacion(
             )
         }
 
-// ── 10. Perfil ──
+        // ── 10. Perfil ──
         composable(Screen.Perfil.route) {
             val viewModel: ProfileViewModel = hiltViewModel()
             ProfileScreen(
@@ -213,7 +214,7 @@ fun AppNavegacion(
             )
         }
 
-// ── 11. Comentarios ──
+        // ── 11. Comentarios ──
         composable(
             route     = Screen.Comentarios.route,
             arguments = listOf(navArgument("resenaId") { type = NavType.IntType })
@@ -228,7 +229,7 @@ fun AppNavegacion(
             )
         }
 
-// ── 12. Detalle de Álbum ──
+        // ── 12. Detalle de Álbum ──
         composable(
             route     = Screen.AlbumDetalle.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType })
@@ -238,7 +239,7 @@ fun AppNavegacion(
             LaunchedEffect(albumId) { viewModel.cargarAlbum(albumId) }
             AlbumDetalleScreen(
                 viewModel         = viewModel,
-                albumId           = albumId,   // ← pasar explícitamente
+                albumId           = albumId,
                 onBackClick       = { navController.popBackStack() },
                 onVerResenasClick = {
                     navController.navigate(Screen.Resena.createRoute(albumId))
