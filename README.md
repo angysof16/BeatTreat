@@ -2,7 +2,9 @@
 
 **BeatTreat** es una aplicación social para amantes de la música, centrada en la experiencia de descubrir, calificar y debatir álbumes con una comunidad activa. Los usuarios pueden explorar lanzamientos, escribir reseñas, comentar las de otros y conectar con personas que comparten sus gustos musicales.
 
----
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/a2652fce-5705-447a-b670-c2203ba523e1" width="200"/>
+</p>---
 
 ## Pantallas de la aplicación
 
