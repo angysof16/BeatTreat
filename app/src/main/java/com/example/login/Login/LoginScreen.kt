@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.login.Home.JaroFont
 import com.example.login.R
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
@@ -147,7 +148,7 @@ fun LogoBeatTreat(modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
         Image(painter = painterResource(id = R.drawable.logo_beattreat), contentDescription = "Logo BeatTreat", modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.width(14.dp))
-        Text(text = "BeatTreat", color = MaterialTheme.colorScheme.onBackground, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+        Text(text = "BeatTreat", color = MaterialTheme.colorScheme.onBackground, fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = JaroFont,)
     }
 }
 

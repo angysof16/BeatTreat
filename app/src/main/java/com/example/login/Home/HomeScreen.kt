@@ -46,7 +46,7 @@ import com.example.login.R
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
-private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
+val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
 // ── Stateful: obtiene el ViewModel y observa el UIState ──
 @Composable
