@@ -12,42 +12,42 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.login.AlbumDetalle.AlbumDetalleScreen
-import com.example.login.AlbumDetalle.AlbumDetalleViewModel
-import com.example.login.ArtistaDetalle.ArtistaDetalleScreen
-import com.example.login.ArtistaDetalle.ArtistaDetalleViewModel
-import com.example.login.Biblioteca.BibliotecaScreen
-import com.example.login.Biblioteca.BibliotecaViewModel
-import com.example.login.Buscar.BuscarScreen
-import com.example.login.Buscar.BuscarViewModel
-import com.example.login.Chat.ChatScreen
-import com.example.login.Chat.ChatViewModel
-import com.example.login.Comentarios.ComentariosScreen
-import com.example.login.Comentarios.ComentariosViewModel
-import com.example.login.Descubre.DescubreScreen
-import com.example.login.Descubre.DescubreViewModel
-import com.example.login.EditarPerfil.EditarPerfilScreen
-import com.example.login.EditarPerfil.EditarPerfilViewModel
-import com.example.login.EscribirResena.EscribirResenaScreen
-import com.example.login.EscribirResena.EscribirResenaViewModel
-import com.example.login.GeneroDetalle.GeneroDetalleScreen
-import com.example.login.GeneroDetalle.GeneroDetalleViewModel
-import com.example.login.Grupos.GruposScreen
-import com.example.login.Grupos.GruposViewModel
-import com.example.login.Home.HomeScreen
-import com.example.login.Home.HomeViewModel
-import com.example.login.Login.LoginScreen
-import com.example.login.Login.LoginViewModel
-import com.example.login.Perfil.ProfileScreen
-import com.example.login.Perfil.ProfileViewModel
-import com.example.login.PlaylistDetalle.PlaylistDetalleScreen
-import com.example.login.PlaylistDetalle.PlaylistDetalleViewModel
-import com.example.login.Registro.RegistroScreen
-import com.example.login.Registro.RegistroViewModel
-import com.example.login.Resena.ResenaScreen
-import com.example.login.Resena.ResenaViewModel
-import com.example.login.Seguidores.SeguidoresScreen
-import com.example.login.Seguidores.SeguidoresViewModel
+import com.example.login.ui.AlbumDetalle.AlbumDetalleScreen
+import com.example.login.ui.AlbumDetalle.AlbumDetalleViewModel
+import com.example.login.ui.ArtistaDetalle.ArtistaDetalleScreen
+import com.example.login.ui.ArtistaDetalle.ArtistaDetalleViewModel
+import com.example.login.ui.Biblioteca.BibliotecaScreen
+import com.example.login.ui.Biblioteca.BibliotecaViewModel
+import com.example.login.ui.Buscar.BuscarScreen
+import com.example.login.ui.Buscar.BuscarViewModel
+import com.example.login.ui.Chat.ChatScreen
+import com.example.login.ui.Chat.ChatViewModel
+import com.example.login.ui.Comentarios.ComentariosScreen
+import com.example.login.ui.Comentarios.ComentariosViewModel
+import com.example.login.ui.Descubre.DescubreScreen
+import com.example.login.ui.Descubre.DescubreViewModel
+import com.example.login.ui.EditarPerfil.EditarPerfilScreen
+import com.example.login.ui.EditarPerfil.EditarPerfilViewModel
+import com.example.login.ui.EscribirResena.EscribirResenaScreen
+import com.example.login.ui.EscribirResena.EscribirResenaViewModel
+import com.example.login.ui.GeneroDetalle.GeneroDetalleScreen
+import com.example.login.ui.GeneroDetalle.GeneroDetalleViewModel
+import com.example.login.ui.Grupos.GruposScreen
+import com.example.login.ui.Grupos.GruposViewModel
+import com.example.login.ui.Home.HomeScreen
+import com.example.login.ui.Home.HomeViewModel
+import com.example.login.ui.Login.LoginScreen
+import com.example.login.ui.Login.LoginViewModel
+import com.example.login.ui.Perfil.ProfileScreen
+import com.example.login.ui.Perfil.ProfileViewModel
+import com.example.login.ui.PlaylistDetalle.PlaylistDetalleScreen
+import com.example.login.ui.PlaylistDetalle.PlaylistDetalleViewModel
+import com.example.login.ui.Registro.RegistroScreen
+import com.example.login.ui.Registro.RegistroViewModel
+import com.example.login.ui.Resena.ResenaScreen
+import com.example.login.ui.Resena.ResenaViewModel
+import com.example.login.ui.Seguidores.SeguidoresScreen
+import com.example.login.ui.Seguidores.SeguidoresViewModel
 
 import androidx.compose.runtime.getValue
 
@@ -266,6 +266,12 @@ fun AppNavegacion(
                 },
                 onResenaClick          = { resena ->
                     navController.navigate(Screen.Comentarios.createRoute(resena.id))
+                },
+                // ── Al cerrar sesión, volver al Login limpiando el back stack ──
+                onCerrarSesionClick    = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
