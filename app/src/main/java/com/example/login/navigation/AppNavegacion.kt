@@ -51,17 +51,25 @@ import com.example.login.ui.Resena.ResenaScreen
 import com.example.login.ui.Resena.ResenaViewModel
 import com.example.login.ui.Seguidores.SeguidoresScreen
 import com.example.login.ui.Seguidores.SeguidoresViewModel
-
 import androidx.compose.runtime.getValue
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AppNavegacion(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
+    // Si Firebase ya tiene sesión activa, arranca en Perfil directamente.
+    // Si no, arranca en Login como siempre.
+    val startDestination = if (FirebaseAuth.getInstance().currentUser != null) {
+        Screen.Perfil.route
+    } else {
+        Screen.Login.route
+    }
+
     NavHost(
         navController    = navController,
-        startDestination = Screen.Login.route,
+        startDestination = startDestination,
         modifier         = modifier
     ) {
 
@@ -72,6 +80,7 @@ fun AppNavegacion(
 
             LaunchedEffect(state.loginExitoso) {
                 if (state.loginExitoso) {
+                    // FIX: va a Perfil, no a Home
                     navController.navigate(Screen.Perfil.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -97,7 +106,8 @@ fun AppNavegacion(
 
             LaunchedEffect(state.registroExitoso) {
                 if (state.registroExitoso) {
-                    navController.navigate(Screen.Home.route) {
+                    // FIX: va a Perfil, no a Home
+                    navController.navigate(Screen.Perfil.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                     viewModel.resetRegistroExitoso()
@@ -246,7 +256,7 @@ fun AppNavegacion(
             route     = Screen.Resena.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val albumId = backStackEntry.arguments?.getInt("albumId") ?: 0
+            val albumId   = backStackEntry.arguments?.getInt("albumId") ?: 0
             val viewModel: ResenaViewModel = hiltViewModel()
             LaunchedEffect(albumId) { viewModel.cargarResenas(albumId) }
             ResenaScreen(
@@ -281,8 +291,6 @@ fun AppNavegacion(
         composable(Screen.Perfil.route) {
             val viewModel: ProfileViewModel = hiltViewModel()
 
-            // FIX 1: Cada vez que esta pantalla vuelve a estar activa (ON_RESUME),
-            // se refresca la URL de la foto para reflejar cambios hechos en EditarPerfil
             val lifecycle = it.lifecycle
             DisposableEffect(lifecycle) {
                 val observer = LifecycleEventObserver { _, event ->
@@ -333,7 +341,7 @@ fun AppNavegacion(
             route     = Screen.Comentarios.route,
             arguments = listOf(navArgument("resenaId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val resenaId = backStackEntry.arguments?.getInt("resenaId") ?: 0
+            val resenaId  = backStackEntry.arguments?.getInt("resenaId") ?: 0
             val viewModel: ComentariosViewModel = hiltViewModel()
             LaunchedEffect(resenaId) { viewModel.cargarComentarios(resenaId) }
             ComentariosScreen(
@@ -348,7 +356,7 @@ fun AppNavegacion(
             route     = Screen.AlbumDetalle.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val albumId = backStackEntry.arguments?.getInt("albumId") ?: 0
+            val albumId   = backStackEntry.arguments?.getInt("albumId") ?: 0
             val viewModel: AlbumDetalleViewModel = hiltViewModel()
             LaunchedEffect(albumId) { viewModel.cargarAlbum(albumId) }
             AlbumDetalleScreen(
@@ -384,7 +392,7 @@ fun AppNavegacion(
             route     = Screen.GeneroDetalle.route,
             arguments = listOf(navArgument("generoId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val generoId = backStackEntry.arguments?.getInt("generoId") ?: 0
+            val generoId  = backStackEntry.arguments?.getInt("generoId") ?: 0
             val viewModel: GeneroDetalleViewModel = hiltViewModel()
             LaunchedEffect(generoId) { viewModel.cargarGenero(generoId) }
             GeneroDetalleScreen(
@@ -445,7 +453,7 @@ fun AppNavegacion(
             route     = Screen.Seguidores.route,
             arguments = listOf(navArgument("tipo") { type = NavType.StringType })
         ) { backStackEntry ->
-            val tipo = backStackEntry.arguments?.getString("tipo") ?: "seguidores"
+            val tipo      = backStackEntry.arguments?.getString("tipo") ?: "seguidores"
             val viewModel: SeguidoresViewModel = hiltViewModel()
             LaunchedEffect(tipo) { viewModel.cargar(tipo) }
             SeguidoresScreen(
