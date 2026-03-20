@@ -28,13 +28,14 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun cargarPerfil() {
-        // Leemos la foto guardada en FirebaseAuth (se actualiza con updateProfileImage)
-        // Si el usuario nunca subió foto, photoUrl es null y usamos la de PerfilData
         val urlDeFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
 
-        // Actualizamos PerfilData con la URL de FirebaseAuth para mantenerlo sincronizado
+        // Si es cuenta nueva, urlDeFirebaseAuth estará vacía y no pisamos nada
         if (urlDeFirebaseAuth.isNotBlank()) {
             PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = urlDeFirebaseAuth)
+        } else {
+            // ya no hay url residual de la sesion anterior
+            PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = "")
         }
 
         _uiState.update {
@@ -47,20 +48,18 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    // Llamado desde AppNavegacion al volver de EditarPerfil
     fun refrescarFotoPerfil() {
-        // Primero intenta leer de FirebaseAuth (fuente de verdad más confiable)
         val urlFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
         val urlFinal = urlFirebaseAuth.ifBlank { PerfilData.perfilActual.fotoPerfilUrl }
 
         _uiState.update { state ->
-            state.copy(
-                perfil = state.perfil?.copy(fotoPerfilUrl = urlFinal)
-            )
+            state.copy(perfil = state.perfil?.copy(fotoPerfilUrl = urlFinal))
         }
     }
 
     fun cerrarSesion() {
+        PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = "")
+
         authRepository.signOut()
         _uiState.update { it.copy(cerrarSesionExitoso = true) }
     }

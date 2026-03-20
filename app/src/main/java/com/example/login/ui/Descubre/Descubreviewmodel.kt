@@ -1,6 +1,7 @@
 package com.example.login.ui.Descubre
 
 import androidx.lifecycle.ViewModel
+import com.example.login.ui.Perfil.PerfilData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,8 +25,14 @@ class DescubreViewModel @Inject constructor(): ViewModel() {
                 categorias         = DescubreData.categorias,
                 generos            = DescubreData.generos,
                 nuevosLanzamientos = DescubreData.nuevosLanzamientos,
+                fotoPerfilUrl      = PerfilData.perfilActual.fotoPerfilUrl,
                 isLoading          = false
             )
         }
+    }
+
+    // Llamado desde AppNavegacion en ON_RESUME para reflejar cambios de foto
+    fun refrescarFotoPerfil() {
+        _uiState.update { it.copy(fotoPerfilUrl = PerfilData.perfilActual.fotoPerfilUrl) }
     }
 }

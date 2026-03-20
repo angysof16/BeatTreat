@@ -72,7 +72,7 @@ fun AppNavegacion(
 
             LaunchedEffect(state.loginExitoso) {
                 if (state.loginExitoso) {
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Perfil.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                     viewModel.resetLoginExitoso()
@@ -115,6 +115,18 @@ fun AppNavegacion(
         // ── 3. Home ──
         composable(Screen.Home.route) {
             val viewModel: HomeViewModel = hiltViewModel()
+
+            val lifecycle = it.lifecycle
+            DisposableEffect(lifecycle) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        viewModel.refrescarFotoPerfil()
+                    }
+                }
+                lifecycle.addObserver(observer)
+                onDispose { lifecycle.removeObserver(observer) }
+            }
+
             HomeScreen(
                 viewModel      = viewModel,
                 onAlbumClick   = { albumId ->
@@ -149,6 +161,18 @@ fun AppNavegacion(
         // ── 5. Descubre ──
         composable(Screen.Descubre.route) {
             val viewModel: DescubreViewModel = hiltViewModel()
+
+            val lifecycle = it.lifecycle
+            DisposableEffect(lifecycle) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        viewModel.refrescarFotoPerfil()
+                    }
+                }
+                lifecycle.addObserver(observer)
+                onDispose { lifecycle.removeObserver(observer) }
+            }
+
             DescubreScreen(
                 viewModel        = viewModel,
                 onCategoriaClick = { categoria ->
@@ -172,6 +196,18 @@ fun AppNavegacion(
         // ── 6. Grupos ──
         composable(Screen.Grupos.route) {
             val viewModel: GruposViewModel = hiltViewModel()
+
+            val lifecycle = it.lifecycle
+            DisposableEffect(lifecycle) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        viewModel.refrescarFotoPerfil()
+                    }
+                }
+                lifecycle.addObserver(observer)
+                onDispose { lifecycle.removeObserver(observer) }
+            }
+
             GruposScreen(
                 viewModel      = viewModel,
                 onGrupoClick   = { navController.navigate(Screen.Chat.route) },

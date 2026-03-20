@@ -1,6 +1,7 @@
 package com.example.login.ui.Home
 
 import androidx.lifecycle.ViewModel
+import com.example.login.ui.Perfil.PerfilData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,14 +22,20 @@ class HomeViewModel @Inject constructor(): ViewModel() {
     private fun cargarHome() {
         _uiState.update {
             it.copy(
-                artistas  = HomeData.artistas,
-                isLoading = false
+                artistas      = HomeData.artistas,
+                fotoPerfilUrl = PerfilData.perfilActual.fotoPerfilUrl,
+                isLoading     = false
             )
         }
     }
 
+    // Llamado desde AppNavegacion en ON_RESUME para reflejar cambios de foto
+    fun refrescarFotoPerfil() {
+        _uiState.update { it.copy(fotoPerfilUrl = PerfilData.perfilActual.fotoPerfilUrl) }
+    }
+
     fun onBannerChange(index: Int) {
-        val max = HomeData.banners.lastIndex
+        val max     = HomeData.banners.lastIndex
         val bounded = index.coerceIn(0, max)
         _uiState.update { it.copy(bannerActual = bounded) }
     }
