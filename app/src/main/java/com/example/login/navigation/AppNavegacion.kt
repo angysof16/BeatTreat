@@ -3,10 +3,13 @@ package com.example.login.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -241,6 +244,20 @@ fun AppNavegacion(
         // ── 11. Perfil ──
         composable(Screen.Perfil.route) {
             val viewModel: ProfileViewModel = hiltViewModel()
+
+            // FIX 1: Cada vez que esta pantalla vuelve a estar activa (ON_RESUME),
+            // se refresca la URL de la foto para reflejar cambios hechos en EditarPerfil
+            val lifecycle = it.lifecycle
+            DisposableEffect(lifecycle) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        viewModel.refrescarFotoPerfil()
+                    }
+                }
+                lifecycle.addObserver(observer)
+                onDispose { lifecycle.removeObserver(observer) }
+            }
+
             ProfileScreen(
                 viewModel              = viewModel,
                 onSearchClick          = {
@@ -267,7 +284,6 @@ fun AppNavegacion(
                 onResenaClick          = { resena ->
                     navController.navigate(Screen.Comentarios.createRoute(resena.id))
                 },
-                // ── Al cerrar sesión, volver al Login limpiando el back stack ──
                 onCerrarSesionClick    = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }

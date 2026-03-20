@@ -45,19 +45,22 @@ class EditarPerfilViewModel @Inject constructor(
             if (result.isSuccess) {
                 val nuevaUrl = result.getOrNull() ?: ""
 
-                // ── Guardamos la URL nueva en PerfilData (object singleton) ──
-                // Así cuando ProfileViewModel llame a refrescarFotoPerfil()
-                // leerá la URL actualizada y la mostrará en el perfil.
+                // Guarda la URL nueva en PerfilData
                 PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = nuevaUrl)
 
                 _uiState.update {
                     it.copy(fotoPerfilUrl = nuevaUrl, isUploadingPhoto = false)
                 }
             } else {
+
+                // en lugar de mostrar siempre el mismo texto genérico
+                val mensajeError = result.exceptionOrNull()?.message
+                    ?: "No se pudo subir la foto. Intenta de nuevo."
+
                 _uiState.update {
                     it.copy(
                         isUploadingPhoto = false,
-                        errorMessage     = "No se pudo subir la foto. Intenta de nuevo."
+                        errorMessage     = mensajeError
                     )
                 }
             }
