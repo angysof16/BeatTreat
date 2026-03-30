@@ -23,6 +23,9 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -96,6 +100,48 @@ fun HomeScreenContent(
         )
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
+            // Estado de carga
+            if (uiState.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier.fillParentMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = BeatTreatColors.Purple60)
+                    }
+                }
+                return@LazyColumn
+            }
+        
+            // Estado de error
+            uiState.errorMessage?.let { msg ->
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillParentMaxSize()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = msg,
+                            color = BeatTreatColors.Error,
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { /* llama a viewModel.cargarHome() via callback */ },
+                            colors  = ButtonDefaults.buttonColors(containerColor = BeatTreatColors.Purple60)
+                        ) {
+                            Text("Reintentar", color = Color.White)
+                        }
+                    }
+                }
+                return@LazyColumn
+            }
+        
+            // Banner (igual que antes)
             item {
                 Banner(
                     bannerIndex = uiState.bannerActual,
@@ -103,7 +149,8 @@ fun HomeScreenContent(
                     onNext      = { onBannerChange(uiState.bannerActual + 1) }
                 )
             }
-
+        
+            // Lista de artistas del backend
             items(uiState.artistas) { artista ->
                 ArtistaSection(
                     artista        = artista,
@@ -112,7 +159,7 @@ fun HomeScreenContent(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
-
+        
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
@@ -380,3 +427,5 @@ fun HomeScreenPreview() {
         )
     }
 }
+
+
