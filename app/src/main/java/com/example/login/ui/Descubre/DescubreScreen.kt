@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -44,8 +43,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.login.R
+import com.example.login.ui.components.FotoPerfilTopBar
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
@@ -91,7 +90,11 @@ fun DescubreScreenContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        TopBarDescubre(onSearchClick = onSearchClick, onProfileClick = onProfileClick)
+        TopBarDescubre(
+            fotoPerfilUrl  = uiState.fotoPerfilUrl,
+            onSearchClick  = onSearchClick,
+            onProfileClick = onProfileClick
+        )
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
@@ -109,7 +112,10 @@ fun DescubreScreenContent(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(uiState.categorias) { categoria ->
-                        CategoriaCard(categoria = categoria, onClick = { onCategoriaClick(categoria) })
+                        CategoriaCard(
+                            categoria = categoria,
+                            onClick   = { onCategoriaClick(categoria) }
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
@@ -138,13 +144,17 @@ fun DescubreScreenContent(
 // ── TopBar ──
 @Composable
 fun TopBarDescubre(
+    fotoPerfilUrl: String,
     onSearchClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier         = Modifier.size(80.dp).clip(RoundedCornerShape(bottomEnd = 12.dp)).background(Color(0xFF1A1A1A)),
+            modifier         = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(bottomEnd = 12.dp))
+                .background(Color(0xFF1A1A1A)),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -157,15 +167,38 @@ fun TopBarDescubre(
         Row(
             modifier = Modifier
                 .weight(1f)
-                .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(bottomStart = 12.dp))
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(bottomStart = 12.dp)
+                )
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "BeatTreat", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Normal, fontFamily = JaroFont, modifier = Modifier.weight(1f))
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                IconButton(onClick = onSearchClick)  { Icon(Icons.Filled.Search,        contentDescription = "Buscar", tint = Color.White, modifier = Modifier.size(28.dp)) }
-                IconButton(onClick = onProfileClick) { Icon(Icons.Filled.AccountCircle, contentDescription = "Perfil", tint = Color.White, modifier = Modifier.size(32.dp)) }
+            Text(
+                text       = "BeatTreat",
+                color      = Color.White,
+                fontSize   = 28.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = JaroFont,
+                modifier   = Modifier.weight(1f)
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment     = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onSearchClick) {
+                    Icon(
+                        Icons.Filled.Search,
+                        contentDescription = "Buscar",
+                        tint               = Color.White,
+                        modifier           = Modifier.size(28.dp)
+                    )
+                }
+                FotoPerfilTopBar(
+                    fotoPerfilUrl = fotoPerfilUrl,
+                    onClick       = onProfileClick
+                )
             }
         }
     }
@@ -183,11 +216,25 @@ fun CategoriaCard(
             .width(120.dp)
             .height(100.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Brush.verticalGradient(colors = listOf(Color(categoria.colorFondo), Color(categoria.colorFondo).copy(alpha = 0.7f))))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(categoria.colorFondo),
+                        Color(categoria.colorFondo).copy(alpha = 0.7f)
+                    )
+                )
+            )
             .clickable { onClick() },
         contentAlignment = Alignment.BottomStart
     ) {
-        Text(text = categoria.nombre, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium, lineHeight = 14.sp, modifier = Modifier.padding(12.dp))
+        Text(
+            text       = categoria.nombre,
+            color      = Color.White,
+            fontSize   = 12.sp,
+            fontWeight = FontWeight.Medium,
+            lineHeight = 14.sp,
+            modifier   = Modifier.padding(12.dp)
+        )
     }
 }
 
@@ -199,13 +246,23 @@ fun SectionHeader(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier              = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier              = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment     = Alignment.CenterVertically
     ) {
         Text(text = titulo, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onVerMasClick() }) {
-            Icon(Icons.Filled.ArrowForward, contentDescription = "Ver más", tint = Color.White, modifier = Modifier.size(20.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier          = Modifier.clickable { onVerMasClick() }
+        ) {
+            Icon(
+                Icons.Filled.ArrowForward,
+                contentDescription = "Ver más",
+                tint               = Color.White,
+                modifier           = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -217,11 +274,21 @@ fun GeneroGrid(
     onGeneroClick: (GeneroUI) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier             = modifier.padding(horizontal = 16.dp),
+        verticalArrangement  = Arrangement.spacedBy(8.dp)
+    ) {
         generos.chunked(2).forEach { rowGeneros ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 rowGeneros.forEach { genero ->
-                    GeneroChip(genero = genero, onClick = { onGeneroClick(genero) }, modifier = Modifier.weight(1f))
+                    GeneroChip(
+                        genero   = genero,
+                        onClick  = { onGeneroClick(genero) },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
                 if (rowGeneros.size == 1) Spacer(modifier = Modifier.weight(1f))
             }
@@ -237,12 +304,30 @@ fun GeneroChip(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier         = modifier.height(48.dp).clip(RoundedCornerShape(24.dp)).background(BeatTreatColors.SurfaceVariant).clickable { onClick() },
+        modifier         = modifier
+            .height(48.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(BeatTreatColors.SurfaceVariant)
+            .clickable { onClick() },
         contentAlignment = Alignment.CenterStart
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp)) {
-            Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(Color(genero.colorChip)))
-            Text(text = genero.nombre, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(horizontal = 12.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier          = Modifier.padding(start = 4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(16.dp)
+                    .clip(CircleShape)
+                    .background(Color(genero.colorChip))
+            )
+            Text(
+                text       = genero.nombre,
+                color      = Color.White,
+                fontSize   = 14.sp,
+                fontWeight = FontWeight.Medium,
+                modifier   = Modifier.padding(horizontal = 12.dp)
+            )
         }
     }
 }
@@ -263,11 +348,16 @@ fun AlbumCard(
                 contentScale       = ContentScale.Crop
             )
         } else {
-            Box(modifier = Modifier.size(140.dp).clip(RoundedCornerShape(12.dp)).background(BeatTreatColors.SurfaceVariant))
+            Box(
+                modifier = Modifier
+                    .size(140.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(BeatTreatColors.SurfaceVariant)
+            )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = album.nombre,   color = Color.White,                    fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
-        Text(text = album.artista,  color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp, maxLines = 1)
+        Text(text = album.nombre,  color = Color.White,                    fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+        Text(text = album.artista, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp, maxLines = 1)
     }
 }
 

@@ -1,6 +1,7 @@
 package com.example.login.ui.Grupos
 
 import androidx.lifecycle.ViewModel
+import com.example.login.ui.Perfil.PerfilData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,9 +22,15 @@ class GruposViewModel @Inject constructor(): ViewModel() {
     private fun cargarGrupos() {
         _uiState.update {
             it.copy(
-                grupos    = GrupoChatData.grupos,
-                isLoading = false
+                grupos        = GrupoChatData.grupos,
+                fotoPerfilUrl = PerfilData.perfilActual.fotoPerfilUrl,
+                isLoading     = false
             )
         }
+    }
+
+    // Llamado desde AppNavegacion en ON_RESUME para reflejar cambios de foto
+    fun refrescarFotoPerfil() {
+        _uiState.update { it.copy(fotoPerfilUrl = PerfilData.perfilActual.fotoPerfilUrl) }
     }
 }

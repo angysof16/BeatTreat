@@ -15,6 +15,8 @@ dagger = "2.56"
 googleKotlinKsp = "2.0.21-1.0.25"
 firebaseCrashlytics = "3.0.3"
 junitKtx = "1.2.1"
+uiText = "1.10.6"
+material3 = "1.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,6 +46,8 @@ firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-storage = { module = "com.google.firebase:firebase-storage" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

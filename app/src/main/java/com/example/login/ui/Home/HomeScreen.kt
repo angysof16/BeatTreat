@@ -16,12 +16,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,17 +42,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.login.R
+import com.example.login.ui.components.FotoPerfilTopBar
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
 val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
-// ── Stateful: obtiene el ViewModel y observa el UIState ──
+// ── Stateful ──
 @Composable
 fun HomeScreen(
     onAlbumClick: (Int) -> Unit = {},
@@ -71,7 +77,7 @@ fun HomeScreen(
     )
 }
 
-// ── Stateless: solo recibe UIState y emite eventos ──
+// ── Stateless ──
 @Composable
 fun HomeScreenContent(
     uiState: HomeUIState,
@@ -87,9 +93,55 @@ fun HomeScreenContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        TopBarHome(onSearchClick = onSearchClick, onProfileClick = onProfileClick)
+        TopBarHome(
+            fotoPerfilUrl  = uiState.fotoPerfilUrl,
+            onSearchClick  = onSearchClick,
+            onProfileClick = onProfileClick
+        )
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
+            // Estado de carga
+            if (uiState.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier.fillParentMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = BeatTreatColors.Purple60)
+                    }
+                }
+                return@LazyColumn
+            }
+        
+            // Estado de error
+            uiState.errorMessage?.let { msg ->
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillParentMaxSize()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = msg,
+                            color = BeatTreatColors.Error,
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { /* llama a viewModel.cargarHome() via callback */ },
+                            colors  = ButtonDefaults.buttonColors(containerColor = BeatTreatColors.Purple60)
+                        ) {
+                            Text("Reintentar", color = Color.White)
+                        }
+                    }
+                }
+                return@LazyColumn
+            }
+        
+            // Banner (igual que antes)
             item {
                 Banner(
                     bannerIndex = uiState.bannerActual,
@@ -97,7 +149,8 @@ fun HomeScreenContent(
                     onNext      = { onBannerChange(uiState.bannerActual + 1) }
                 )
             }
-
+        
+            // Lista de artistas del backend
             items(uiState.artistas) { artista ->
                 ArtistaSection(
                     artista        = artista,
@@ -106,7 +159,7 @@ fun HomeScreenContent(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
-
+        
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
@@ -115,6 +168,7 @@ fun HomeScreenContent(
 // ── TopBar ──
 @Composable
 fun TopBarHome(
+    fotoPerfilUrl: String,
     onSearchClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -137,9 +191,12 @@ fun TopBarHome(
         Row(
             modifier = Modifier
                 .weight(1f)
-                .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(bottomStart = 12.dp))
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(bottomStart = 12.dp)
+                )
                 .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalAlignment   = Alignment.CenterVertically,
+            verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
@@ -150,13 +207,23 @@ fun TopBarHome(
                 fontFamily = JaroFont,
                 modifier   = Modifier.weight(1f)
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment     = Alignment.CenterVertically
+            ) {
                 IconButton(onClick = onSearchClick) {
-                    Icon(Icons.Filled.Search, contentDescription = "Buscar", tint = Color.White, modifier = Modifier.size(28.dp))
+                    Icon(
+                        Icons.Filled.Search,
+                        contentDescription = "Buscar",
+                        tint               = Color.White,
+                        modifier           = Modifier.size(28.dp)
+                    )
                 }
-                IconButton(onClick = onProfileClick) {
-                    Icon(Icons.Filled.AccountCircle, contentDescription = "Perfil", tint = Color.White, modifier = Modifier.size(32.dp))
-                }
+                // Foto de perfil o ícono genérico si aún no hay foto
+                FotoPerfilTopBar(
+                    fotoPerfilUrl = fotoPerfilUrl,
+                    onClick       = onProfileClick
+                )
             }
         }
     }
@@ -182,8 +249,16 @@ fun Banner(
             modifier           = Modifier.fillMaxSize(),
             contentScale       = ContentScale.Crop
         )
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = "Tu mejor ritmo \n todos los días", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+        Box(
+            modifier         = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text       = "Tu mejor ritmo \n todos los días",
+                color      = Color.White,
+                fontSize   = 22.sp,
+                fontWeight = FontWeight.SemiBold
+            )
         }
         BannerControles(onPrevious = onPrevious, onNext = onNext)
         BannerIndicadores()
@@ -203,10 +278,18 @@ fun BannerControles(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = onPrevious) {
-            Image(painter = painterResource(R.drawable.flecha_izquierda), contentDescription = "Anterior", modifier = Modifier.size(28.dp))
+            Image(
+                painter            = painterResource(R.drawable.flecha_izquierda),
+                contentDescription = "Anterior",
+                modifier           = Modifier.size(28.dp)
+            )
         }
         IconButton(onClick = onNext) {
-            Image(painter = painterResource(R.drawable.flecha_derecha), contentDescription = "Siguiente", modifier = Modifier.size(28.dp))
+            Image(
+                painter            = painterResource(R.drawable.flecha_derecha),
+                contentDescription = "Siguiente",
+                modifier           = Modifier.size(28.dp)
+            )
         }
     }
 }
@@ -219,7 +302,11 @@ fun BannerIndicadores(modifier: Modifier = Modifier) {
         verticalArrangement   = Arrangement.Bottom,
         horizontalAlignment   = Alignment.CenterHorizontally
     ) {
-        Image(painter = painterResource(R.drawable.puntos), contentDescription = null, modifier = Modifier.size(40.dp))
+        Image(
+            painter            = painterResource(R.drawable.puntos),
+            contentDescription = null,
+            modifier           = Modifier.size(40.dp)
+        )
     }
 }
 
@@ -236,14 +323,32 @@ fun ArtistaSection(
             modifier          = Modifier.fillMaxWidth().clickable { onArtistaClick() },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
+            Icon(
+                Icons.Filled.AccountCircle,
+                contentDescription = null,
+                tint               = Color.White,
+                modifier           = Modifier.size(26.dp)
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = artista.nombre, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+            Text(
+                text       = artista.nombre,
+                color      = Color.White,
+                fontSize   = 20.sp,
+                fontWeight = FontWeight.Medium
+            )
             Spacer(modifier = Modifier.weight(1f))
-            Icon(Icons.Filled.ArrowForward, contentDescription = "Ver más", tint = Color.White, modifier = Modifier.size(20.dp))
+            Icon(
+                Icons.Filled.ArrowForward,
+                contentDescription = "Ver más",
+                tint               = Color.White,
+                modifier           = Modifier.size(20.dp)
+            )
         }
         Spacer(modifier = Modifier.height(12.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(30.dp)) {
+        Row(
+            modifier              = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(30.dp)
+        ) {
             artista.albumes.take(3).forEach { album ->
                 AlbumItem(album = album, onClick = { onAlbumClick(album.id) })
             }
@@ -290,9 +395,20 @@ fun AlbumItemFooter(
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = nombre, color = Color.White, fontSize = 14.sp, maxLines = 1, modifier = Modifier.weight(1f))
+        Text(
+            text     = nombre,
+            color    = Color.White,
+            fontSize = 14.sp,
+            maxLines = 1,
+            modifier = Modifier.weight(1f)
+        )
         IconButton(onClick = {}, modifier = Modifier.size(20.dp)) {
-            Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(14.dp))
+            Icon(
+                Icons.Filled.MoreVert,
+                contentDescription = "Opciones",
+                tint               = Color.White,
+                modifier           = Modifier.size(14.dp)
+            )
         }
     }
 }
@@ -311,3 +427,5 @@ fun HomeScreenPreview() {
         )
     }
 }
+
+

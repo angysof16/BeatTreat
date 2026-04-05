@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -43,7 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.login.R
-import com.example.login.ui.Grupos.GrupoChatUI
+import com.example.login.ui.components.FotoPerfilTopBar
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
@@ -83,17 +82,19 @@ fun GruposScreenContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // ── TopBar igual al resto de la app ──
-        TopBarGrupos(onSearchClick = onSearchClick, onProfileClick = onProfileClick)
+        TopBarGrupos(
+            fotoPerfilUrl  = uiState.fotoPerfilUrl,
+            onSearchClick  = onSearchClick,
+            onProfileClick = onProfileClick
+        )
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-
             item {
                 Row(
-                    modifier          = Modifier
+                    modifier              = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment     = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
@@ -110,7 +111,7 @@ fun GruposScreenContent(
                         )
                     }
                     Box(
-                        modifier = Modifier
+                        modifier         = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
                             .background(BeatTreatColors.SurfaceVariant),
@@ -136,9 +137,10 @@ fun GruposScreenContent(
     }
 }
 
-// ── TopBar consistente con el resto de la app ──
+// ── TopBar ──
 @Composable
 fun TopBarGrupos(
+    fotoPerfilUrl: String,
     onSearchClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -177,7 +179,10 @@ fun TopBarGrupos(
                 fontFamily = JaroFont,
                 modifier   = Modifier.weight(1f)
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment     = Alignment.CenterVertically
+            ) {
                 IconButton(onClick = onSearchClick) {
                     Icon(
                         Icons.Filled.Search,
@@ -186,14 +191,10 @@ fun TopBarGrupos(
                         modifier           = Modifier.size(28.dp)
                     )
                 }
-                IconButton(onClick = onProfileClick) {
-                    Icon(
-                        Icons.Filled.AccountCircle,
-                        contentDescription = "Perfil",
-                        tint               = Color.White,
-                        modifier           = Modifier.size(32.dp)
-                    )
-                }
+                FotoPerfilTopBar(
+                    fotoPerfilUrl = fotoPerfilUrl,
+                    onClick       = onProfileClick
+                )
             }
         }
     }
@@ -225,7 +226,6 @@ fun GrupoCard(
                 )
                 .align(Alignment.CenterStart)
         )
-
         Row(
             modifier          = Modifier
                 .fillMaxWidth()
@@ -250,9 +250,7 @@ fun GrupoCard(
                     fontWeight = FontWeight.Bold
                 )
             }
-
             Spacer(modifier = Modifier.width(14.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text       = grupo.nombre,
@@ -268,9 +266,7 @@ fun GrupoCard(
                     maxLines = 1
                 )
             }
-
             Spacer(modifier = Modifier.width(8.dp))
-
             Text(
                 text     = grupo.hora,
                 color    = Color.White.copy(alpha = 0.4f),

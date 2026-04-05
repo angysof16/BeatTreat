@@ -26,7 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import com.example.login.R
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
@@ -43,8 +45,6 @@ fun EditarPerfilScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // ── Launcher de galería ──────────────────────────────────────────────────
-    // Cuando el usuario elige una imagen se llama subirFotoPerfil() en el VM
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -65,7 +65,6 @@ fun EditarPerfilScreen(
         onUsuarioChange    = { viewModel.onUsuarioChange(it) },
         onBioChange        = { viewModel.onBioChange(it) },
         onGuardarClick     = { viewModel.guardar() },
-        // Al tocar la foto o el botón de cámara se abre la galería
         onCambiarFotoClick = { galleryLauncher.launch("image/*") },
         modifier           = modifier
     )
@@ -83,17 +82,23 @@ fun EditarPerfilScreenContent(
     onCambiarFotoClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         TopBarEditarPerfil(onBackClick = onBackClick, onGuardarClick = onGuardarClick)
 
         Column(
-            modifier            = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+            modifier            = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ── Avatar con botón de cámara ──────────────────────────────────
-            // Toda el área del avatar es clickable para abrir la galería
+            // ── Avatar ──
             Box(contentAlignment = Alignment.BottomEnd) {
                 Box(
                     modifier         = Modifier
@@ -102,29 +107,50 @@ fun EditarPerfilScreenContent(
                         .background(BeatTreatColors.SurfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Si hay URL muestra la foto con Coil, si no el ícono genérico
                     if (uiState.fotoPerfilUrl.isNotBlank()) {
-                        AsyncImage(
+                        // Hay URL: carga con Coil, sin drawable de placeholder
+                        SubcomposeAsyncImage(
                             model              = uiState.fotoPerfilUrl,
                             contentDescription = "Foto de perfil",
                             modifier           = Modifier.fillMaxSize(),
-                            contentScale       = ContentScale.Crop,
-                            error              = painterResource(R.drawable.foto_perfil),
-                            placeholder        = painterResource(R.drawable.foto_perfil)
-                        )
+                            contentScale       = ContentScale.Crop
+                        ) {
+                            when (painter.state) {
+                                is AsyncImagePainter.State.Loading -> {
+                                    CircularProgressIndicator(
+                                        color       = BeatTreatColors.Purple60,
+                                        modifier    = Modifier.size(36.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                                is AsyncImagePainter.State.Error -> {
+                                    // Fallo de red: ícono genérico, sin drawable hardcodeado
+                                    Icon(
+                                        imageVector        = Icons.Filled.AccountCircle,
+                                        contentDescription = null,
+                                        tint               = Color.White.copy(alpha = 0.6f),
+                                        modifier           = Modifier.size(90.dp)
+                                    )
+                                }
+                                else -> SubcomposeAsyncImageContent()
+                            }
+                        }
                     } else {
+                        // Sin URL: ícono genérico, sin drawable hardcodeado
                         Icon(
-                            Icons.Filled.AccountCircle,
+                            imageVector        = Icons.Filled.AccountCircle,
                             contentDescription = null,
-                            tint               = Color.White,
+                            tint               = Color.White.copy(alpha = 0.6f),
                             modifier           = Modifier.size(90.dp)
                         )
                     }
 
-                    // Overlay de carga mientras se sube la foto
+                    // Overlay de subida
                     if (uiState.isUploadingPhoto) {
                         Box(
-                            modifier         = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)),
+                            modifier         = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.55f)),
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
@@ -136,7 +162,7 @@ fun EditarPerfilScreenContent(
                     }
                 }
 
-                // Botón cámara en la esquina — abre galería
+                // Botón cámara
                 Box(
                     modifier         = Modifier
                         .size(30.dp)
@@ -160,15 +186,16 @@ fun EditarPerfilScreenContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Texto "Cambiar foto" también es clickable
             Text(
                 text     = if (uiState.isUploadingPhoto) "Subiendo foto..." else "Cambiar foto de perfil",
                 color    = BeatTreatColors.Purple60,
                 fontSize = 14.sp,
-                modifier = if (!uiState.isUploadingPhoto) Modifier.clickableIfEnabled(onCambiarFotoClick) else Modifier
+                modifier = if (!uiState.isUploadingPhoto)
+                    Modifier.clickable { onCambiarFotoClick() }
+                else
+                    Modifier
             )
 
-            // Mensaje de error si falla la subida
             uiState.errorMessage?.let { msg ->
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(text = msg, color = BeatTreatColors.Error, fontSize = 12.sp)
@@ -176,23 +203,52 @@ fun EditarPerfilScreenContent(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ── Campos de texto ──
-            CampoEditable(label = "Nombre",  valor = uiState.nombre,  onValueChange = onNombreChange,  icono = Icons.Filled.Person)
+            CampoEditable(
+                label         = "Nombre",
+                valor         = uiState.nombre,
+                onValueChange = onNombreChange,
+                icono         = Icons.Filled.Person
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            CampoEditable(label = "Usuario", valor = uiState.usuario, onValueChange = onUsuarioChange, icono = Icons.Filled.AlternateEmail, prefijo = "@")
+            CampoEditable(
+                label         = "Usuario",
+                valor         = uiState.usuario,
+                onValueChange = onUsuarioChange,
+                icono         = Icons.Filled.AlternateEmail,
+                prefijo       = "@"
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(text = "Biografía", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp))
-            Card(colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text       = "Biografía",
+                color      = Color.White.copy(alpha = 0.7f),
+                fontSize   = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier   = Modifier.fillMaxWidth().padding(bottom = 6.dp)
+            )
+            Card(
+                colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+                shape    = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 TextField(
-                    value = uiState.bio, onValueChange = onBioChange,
-                    placeholder = { Text("Cuéntale algo a la comunidad...", color = Color.White.copy(alpha = 0.35f)) },
+                    value         = uiState.bio,
+                    onValueChange = onBioChange,
+                    placeholder   = {
+                        Text(
+                            "Cuéntale algo a la comunidad...",
+                            color = Color.White.copy(alpha = 0.35f)
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth().height(120.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
-                        focusedTextColor = Color.White, unfocusedTextColor = Color.White, cursorColor = BeatTreatColors.Purple60
+                    colors   = TextFieldDefaults.colors(
+                        focusedContainerColor   = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor   = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor        = Color.White,
+                        unfocusedTextColor      = Color.White,
+                        cursorColor             = BeatTreatColors.Purple60
                     ),
                     maxLines = 5
                 )
@@ -213,9 +269,8 @@ fun EditarPerfilScreenContent(
     }
 }
 
-// Extensión helper para hacer un Modifier clickable condicionalmente
 private fun Modifier.clickableIfEnabled(onClick: () -> Unit): Modifier =
-    this.then(Modifier.clickable{ onClick() })
+    this.then(Modifier.clickable { onClick() })
 
 // ── TopBar ──
 @Composable
@@ -226,7 +281,10 @@ fun TopBarEditarPerfil(
 ) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier         = Modifier.size(80.dp).clip(RoundedCornerShape(bottomEnd = 12.dp)).background(Color(0xFF1A1A1A)),
+            modifier         = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(bottomEnd = 12.dp))
+                .background(Color(0xFF1A1A1A)),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -239,16 +297,30 @@ fun TopBarEditarPerfil(
         Row(
             modifier = Modifier
                 .weight(1f)
-                .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(bottomStart = 12.dp))
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(bottomStart = 12.dp)
+                )
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             IconButton(onClick = onBackClick) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(26.dp))
+                Icon(
+                    Icons.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint               = Color.White,
+                    modifier           = Modifier.size(26.dp)
+                )
             }
-            Text(text = "BeatTreat", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Normal, fontFamily = JaroFont,
-                modifier = Modifier.weight(1f).padding(start = 4.dp))
+            Text(
+                text       = "BeatTreat",
+                color      = Color.White,
+                fontSize   = 28.sp,
+                fontWeight = FontWeight.Normal,
+                fontFamily = JaroFont,
+                modifier   = Modifier.weight(1f).padding(start = 4.dp)
+            )
             TextButton(onClick = onGuardarClick) {
                 Text("Guardar", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
@@ -267,18 +339,38 @@ fun CampoEditable(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(text = label, color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 6.dp))
-        Card(colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant), shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text       = label,
+            color      = Color.White.copy(alpha = 0.7f),
+            fontSize   = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier   = Modifier.padding(bottom = 6.dp)
+        )
+        Card(
+            colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+            shape    = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
             TextField(
-                value = valor, onValueChange = onValueChange, modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = Color.White, unfocusedTextColor = Color.White, cursorColor = BeatTreatColors.Purple60
+                value         = valor,
+                onValueChange = onValueChange,
+                modifier      = Modifier.fillMaxWidth(),
+                colors        = TextFieldDefaults.colors(
+                    focusedContainerColor   = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor   = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedTextColor        = Color.White,
+                    unfocusedTextColor      = Color.White,
+                    cursorColor             = BeatTreatColors.Purple60
                 ),
                 singleLine  = true,
-                leadingIcon = { Icon(icono, contentDescription = null, tint = Color.White.copy(alpha = 0.5f)) },
-                prefix      = if (prefijo.isNotEmpty()) { { Text(prefijo, color = Color.White.copy(alpha = 0.5f)) } } else null
+                leadingIcon = {
+                    Icon(icono, contentDescription = null, tint = Color.White.copy(alpha = 0.5f))
+                },
+                prefix = if (prefijo.isNotEmpty()) {
+                    { Text(prefijo, color = Color.White.copy(alpha = 0.5f)) }
+                } else null
             )
         }
     }

@@ -65,10 +65,12 @@ dependencies {
 
     // Hilt
     implementation(libs.dagger.hilt)
+    implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.material3)
     ksp(libs.dagger.kapt)
     implementation(libs.hilt.compose.navigation)
 
-    // Firebase (versiones manejadas por el BoM)
+    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
@@ -76,6 +78,13 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
+
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
 
     // Tests
     testImplementation(libs.junit)

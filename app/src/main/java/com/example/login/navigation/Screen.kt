@@ -2,7 +2,7 @@ package com.example.login.navigation
 
 sealed class Screen(val route: String) {
 
-    // ── Pantallas sin argumentos ──
+    // ── Pantallas sin argumentos ──────────────────────────────────────────────
     object Login          : Screen("login")
     object Registro       : Screen("registro")
     object Home           : Screen("home")
@@ -16,7 +16,7 @@ sealed class Screen(val route: String) {
     object CrearPlaylist  : Screen("crear_playlist")
     object EditarPerfil   : Screen("editar_perfil")
 
-    // ── Pantallas con argumentos ──
+    // ── Pantallas con argumentos ──────────────────────────────────────────────
 
     object Resena : Screen("resena/{albumId}") {
         fun createRoute(albumId: Int) = "resena/$albumId"
@@ -52,5 +52,14 @@ sealed class Screen(val route: String) {
 
     object ResenasUsuario : Screen("resenas_usuario/{usuarioId}") {
         fun createRoute(usuarioId: Int) = "resenas_usuario/$usuarioId"
+    }
+
+    /**
+     * Pantalla de perfil de OTRO usuario.
+     * Recibe el userId del backend (Int).
+     * Ejemplo: "perfil_usuario/2"
+     */
+    object PerfilOtroUsuario : Screen("perfil_usuario/{userId}") {
+        fun createRoute(userId: Int) = "perfil_usuario/$userId"
     }
 }
