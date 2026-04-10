@@ -32,18 +32,18 @@ interface BeatTreatApiService {
 
     // ── CRUD Reviews ─────────────────────────────────────────────────────────
 
-    /** POST /reviews  → crea una nueva reseña */
+    /** POST /reviews */
     @POST("reviews")
     suspend fun createReview(@Body body: CreateReviewDTO): ReviewDto
 
-    /** PUT /reviews/:id  → edita rating y content de una reseña existente */
+    /** PUT /reviews/:id */
     @PUT("reviews/{id}")
     suspend fun updateReview(
         @Path("id") reviewId: Int,
         @Body body: UpdateReviewDTO
     ): ReviewDto
 
-    /** DELETE /reviews/:id  → elimina la reseña */
+    /** DELETE /reviews/:id */
     @DELETE("reviews/{id}")
     suspend fun deleteReview(@Path("id") reviewId: Int)
 }
