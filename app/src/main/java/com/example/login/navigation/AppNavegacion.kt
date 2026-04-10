@@ -43,6 +43,8 @@ import com.example.login.ui.Login.LoginScreen
 import com.example.login.ui.Login.LoginViewModel
 import com.example.login.ui.Perfil.ProfileScreen
 import com.example.login.ui.Perfil.ProfileViewModel
+import com.example.login.ui.PerfilOtroUsuario.PerfilOtroUsuarioScreen
+import com.example.login.ui.PerfilOtroUsuario.PerfilOtroUsuarioViewModel
 import com.example.login.ui.PlaylistDetalle.PlaylistDetalleScreen
 import com.example.login.ui.PlaylistDetalle.PlaylistDetalleViewModel
 import com.example.login.ui.Registro.RegistroScreen
@@ -53,14 +55,13 @@ import com.example.login.ui.Seguidores.SeguidoresScreen
 import com.example.login.ui.Seguidores.SeguidoresViewModel
 import androidx.compose.runtime.getValue
 import com.google.firebase.auth.FirebaseAuth
+import com.example.login.ui.MiPerfil.MiPerfilScreen
 
 @Composable
 fun AppNavegacion(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    // Si Firebase ya tiene sesión activa, arranca en Perfil directamente.
-    // Si no, arranca en Login como siempre.
     val startDestination = if (FirebaseAuth.getInstance().currentUser != null) {
         Screen.Perfil.route
     } else {
@@ -73,14 +74,13 @@ fun AppNavegacion(
         modifier         = modifier
     ) {
 
-        // ── 1. Login ──
+        // ── 1. Login ──────────────────────────────────────────────────────────
         composable(Screen.Login.route) {
             val viewModel: LoginViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
 
             LaunchedEffect(state.loginExitoso) {
                 if (state.loginExitoso) {
-                    // FIX: va a Perfil, no a Home
                     navController.navigate(Screen.Perfil.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -99,14 +99,13 @@ fun AppNavegacion(
             )
         }
 
-        // ── 2. Registro ──
+        // ── 2. Registro ───────────────────────────────────────────────────────
         composable(Screen.Registro.route) {
             val viewModel: RegistroViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
 
             LaunchedEffect(state.registroExitoso) {
                 if (state.registroExitoso) {
-                    // FIX: va a Perfil, no a Home
                     navController.navigate(Screen.Perfil.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -122,16 +121,14 @@ fun AppNavegacion(
             )
         }
 
-        // ── 3. Home ──
+        // ── 3. Home ───────────────────────────────────────────────────────────
         composable(Screen.Home.route) {
             val viewModel: HomeViewModel = hiltViewModel()
 
             val lifecycle = it.lifecycle
             DisposableEffect(lifecycle) {
                 val observer = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_RESUME) {
-                        viewModel.refrescarFotoPerfil()
-                    }
+                    if (event == Lifecycle.Event.ON_RESUME) viewModel.refrescarFotoPerfil()
                 }
                 lifecycle.addObserver(observer)
                 onDispose { lifecycle.removeObserver(observer) }
@@ -145,16 +142,12 @@ fun AppNavegacion(
                 onArtistaClick = { artistaId ->
                     navController.navigate(Screen.ArtistaDetalle.createRoute(artistaId))
                 },
-                onSearchClick  = {
-                    navController.navigate(Screen.Buscar.route)
-                },
-                onProfileClick = {
-                    navController.navigate(Screen.Perfil.route)
-                }
+                onSearchClick  = { navController.navigate(Screen.Buscar.route) },
+                onProfileClick = { navController.navigate(Screen.Perfil.route) }
             )
         }
 
-        // ── 4. Biblioteca ──
+        // ── 4. Biblioteca ─────────────────────────────────────────────────────
         composable(Screen.Biblioteca.route) {
             val viewModel: BibliotecaViewModel = hiltViewModel()
             BibliotecaScreen(
@@ -162,22 +155,18 @@ fun AppNavegacion(
                 onPlaylistClick      = { playlist ->
                     navController.navigate(Screen.PlaylistDetalle.createRoute(playlist.id))
                 },
-                onCrearPlaylistClick = {
-                    navController.navigate(Screen.CrearPlaylist.route)
-                }
+                onCrearPlaylistClick = { navController.navigate(Screen.CrearPlaylist.route) }
             )
         }
 
-        // ── 5. Descubre ──
+        // ── 5. Descubre ───────────────────────────────────────────────────────
         composable(Screen.Descubre.route) {
             val viewModel: DescubreViewModel = hiltViewModel()
 
             val lifecycle = it.lifecycle
             DisposableEffect(lifecycle) {
                 val observer = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_RESUME) {
-                        viewModel.refrescarFotoPerfil()
-                    }
+                    if (event == Lifecycle.Event.ON_RESUME) viewModel.refrescarFotoPerfil()
                 }
                 lifecycle.addObserver(observer)
                 onDispose { lifecycle.removeObserver(observer) }
@@ -194,25 +183,19 @@ fun AppNavegacion(
                 onAlbumClick     = { album ->
                     navController.navigate(Screen.AlbumDetalle.createRoute(album.id + 100))
                 },
-                onSearchClick    = {
-                    navController.navigate(Screen.Buscar.route)
-                },
-                onProfileClick   = {
-                    navController.navigate(Screen.Perfil.route)
-                }
+                onSearchClick    = { navController.navigate(Screen.Buscar.route) },
+                onProfileClick   = { navController.navigate(Screen.Perfil.route) }
             )
         }
 
-        // ── 6. Grupos ──
+        // ── 6. Grupos ─────────────────────────────────────────────────────────
         composable(Screen.Grupos.route) {
             val viewModel: GruposViewModel = hiltViewModel()
 
             val lifecycle = it.lifecycle
             DisposableEffect(lifecycle) {
                 val observer = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_RESUME) {
-                        viewModel.refrescarFotoPerfil()
-                    }
+                    if (event == Lifecycle.Event.ON_RESUME) viewModel.refrescarFotoPerfil()
                 }
                 lifecycle.addObserver(observer)
                 onDispose { lifecycle.removeObserver(observer) }
@@ -226,7 +209,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 7. Chat ──
+        // ── 7. Chat ───────────────────────────────────────────────────────────
         composable(Screen.Chat.route) {
             val viewModel: ChatViewModel = hiltViewModel()
             ChatScreen(
@@ -236,7 +219,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 8. Buscar ──
+        // ── 8. Buscar ─────────────────────────────────────────────────────────
         composable(Screen.Buscar.route) {
             val viewModel: BuscarViewModel = hiltViewModel()
             BuscarScreen(
@@ -251,7 +234,9 @@ fun AppNavegacion(
             )
         }
 
-        // ── 9. Reseñas ──
+        // ── 9. Reseñas ────────────────────────────────────────────────────────
+        // NOTA para Persona 4: aquí se pasa onAutorClick para navegar al perfil
+        // del autor de una reseña. El userId viene del autor de la reseña.
         composable(
             route     = Screen.Resena.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType })
@@ -266,11 +251,19 @@ fun AppNavegacion(
                 onResenaClick         = { resena ->
                     navController.navigate(Screen.Comentarios.createRoute(resena.id))
                 },
+                // Navega al perfil del autor.
+                // IMPORTANTE: el autorId debe ser el ID del backend.
+                // Como los datos locales no tienen userId del backend,
+                // usamos userId=2 como ejemplo hasta que Persona 2 provea el dato real.
+                // Cuando los reviews vengan del backend, reemplaza por resena.autorUserId.
+                onAutorClick          = { autorUserId ->
+                    navController.navigate(Screen.PerfilOtroUsuario.createRoute(autorUserId))
+                },
                 onEscribirResenaClick = { navController.navigate(Screen.EscribirResena.route) }
             )
         }
 
-        // ── 10. Escribir Reseña ──
+        // ── 10. Escribir Reseña ───────────────────────────────────────────────
         composable(Screen.EscribirResena.route) {
             val viewModel: EscribirResenaViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
@@ -287,16 +280,21 @@ fun AppNavegacion(
             )
         }
 
-        // ── 11. Perfil ──
+        composable(Screen.MiPerfil.route) {
+            MiPerfilScreen(
+                onAlbumClick = { albumId ->
+                    navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
+                }
+            )
+        }
+        // ── 11. Perfil propio ─────────────────────────────────────────────────
         composable(Screen.Perfil.route) {
             val viewModel: ProfileViewModel = hiltViewModel()
 
             val lifecycle = it.lifecycle
             DisposableEffect(lifecycle) {
                 val observer = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_RESUME) {
-                        viewModel.refrescarFotoPerfil()
-                    }
+                    if (event == Lifecycle.Event.ON_RESUME) viewModel.refrescarFotoPerfil()
                 }
                 lifecycle.addObserver(observer)
                 onDispose { lifecycle.removeObserver(observer) }
@@ -304,26 +302,20 @@ fun AppNavegacion(
 
             ProfileScreen(
                 viewModel              = viewModel,
-                onSearchClick          = {
-                    navController.navigate(Screen.Buscar.route)
-                },
-                onEditProfileClick     = {
-                    navController.navigate(Screen.EditarPerfil.route)
-                },
+                onSearchClick          = { navController.navigate(Screen.Buscar.route) },
+                onEditProfileClick     = { navController.navigate(Screen.EditarPerfil.route) },
                 onSiguiendoClick       = {
                     navController.navigate(Screen.Seguidores.createRoute("siguiendo"))
                 },
                 onSeguidoresClick      = {
                     navController.navigate(Screen.Seguidores.createRoute("seguidores"))
                 },
-                onMessageClick         = {
-                    navController.navigate(Screen.Chat.route)
-                },
+                onMessageClick         = { navController.navigate(Screen.Chat.route) },
                 onAlbumClick           = { albumId ->
                     navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
                 },
                 onVerTodasResenasClick = {
-                    navController.navigate(Screen.Resena.createRoute(7))
+                    navController.navigate(Screen.MiPerfil.route)
                 },
                 onResenaClick          = { resena ->
                     navController.navigate(Screen.Comentarios.createRoute(resena.id))
@@ -336,7 +328,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 12. Comentarios ──
+        // ── 12. Comentarios ───────────────────────────────────────────────────
         composable(
             route     = Screen.Comentarios.route,
             arguments = listOf(navArgument("resenaId") { type = NavType.IntType })
@@ -351,7 +343,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 13. Detalle de Álbum ──
+        // ── 13. Detalle de Álbum ──────────────────────────────────────────────
         composable(
             route     = Screen.AlbumDetalle.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType })
@@ -369,7 +361,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 14. Detalle de Artista ──
+        // ── 14. Detalle de Artista ────────────────────────────────────────────
         composable(
             route     = Screen.ArtistaDetalle.route,
             arguments = listOf(navArgument("artistaId") { type = NavType.IntType })
@@ -387,7 +379,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 15. Detalle de Género ──
+        // ── 15. Detalle de Género ─────────────────────────────────────────────
         composable(
             route     = Screen.GeneroDetalle.route,
             arguments = listOf(navArgument("generoId") { type = NavType.IntType })
@@ -405,7 +397,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 16. Detalle de Categoría ──
+        // ── 16. Detalle de Categoría ──────────────────────────────────────────
         composable(
             route     = Screen.CategoriaDetalle.route,
             arguments = listOf(navArgument("categoriaId") { type = NavType.IntType })
@@ -423,7 +415,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 17. Detalle de Playlist ──
+        // ── 17. Detalle de Playlist ───────────────────────────────────────────
         composable(
             route     = Screen.PlaylistDetalle.route,
             arguments = listOf(navArgument("playlistId") { type = NavType.IntType })
@@ -438,7 +430,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 18. Editar Perfil ──
+        // ── 18. Editar Perfil ─────────────────────────────────────────────────
         composable(Screen.EditarPerfil.route) {
             val viewModel: EditarPerfilViewModel = hiltViewModel()
             EditarPerfilScreen(
@@ -448,7 +440,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 19. Seguidores / Siguiendo ──
+        // ── 19. Seguidores / Siguiendo ────────────────────────────────────────
         composable(
             route     = Screen.Seguidores.route,
             arguments = listOf(navArgument("tipo") { type = NavType.StringType })
@@ -463,7 +455,7 @@ fun AppNavegacion(
             )
         }
 
-        // ── 20. Crear Playlist ──
+        // ── 20. Crear Playlist ────────────────────────────────────────────────
         composable(Screen.CrearPlaylist.route) {
             androidx.compose.foundation.layout.Box(
                 modifier         = Modifier
@@ -476,6 +468,22 @@ fun AppNavegacion(
                     color = androidx.compose.ui.graphics.Color.White
                 )
             }
+        }
+
+        // ── 21. Perfil de OTRO usuario ────────────────────────────────────────
+        // Persona 4: pantalla nueva, accesible desde ResenaScreen y ComentariosScreen
+        composable(
+            route     = Screen.PerfilOtroUsuario.route,
+            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val userId    = backStackEntry.arguments?.getInt("userId") ?: 0
+            val viewModel: PerfilOtroUsuarioViewModel = hiltViewModel()
+            LaunchedEffect(userId) { viewModel.cargarPerfil(userId) }
+            PerfilOtroUsuarioScreen(
+                viewModel   = viewModel,
+                userId      = userId,
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Favorite
@@ -31,6 +32,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,10 +50,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.login.ui.Resena.ResenaDetalladaUI
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
@@ -115,6 +118,7 @@ fun AlbumDetalleScreenContent(
                 onClick      = onVerResenasClick
             )
         }
+
         // ── Lista de canciones ──
         item {
             Spacer(modifier = Modifier.height(20.dp))
@@ -129,8 +133,138 @@ fun AlbumDetalleScreenContent(
         }
         items(album.canciones.size) { index ->
             CancionItem(
-                cancion    = album.canciones[index],
-                esUltima   = index == album.canciones.lastIndex
+                cancion  = album.canciones[index],
+                esUltima = index == album.canciones.lastIndex
+            )
+        }
+
+        // ── Sección de reseñas ──
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text       = "Reseñas",
+                color      = Color.White,
+                fontSize   = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier   = Modifier.padding(horizontal = 20.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        if (uiState.resenasLoading) {
+            item {
+                Box(
+                    modifier         = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = BeatTreatColors.Purple60)
+                }
+            }
+        }
+
+        if (!uiState.resenasLoading && uiState.resenas.isEmpty()) {
+            item {
+                Box(
+                    modifier         = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text  = "Aún no hay reseñas para este álbum",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+
+        items(uiState.resenas.size) { index ->
+            ResenaItem(resena = uiState.resenas[index])
+        }
+    }
+}
+
+// ── Card de una reseña dentro del detalle ──
+@Composable
+fun ResenaItem(
+    resena: ResenaDetalladaUI,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+        shape  = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector        = Icons.Filled.AccountCircle,
+                        contentDescription = resena.autorNombre,
+                        tint               = Color.White,
+                        modifier           = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text       = resena.autorNombre,
+                            color      = Color.White,
+                            fontSize   = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text     = resena.autorUsuario,
+                            color    = Color.White.copy(alpha = 0.5f),
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+                Text(
+                    text     = resena.fecha,
+                    color    = Color.White.copy(alpha = 0.5f),
+                    fontSize = 11.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                repeat(5) { index ->
+                    val icono = when {
+                        index < resena.calificacion.toInt()                              -> Icons.Filled.Star
+                        index == resena.calificacion.toInt() && (resena.calificacion - resena.calificacion.toInt()) >= 0.5f -> Icons.Filled.StarHalf
+                        else -> Icons.Filled.StarBorder
+                    }
+                    Icon(
+                        imageVector        = icono,
+                        contentDescription = null,
+                        tint               = if (index < resena.calificacion.toInt()) Color(0xFFFFC107) else Color.Gray,
+                        modifier           = Modifier.size(16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text     = resena.calificacion.toString(),
+                    color    = Color.White,
+                    fontSize = 12.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text       = resena.texto,
+                color      = Color.White.copy(alpha = 0.85f),
+                fontSize   = 13.sp,
+                lineHeight = 18.sp,
+                maxLines   = 4,
+                overflow   = TextOverflow.Ellipsis
             )
         }
     }
@@ -150,7 +284,6 @@ fun CancionItem(
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Número de canción
             Box(
                 modifier         = Modifier
                     .size(32.dp)
@@ -159,14 +292,13 @@ fun CancionItem(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text      = cancion.numero.toString(),
-                    color     = Color.White.copy(alpha = 0.7f),
-                    fontSize  = 12.sp,
+                    text       = cancion.numero.toString(),
+                    color      = Color.White.copy(alpha = 0.7f),
+                    fontSize   = 12.sp,
                     fontWeight = FontWeight.Medium
                 )
             }
             Spacer(modifier = Modifier.width(14.dp))
-            // Título
             Text(
                 text       = cancion.titulo,
                 color      = Color.White,
@@ -174,7 +306,6 @@ fun CancionItem(
                 fontWeight = FontWeight.Normal,
                 modifier   = Modifier.weight(1f)
             )
-            // Duración
             Text(
                 text     = cancion.duracion,
                 color    = Color.White.copy(alpha = 0.5f),
@@ -227,9 +358,9 @@ fun AlbumPortadaHeader(
             modifier = Modifier.fillMaxSize().background(
                 Brush.verticalGradient(
                     colorStops = arrayOf(
-                        0.0f to Color.Black.copy(alpha = 0.4f),
+                        0.0f  to Color.Black.copy(alpha = 0.4f),
                         0.55f to Color.Transparent,
-                        1.0f to Color(0xFF121212)
+                        1.0f  to Color(0xFF121212)
                     )
                 )
             )
@@ -278,9 +409,9 @@ fun AlbumPortadaHeader(
 @Composable
 fun AlbumInfoSection(album: AlbumDetalleUI, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
-        Text(text = album.nombre,  color = Color.White,               fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 30.sp)
+        Text(text = album.nombre,  color = Color.White,              fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 30.sp)
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = album.artista, color = BeatTreatColors.Purple60,  fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        Text(text = album.artista, color = BeatTreatColors.Purple60, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         Spacer(modifier = Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ChipInfo(texto = album.año)
@@ -319,7 +450,7 @@ fun AlbumCalificacionRow(calificacion: Float, totalResenas: Int, modifier: Modif
         ) {
             Column {
                 Text(text = calificacion.toString(), color = Color.White, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
-                Text(text = "$totalResenas reseñas", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
+                Text(text = "$totalResenas reseñas",  color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
             }
             EstrellasCalificacion(calificacion = calificacion)
         }
@@ -366,8 +497,8 @@ fun BotonVerResenas(totalResenas: Int, calificacion: Float, onClick: () -> Unit,
             Icon(Icons.Filled.ChatBubbleOutline, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text(text = "Ver reseñas",                        color = Color.White,                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                Text(text = "$totalResenas opiniones de usuarios", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+                Text(text = "Ver reseñas",                         color = Color.White,                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(text = "$totalResenas opiniones de usuarios",  color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
             }
         }
         Box(

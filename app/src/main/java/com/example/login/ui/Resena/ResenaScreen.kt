@@ -3,39 +3,15 @@ package com.example.login.ui.Resena
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,13 +30,21 @@ import com.example.login.ui.theme.BeatTreatTheme
 
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
-// ── Stateful ──
+// ── Stateful ──────────────────────────────────────────────────────────────────
 @Composable
 fun ResenaScreen(
     albumId: Int,
     onBackClick: () -> Unit = {},
     onResenaClick: (ResenaDetalladaUI) -> Unit = {},
     onEscribirResenaClick: () -> Unit = {},
+    /**
+     * Callback de Persona 4: navega al perfil del autor de una reseña.
+     * Recibe el userId del backend del autor.
+     * Cuando los datos vengan del backend (Persona 2), usa resena.autorUserId.
+     * Por ahora los datos locales tienen autorNombre pero no userId del backend,
+     * por eso se pasa un valor fijo de ejemplo (2) para usuarios distintos al actual.
+     */
+    onAutorClick: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ResenaViewModel
 ) {
@@ -76,11 +60,12 @@ fun ResenaScreen(
         onResenaClick         = onResenaClick,
         onLikeClick           = { viewModel.toggleLikeResena(it) },
         onEscribirResenaClick = onEscribirResenaClick,
+        onAutorClick          = onAutorClick,
         modifier              = modifier
     )
 }
 
-// ── Stateless ──
+// ── Stateless ─────────────────────────────────────────────────────────────────
 @Composable
 fun ResenaScreenContent(
     uiState: ResenaUIState,
@@ -88,6 +73,7 @@ fun ResenaScreenContent(
     onResenaClick: (ResenaDetalladaUI) -> Unit,
     onLikeClick: (Int) -> Unit,
     onEscribirResenaClick: () -> Unit,
+    onAutorClick: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -119,7 +105,12 @@ fun ResenaScreenContent(
                         resena      = resena,
                         isLiked     = resena.id in uiState.resenasLikeadas,
                         onClick     = { onResenaClick(resena) },
-                        onLikeClick = { onLikeClick(resena.id) }
+                        onLikeClick = { onLikeClick(resena.id) },
+                        // Cuando el autor no sea el usuario actual (id 1),
+                        // permitimos navegar a su perfil.
+                        // Aquí pasamos resena.id como proxy del userId del autor
+                        // hasta que Persona 2 agregue el campo autorUserId al DTO.
+                        onAutorClick = { onAutorClick(resena.id + 1) }
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -130,7 +121,7 @@ fun ResenaScreenContent(
     }
 }
 
-// ── Estado vacío ──
+// ── Estado vacío ──────────────────────────────────────────────────────────────
 @Composable
 fun SinResenasAun(onEscribirClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
@@ -160,7 +151,7 @@ fun SinResenasAun(onEscribirClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-// ── TopBar consistente con el resto de la app ──
+// ── TopBar ────────────────────────────────────────────────────────────────────
 @Composable
 fun TopBarResena(
     onBackClick: () -> Unit,
@@ -220,22 +211,26 @@ fun TopBarResena(
     }
 }
 
-// ── Card de Reseña Detallada ──
+// ── Card de Reseña Detallada ──────────────────────────────────────────────────
 @Composable
 fun ResenaDetalladaCard(
     resena: ResenaDetalladaUI,
     isLiked: Boolean,
     onClick: () -> Unit,
     onLikeClick: () -> Unit,
+    onAutorClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable { onClick() },
-        colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
-        shape    = RoundedCornerShape(12.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+        shape  = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            ResenaAutorRow(resena = resena)
+            ResenaAutorRow(resena = resena, onAutorClick = onAutorClick)
             Spacer(modifier = Modifier.height(12.dp))
             ResenaAlbumRow(resena = resena)
             Spacer(modifier = Modifier.height(12.dp))
@@ -248,15 +243,25 @@ fun ResenaDetalladaCard(
     }
 }
 
-// ── Fila de autor ──
+// ── Fila de autor con botón "Ver perfil" ──────────────────────────────────────
 @Composable
-fun ResenaAutorRow(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
+fun ResenaAutorRow(
+    resena: ResenaDetalladaUI,
+    onAutorClick: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier              = modifier.fillMaxWidth(),
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // Avatar + nombre (clicable → va al perfil del autor)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier          = Modifier
+                .weight(1f)
+                .clickable { onAutorClick() }
+        ) {
             if (resena.autorFotoRes != 0) {
                 Image(
                     painter            = painterResource(id = resena.autorFotoRes),
@@ -274,17 +279,32 @@ fun ResenaAutorRow(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
             }
             Spacer(modifier = Modifier.width(10.dp))
             Column {
-                Text(text = resena.autorNombre,  color = Color.White,                    fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                Text(text = resena.autorUsuario, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+                Text(
+                    text       = resena.autorNombre,
+                    color      = Color.White,
+                    fontSize   = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text     = resena.autorUsuario,
+                    color    = Color.White.copy(alpha = 0.6f),
+                    fontSize = 12.sp
+                )
             }
         }
-        IconButton(onClick = {}) {
-            Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = Color.White)
+
+        // Botón "Ver perfil" → Persona 4
+        TextButton(onClick = onAutorClick) {
+            Text(
+                text     = "Ver perfil",
+                color    = BeatTreatColors.Purple60,
+                fontSize = 12.sp
+            )
         }
     }
 }
 
-// ── Fila de álbum ──
+// ── Fila de álbum ─────────────────────────────────────────────────────────────
 @Composable
 fun ResenaAlbumRow(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -296,7 +316,12 @@ fun ResenaAlbumRow(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
                 contentScale       = ContentScale.Crop
             )
         } else {
-            Box(modifier = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)).background(BeatTreatColors.Purple40))
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(BeatTreatColors.Purple40)
+            )
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column {
@@ -306,7 +331,7 @@ fun ResenaAlbumRow(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
     }
 }
 
-// ── Estrellas de calificación ──
+// ── Estrellas ─────────────────────────────────────────────────────────────────
 @Composable
 fun ResenaEstrellas(calificacion: Float, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -323,7 +348,7 @@ fun ResenaEstrellas(calificacion: Float, modifier: Modifier = Modifier) {
     }
 }
 
-// ── Footer de la card ──
+// ── Footer ────────────────────────────────────────────────────────────────────
 @Composable
 fun ResenaFooter(
     resena: ResenaDetalladaUI,
@@ -360,6 +385,7 @@ fun ResenaFooter(
     }
 }
 
+// ── Preview ───────────────────────────────────────────────────────────────────
 @Preview(showBackground = true)
 @Composable
 fun ResenaScreenPreview() {
@@ -369,7 +395,8 @@ fun ResenaScreenPreview() {
             onBackClick           = {},
             onResenaClick         = {},
             onLikeClick           = {},
-            onEscribirResenaClick = {}
+            onEscribirResenaClick = {},
+            onAutorClick          = {}
         )
     }
 }
