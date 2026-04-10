@@ -24,15 +24,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +38,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,8 +60,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.login.ui.AlbumDetalle.AlbumDetalleData
 import com.example.login.R
+import com.example.login.data.dto.AlbumDto
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
@@ -115,7 +115,9 @@ fun EscribirResenaScreenContent(
     onPublicarClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val puedePublicar = uiState.textoResena.isNotBlank() && uiState.calificacion > 0
+    val puedePublicar = uiState.textoResena.isNotBlank()
+            && uiState.calificacion > 0
+            && uiState.albumId != 0
 
     Column(
         modifier = modifier
@@ -148,6 +150,16 @@ fun EscribirResenaScreenContent(
                 fontSize = 14.sp
             )
 
+            // Mensaje de error
+            uiState.errorMessage?.let { msg ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text     = msg,
+                    color    = BeatTreatColors.Error,
+                    fontSize = 13.sp
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
@@ -157,8 +169,12 @@ fun EscribirResenaScreenContent(
                 fontWeight = FontWeight.SemiBold,
                 modifier   = Modifier.padding(bottom = 8.dp)
             )
-            SelectorAlbum(
-                albumSeleccionado = uiState.albumSeleccionado,
+
+            // Selector con álbumes del backend
+            SelectorAlbumBackend(
+                albumsBackend       = uiState.albumesBackend,
+                albumesCargando     = uiState.albumesCargando,
+                albumSeleccionado   = uiState.albumSeleccionado,
                 onAlbumSeleccionado = onAlbumSeleccionado
             )
 
@@ -204,14 +220,222 @@ fun EscribirResenaScreenContent(
                     disabledContentColor   = Color.White.copy(alpha = 0.4f)
                 )
             ) {
-                Text(
-                    text       = "Publicar reseña",
-                    fontSize   = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier    = Modifier.size(20.dp),
+                        color       = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text       = "Publicar reseña",
+                        fontSize   = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(80.dp))
+        }
+    }
+}
+
+// ── Selector de álbum usando lista del backend ──
+@Composable
+fun SelectorAlbumBackend(
+    albumsBackend: List<AlbumDto>,
+    albumesCargando: Boolean,
+    albumSeleccionado: String,
+    onAlbumSeleccionado: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expandido by remember { mutableStateOf(false) }
+    var busqueda  by remember { mutableStateOf("") }
+
+    // Construye las etiquetas "título — artista" con los IDs reales del backend
+    val etiquetas = remember(albumsBackend) {
+        albumsBackend.map { "${it.title} — ${it.artist}" }
+    }
+
+    val etiquetasFiltradas = remember(busqueda, etiquetas) {
+        if (busqueda.isBlank()) etiquetas
+        else etiquetas.filter { it.lowercase().contains(busqueda.lowercase()) }
+    }
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { if (!albumesCargando) expandido = !expandido },
+            colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+            shape  = if (expandido)
+                RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 0.dp, bottomEnd = 0.dp)
+            else
+                RoundedCornerShape(14.dp)
+        ) {
+            Row(
+                modifier          = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier         = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(BeatTreatColors.Purple60, BeatTreatColors.PurpleDark)
+                            )
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (albumesCargando) {
+                        CircularProgressIndicator(
+                            modifier    = Modifier.size(24.dp),
+                            color       = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            Icons.Filled.Album,
+                            contentDescription = null,
+                            tint               = Color.White,
+                            modifier           = Modifier.size(26.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    if (albumSeleccionado.isBlank()) {
+                        Text(
+                            text  = if (albumesCargando) "Cargando álbumes..." else "Seleccionar álbum",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 15.sp
+                        )
+                        if (!albumesCargando) {
+                            Text(
+                                text     = "Toca para buscar",
+                                color    = Color.White.copy(alpha = 0.3f),
+                                fontSize = 12.sp
+                            )
+                        }
+                    } else {
+                        Text(
+                            text       = albumSeleccionado,
+                            color      = Color.White,
+                            fontSize   = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+                if (!albumesCargando) {
+                    Icon(
+                        imageVector        = if (expandido) Icons.Filled.KeyboardArrowUp
+                        else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint               = Color.White.copy(alpha = 0.5f),
+                        modifier           = Modifier.size(22.dp)
+                    )
+                }
+            }
+        }
+
+        if (expandido && !albumesCargando) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+                shape    = RoundedCornerShape(
+                    topStart    = 0.dp,
+                    topEnd      = 0.dp,
+                    bottomStart = 14.dp,
+                    bottomEnd   = 14.dp
+                )
+            ) {
+                Column {
+                    // Campo de búsqueda
+                    Row(
+                        modifier          = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Filled.Search,
+                            contentDescription = null,
+                            tint               = Color.White.copy(alpha = 0.5f),
+                            modifier           = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextField(
+                            value         = busqueda,
+                            onValueChange = { busqueda = it },
+                            placeholder   = {
+                                Text(
+                                    "Buscar...",
+                                    color    = Color.White.copy(alpha = 0.35f),
+                                    fontSize = 14.sp
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors   = TextFieldDefaults.colors(
+                                focusedContainerColor   = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor   = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                focusedTextColor        = Color.White,
+                                unfocusedTextColor      = Color.White,
+                                cursorColor             = BeatTreatColors.Purple60
+                            ),
+                            singleLine = true
+                        )
+                    }
+                    Divider(color = Color.White.copy(alpha = 0.08f))
+
+                    if (etiquetasFiltradas.isEmpty()) {
+                        Box(
+                            modifier         = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text  = "No se encontraron álbumes",
+                                color = Color.White.copy(alpha = 0.4f),
+                                fontSize = 13.sp
+                            )
+                        }
+                    } else {
+                        LazyColumn(modifier = Modifier.heightIn(max = 220.dp)) {
+                            items(etiquetasFiltradas) { etiqueta ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onAlbumSeleccionado(etiqueta)
+                                            expandido = false
+                                            busqueda  = ""
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(BeatTreatColors.Purple60)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text     = etiqueta,
+                                        color    = Color.White,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                                Divider(color = Color.White.copy(alpha = 0.05f))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -277,130 +501,11 @@ fun TopBarEscribirResena(
             ) {
                 Text(
                     text       = "Publicar",
-                    color      = if (habilitarPublicar) BeatTreatColors.Purple60 else Color.White.copy(alpha = 0.4f),
+                    color      = if (habilitarPublicar) BeatTreatColors.Purple60
+                    else Color.White.copy(alpha = 0.4f),
                     fontSize   = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
-            }
-        }
-    }
-}
-
-// ── Selector de álbum con dropdown ──
-@Composable
-fun SelectorAlbum(
-    albumSeleccionado: String,
-    onAlbumSeleccionado: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expandido by remember { mutableStateOf(false) }
-    var busqueda  by remember { mutableStateOf("") }
-
-    val todosLosAlbumes = remember {
-        AlbumDetalleData.todos().map { "${it.nombre} — ${it.artista}" }
-    }
-    val albumesFiltrados = remember(busqueda) {
-        if (busqueda.isBlank()) todosLosAlbumes
-        else todosLosAlbumes.filter { it.lowercase().contains(busqueda.lowercase()) }
-    }
-
-    Column(modifier = modifier.fillMaxWidth()) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expandido = !expandido },
-            colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
-            shape  = if (expandido) RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 0.dp, bottomEnd = 0.dp) else RoundedCornerShape(14.dp)
-        ) {
-            Row(
-                modifier          = Modifier.fillMaxWidth().padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier         = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Brush.radialGradient(colors = listOf(BeatTreatColors.Purple60, BeatTreatColors.PurpleDark))),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.Album, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    if (albumSeleccionado.isBlank()) {
-                        Text(text = "Seleccionar álbum",   color = Color.White.copy(alpha = 0.5f), fontSize = 15.sp)
-                        Text(text = "Toca para buscar",    color = Color.White.copy(alpha = 0.3f), fontSize = 12.sp)
-                    } else {
-                        Text(text = albumSeleccionado,     color = Color.White,                    fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                }
-                Icon(
-                    imageVector        = if (expandido) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint               = Color.White.copy(alpha = 0.5f),
-                    modifier           = Modifier.size(22.dp)
-                )
-            }
-        }
-
-        if (expandido) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
-                shape    = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 14.dp, bottomEnd = 14.dp)
-            ) {
-                Column {
-                    // Campo de búsqueda dentro del dropdown
-                    Row(
-                        modifier          = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Filled.Search, contentDescription = null, tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TextField(
-                            value         = busqueda,
-                            onValueChange = { busqueda = it },
-                            placeholder   = { Text("Buscar...", color = Color.White.copy(alpha = 0.35f), fontSize = 14.sp) },
-                            modifier      = Modifier.fillMaxWidth(),
-                            colors        = TextFieldDefaults.colors(
-                                focusedContainerColor   = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                focusedIndicatorColor   = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                focusedTextColor        = Color.White,
-                                unfocusedTextColor      = Color.White,
-                                cursorColor             = BeatTreatColors.Purple60
-                            ),
-                            singleLine = true
-                        )
-                    }
-                    Divider(color = Color.White.copy(alpha = 0.08f))
-
-                    // Lista de álbumes (máximo 5 visibles)
-                    LazyColumn(modifier = Modifier.heightIn(max = 220.dp)) {
-                        items(albumesFiltrados) { item ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onAlbumSeleccionado(item)
-                                        expandido = false
-                                        busqueda  = ""
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier.size(8.dp).clip(RoundedCornerShape(4.dp))
-                                        .background(BeatTreatColors.Purple60)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(text = item, color = Color.White, fontSize = 14.sp)
-                            }
-                            Divider(color = Color.White.copy(alpha = 0.05f))
-                        }
-                    }
-                }
             }
         }
     }
@@ -435,7 +540,8 @@ fun CalificacionSelector(
                         Icon(
                             imageVector        = if (llena) Icons.Filled.Star else Icons.Filled.StarBorder,
                             contentDescription = "Estrella ${index + 1}",
-                            tint               = if (llena) Color(0xFFFFC107) else Color.White.copy(alpha = 0.25f),
+                            tint               = if (llena) Color(0xFFFFC107)
+                            else Color.White.copy(alpha = 0.25f),
                             modifier           = Modifier.size(40.dp)
                         )
                     }
@@ -447,7 +553,11 @@ fun CalificacionSelector(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Brush.horizontalGradient(colors = listOf(BeatTreatColors.Purple60, Color(0xFF8B5CF6))))
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(BeatTreatColors.Purple60, Color(0xFF8B5CF6))
+                            )
+                        )
                         .padding(horizontal = 20.dp, vertical = 6.dp)
                 ) {
                     Text(
@@ -500,12 +610,15 @@ fun CampoOpinion(
         }
 
         Row(
-            modifier              = Modifier.fillMaxWidth().padding(top = 6.dp, end = 4.dp),
+            modifier              = Modifier
+                .fillMaxWidth()
+                .padding(top = 6.dp, end = 4.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Text(
                 text     = "${texto.length} / 500",
-                color    = if (texto.length > 450) Color(0xFFFFC107) else Color.White.copy(alpha = 0.4f),
+                color    = if (texto.length > 450) Color(0xFFFFC107)
+                else Color.White.copy(alpha = 0.4f),
                 fontSize = 12.sp
             )
         }
