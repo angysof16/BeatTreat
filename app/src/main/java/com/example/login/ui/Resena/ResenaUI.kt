@@ -13,7 +13,10 @@ data class ResenaDetalladaUI(
     val texto: String,
     val likes: Int,
     val comentarios: Int,
-    val fecha: String
+    val fecha: String,
+    val autorUserId: Int = 0,
+    val autorFotoRes: Int = 0,
+    val albumRes: Int = 0
 )
 
 data class ComentarioUI(

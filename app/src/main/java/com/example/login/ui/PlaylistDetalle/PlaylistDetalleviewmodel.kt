@@ -45,11 +45,11 @@ class PlaylistDetalleViewModel @Inject constructor() : ViewModel() {
         _uiState.update {
             it.copy(
                 playlist = PlaylistDetalleUI(
-                    id          = playlist.id,
-                    nombre      = playlist.nombre,
-                    descripcion = playlist.descripcion,
-                    imagenRes   = playlist.imagenRes,
-                    canciones   = canciones
+                    id            = playlist.id,
+                    nombre        = playlist.nombre,
+                    descripcion   = playlist.descripcion,
+                    coverImageUrl = "",
+                    canciones     = canciones
                 ),
                 isLoading = false
             )

@@ -36,7 +36,7 @@ fun BeatTreatApp() {
                     onDescubreClick   = { navController.navigate(Screen.Descubre.route) { popUpTo(Screen.Home.route) } },
                     onChatClick       = { navController.navigate(Screen.Grupos.route) },
                     // El "+" del BottomBar navega sin album fijado
-                    onAddClick        = { navController.navigate(Screen.EscribirResena.createRoute(0)) }
+                    onAddClick = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } } }
                 )
             }
         }

@@ -24,31 +24,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.login.R
 import com.example.login.ui.theme.BeatTreatColors
 import com.example.login.ui.theme.BeatTreatTheme
 
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
-// ── Stateful ──────────────────────────────────────────────────────────────────
 @Composable
 fun ResenaScreen(
     albumId: Int,
     onBackClick: () -> Unit = {},
     onResenaClick: (ResenaDetalladaUI) -> Unit = {},
     onEscribirResenaClick: () -> Unit = {},
-    /**
-     * Navega al perfil del autor de la reseña.
-     * Recibe el autorUserId real del backend.
-     */
     onAutorClick: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ResenaViewModel
 ) {
-    LaunchedEffect(albumId) {
-        viewModel.cargarResenas(albumId)
-    }
-
+    LaunchedEffect(albumId) { viewModel.cargarResenas(albumId) }
     val uiState by viewModel.uiState.collectAsState()
 
     ResenaScreenContent(
@@ -62,7 +55,6 @@ fun ResenaScreen(
     )
 }
 
-// ── Stateless ─────────────────────────────────────────────────────────────────
 @Composable
 fun ResenaScreenContent(
     uiState: ResenaUIState,
@@ -73,15 +65,8 @@ fun ResenaScreenContent(
     onAutorClick: (Int) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        TopBarResena(
-            onBackClick     = onBackClick,
-            onEscribirClick = onEscribirResenaClick
-        )
+    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        TopBarResena(onBackClick = onBackClick, onEscribirClick = onEscribirResenaClick)
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
@@ -99,67 +84,40 @@ fun ResenaScreenContent(
             } else {
                 items(uiState.resenas) { resena ->
                     ResenaDetalladaCard(
-                        resena      = resena,
-                        isLiked     = resena.id in uiState.resenasLikeadas,
-                        onClick     = { onResenaClick(resena) },
-                        onLikeClick = { onLikeClick(resena.id) },
-                        // ← Usar el autorUserId real, no un proxy
-                        onAutorClick = {
-                            if (resena.autorUserId > 0) onAutorClick(resena.autorUserId)
-                        }
+                        resena       = resena,
+                        isLiked      = resena.id in uiState.resenasLikeadas,
+                        onClick      = { onResenaClick(resena) },
+                        onLikeClick  = { onLikeClick(resena.id) },
+                        onAutorClick = { if (resena.autorUserId > 0) onAutorClick(resena.autorUserId) }
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
             }
-
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
 
-// ── Estado vacío ──────────────────────────────────────────────────────────────
 @Composable
 fun SinResenasAun(onEscribirClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier            = modifier.fillMaxWidth().padding(vertical = 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector        = Icons.Filled.MusicNote,
-            contentDescription = null,
-            tint               = Color.White.copy(alpha = 0.25f),
-            modifier           = Modifier.size(64.dp)
-        )
+        Icon(Icons.Filled.MusicNote, contentDescription = null, tint = Color.White.copy(alpha = 0.25f), modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text     = "Aún no hay reseñas para este álbum",
-            color    = Color.White.copy(alpha = 0.5f),
-            fontSize = 15.sp
-        )
+        Text("Aún no hay reseñas para este álbum", color = Color.White.copy(alpha = 0.5f), fontSize = 15.sp)
         Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text       = "¡Sé el primero en opinar!",
-            color      = BeatTreatColors.Purple60,
-            fontSize   = 14.sp,
-            fontWeight = FontWeight.Medium,
-            modifier   = Modifier.clickable { onEscribirClick() }
-        )
+        Text("¡Sé el primero en opinar!", color = BeatTreatColors.Purple60, fontSize = 14.sp,
+            fontWeight = FontWeight.Medium, modifier = Modifier.clickable { onEscribirClick() })
     }
 }
 
-// ── TopBar ────────────────────────────────────────────────────────────────────
 @Composable
-fun TopBarResena(
-    onBackClick: () -> Unit,
-    onEscribirClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun TopBarResena(onBackClick: () -> Unit, onEscribirClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier         = Modifier
-                .size(80.dp)
-                .clip(RoundedCornerShape(bottomEnd = 12.dp))
-                .background(Color(0xFF1A1A1A)),
+            modifier         = Modifier.size(80.dp).clip(RoundedCornerShape(bottomEnd = 12.dp)).background(Color(0xFF1A1A1A)),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -170,44 +128,23 @@ fun TopBarResena(
             )
         }
         Row(
-            modifier = Modifier
-                .weight(1f)
-                .background(
-                    MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(bottomStart = 12.dp)
-                )
+            modifier = Modifier.weight(1f)
+                .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(bottomStart = 12.dp))
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             IconButton(onClick = onBackClick) {
-                Icon(
-                    Icons.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint               = Color.White,
-                    modifier           = Modifier.size(26.dp)
-                )
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(26.dp))
             }
-            Text(
-                text       = "BeatTreat",
-                color      = Color.White,
-                fontSize   = 28.sp,
-                fontWeight = FontWeight.Normal,
-                fontFamily = JaroFont,
-                modifier   = Modifier.weight(1f).padding(start = 4.dp)
-            )
-            Text(
-                text       = "Escribir",
-                color      = Color.White,
-                fontSize   = 15.sp,
-                fontWeight = FontWeight.Medium,
-                modifier   = Modifier.clickable { onEscribirClick() }
-            )
+            Text("BeatTreat", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Normal,
+                fontFamily = JaroFont, modifier = Modifier.weight(1f).padding(start = 4.dp))
+            Text("Escribir", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Medium,
+                modifier = Modifier.clickable { onEscribirClick() })
         }
     }
 }
 
-// ── Card de Reseña Detallada ──────────────────────────────────────────────────
 @Composable
 fun ResenaDetalladaCard(
     resena: ResenaDetalladaUI,
@@ -218,12 +155,9 @@ fun ResenaDetalladaCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
-        shape  = RoundedCornerShape(12.dp)
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable { onClick() },
+        colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
+        shape    = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             ResenaAutorRow(resena = resena, onAutorClick = onAutorClick)
@@ -232,20 +166,15 @@ fun ResenaDetalladaCard(
             Spacer(modifier = Modifier.height(12.dp))
             ResenaEstrellas(calificacion = resena.calificacion)
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = resena.texto, color = Color.White, fontSize = 14.sp, lineHeight = 20.sp)
+            Text(resena.texto, color = Color.White, fontSize = 14.sp, lineHeight = 20.sp)
             Spacer(modifier = Modifier.height(12.dp))
             ResenaFooter(resena = resena, isLiked = isLiked, onLikeClick = onLikeClick)
         }
     }
 }
 
-// ── Fila de autor con botón "Ver perfil" ──────────────────────────────────────
 @Composable
-fun ResenaAutorRow(
-    resena: ResenaDetalladaUI,
-    onAutorClick: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
+fun ResenaAutorRow(resena: ResenaDetalladaUI, onAutorClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     Row(
         modifier              = modifier.fillMaxWidth(),
         verticalAlignment     = Alignment.CenterVertically,
@@ -253,13 +182,12 @@ fun ResenaAutorRow(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier          = Modifier
-                .weight(1f)
-                .clickable { onAutorClick() }
+            modifier          = Modifier.weight(1f).clickable { onAutorClick() }
         ) {
-            if (resena.autorFotoRes != 0) {
-                Image(
-                    painter            = painterResource(id = resena.autorFotoRes),
+            // Foto del autor — siempre URL, sin drawable
+            if (resena.autorFotoUrl.isNotBlank()) {
+                AsyncImage(
+                    model              = resena.autorFotoUrl,
                     contentDescription = resena.autorNombre,
                     modifier           = Modifier.size(42.dp).clip(CircleShape),
                     contentScale       = ContentScale.Crop
@@ -274,61 +202,46 @@ fun ResenaAutorRow(
             }
             Spacer(modifier = Modifier.width(10.dp))
             Column {
-                Text(
-                    text       = resena.autorNombre,
-                    color      = Color.White,
-                    fontSize   = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text     = resena.autorUsuario,
-                    color    = Color.White.copy(alpha = 0.6f),
-                    fontSize = 12.sp
-                )
+                Text(resena.autorNombre,  color = Color.White,                    fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text(resena.autorUsuario, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
             }
         }
 
-        // Botón "Ver perfil" solo si hay un userId válido
         if (resena.autorUserId > 0) {
             TextButton(onClick = onAutorClick) {
-                Text(
-                    text     = "Ver perfil",
-                    color    = BeatTreatColors.Purple60,
-                    fontSize = 12.sp
-                )
+                Text("Ver perfil", color = BeatTreatColors.Purple60, fontSize = 12.sp)
             }
         }
     }
 }
 
-// ── Fila de álbum ─────────────────────────────────────────────────────────────
 @Composable
 fun ResenaAlbumRow(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        if (resena.albumRes != 0) {
-            Image(
-                painter            = painterResource(id = resena.albumRes),
+        // Portada del álbum — siempre URL, sin drawable
+        if (resena.albumImagenUrl.isNotBlank()) {
+            AsyncImage(
+                model              = resena.albumImagenUrl,
                 contentDescription = resena.albumNombre,
                 modifier           = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)),
                 contentScale       = ContentScale.Crop
             )
         } else {
             Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(BeatTreatColors.Purple40)
-            )
+                modifier         = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)).background(BeatTreatColors.Purple40),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Filled.Album, contentDescription = null, tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(30.dp))
+            }
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column {
-            Text(text = resena.albumNombre,  color = Color.White,                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(text = resena.albumArtista, color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
+            Text(resena.albumNombre,  color = Color.White,                    fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(resena.albumArtista, color = Color.White.copy(alpha = 0.7f), fontSize = 14.sp)
         }
     }
 }
 
-// ── Estrellas ─────────────────────────────────────────────────────────────────
 @Composable
 fun ResenaEstrellas(calificacion: Float, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
@@ -341,18 +254,12 @@ fun ResenaEstrellas(calificacion: Float, modifier: Modifier = Modifier) {
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = calificacion.toString(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text(calificacion.toString(), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
 }
 
-// ── Footer ────────────────────────────────────────────────────────────────────
 @Composable
-fun ResenaFooter(
-    resena: ResenaDetalladaUI,
-    isLiked: Boolean,
-    onLikeClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun ResenaFooter(resena: ResenaDetalladaUI, isLiked: Boolean, onLikeClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier              = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -367,22 +274,16 @@ fun ResenaFooter(
                     modifier           = Modifier.size(20.dp)
                 )
             }
-            Text(text = resena.likes.toString(), color = Color.White, fontSize = 14.sp)
+            Text(resena.likes.toString(), color = Color.White, fontSize = 14.sp)
             Spacer(modifier = Modifier.width(16.dp))
-            Icon(
-                imageVector        = Icons.Filled.MusicNote,
-                contentDescription = "Comentarios",
-                tint               = Color.White.copy(alpha = 0.6f),
-                modifier           = Modifier.size(16.dp)
-            )
+            Icon(Icons.Filled.MusicNote, contentDescription = "Comentarios", tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "${resena.comentarios}", color = Color.White, fontSize = 14.sp)
+            Text("${resena.comentarios}", color = Color.White, fontSize = 14.sp)
         }
-        Text(text = resena.fecha, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+        Text(resena.fecha, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
     }
 }
 
-// ── Preview ───────────────────────────────────────────────────────────────────
 @Preview(showBackground = true)
 @Composable
 fun ResenaScreenPreview() {
