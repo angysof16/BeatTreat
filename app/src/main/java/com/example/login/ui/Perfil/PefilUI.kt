@@ -6,8 +6,8 @@ data class PerfilUI(
     val id: Int,
     val nombre: String,
     val usuario: String,
-    val fotoPerfilUrl: String,   // ← antes era fotoPerfilRes: Int
-    val fotoBannerUrl: String,   // ← antes era fotoBannerRes: Int
+    val fotoPerfilUrl: String,
+    val fotoBannerUrl: String,
     val siguiendo: Int,
     val seguidores: Int
 )
@@ -15,14 +15,14 @@ data class PerfilUI(
 data class AlbumPerfilUI(
     val id: Int,
     val nombre: String,
-    val imagenRes: Int           // Los álbumes siguen siendo locales
+    val imagenUrl: String
 )
 
 data class ResenaUI(
     val id: Int,
     val autorNombre: String,
     val autorUsuario: String,
-    val autorFotoRes: Int,
+    val autorFotoUrl: String,
     val texto: String,
     val likes: Int,
     val comentarios: Int

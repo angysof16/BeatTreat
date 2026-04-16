@@ -1,6 +1,5 @@
 package com.example.login.ui.Home
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -38,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -67,13 +66,13 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     HomeScreenContent(
-        uiState        = uiState,
+        uiState = uiState,
         onBannerChange = { viewModel.onBannerChange(it) },
-        onAlbumClick   = onAlbumClick,
+        onAlbumClick = onAlbumClick,
         onArtistaClick = onArtistaClick,
-        onSearchClick  = onSearchClick,
+        onSearchClick = onSearchClick,
         onProfileClick = onProfileClick,
-        modifier       = modifier
+        modifier = modifier
     )
 }
 
@@ -94,13 +93,12 @@ fun HomeScreenContent(
             .background(MaterialTheme.colorScheme.background)
     ) {
         TopBarHome(
-            fotoPerfilUrl  = uiState.fotoPerfilUrl,
-            onSearchClick  = onSearchClick,
+            fotoPerfilUrl = uiState.fotoPerfilUrl,
+            onSearchClick = onSearchClick,
             onProfileClick = onProfileClick
         )
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            // Estado de carga
             if (uiState.isLoading) {
                 item {
                     Box(
@@ -112,54 +110,41 @@ fun HomeScreenContent(
                 }
                 return@LazyColumn
             }
-        
-            // Estado de error
+
             uiState.errorMessage?.let { msg ->
                 item {
                     Column(
-                        modifier = Modifier
-                            .fillParentMaxSize()
-                            .padding(32.dp),
+                        modifier = Modifier.fillParentMaxSize().padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = msg,
-                            color = BeatTreatColors.Error,
-                            fontSize = 15.sp,
-                            textAlign = TextAlign.Center
-                        )
+                        Text(text = msg, color = BeatTreatColors.Error, fontSize = 15.sp, textAlign = TextAlign.Center)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = { /* llama a viewModel.cargarHome() via callback */ },
-                            colors  = ButtonDefaults.buttonColors(containerColor = BeatTreatColors.Purple60)
-                        ) {
+                        Button(onClick = {}, colors = ButtonDefaults.buttonColors(containerColor = BeatTreatColors.Purple60)) {
                             Text("Reintentar", color = Color.White)
                         }
                     }
                 }
                 return@LazyColumn
             }
-        
-            // Banner (igual que antes)
+
             item {
                 Banner(
-                    bannerIndex = uiState.bannerActual,
-                    onPrevious  = { if (uiState.bannerActual > 0) onBannerChange(uiState.bannerActual - 1) },
-                    onNext      = { onBannerChange(uiState.bannerActual + 1) }
+                    bannerUrl = uiState.bannerUrl,
+                    onPrevious = { if (uiState.bannerActual > 0) onBannerChange(uiState.bannerActual - 1) },
+                    onNext = { onBannerChange(uiState.bannerActual + 1) }
                 )
             }
-        
-            // Lista de artistas del backend
+
             items(uiState.artistas) { artista ->
                 ArtistaSection(
-                    artista        = artista,
-                    onAlbumClick   = onAlbumClick,
+                    artista = artista,
+                    onAlbumClick = onAlbumClick,
                     onArtistaClick = { onArtistaClick(artista.id) }
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
-        
+
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
@@ -175,17 +160,20 @@ fun TopBarHome(
 ) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier = Modifier
+            modifier         = Modifier
                 .size(80.dp)
                 .clip(RoundedCornerShape(bottomEnd = 12.dp))
                 .background(Color(0xFF1A1A1A)),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter            = painterResource(id = R.drawable.logo_beattreat),
+            // Logo de la app — se puede reemplazar con AsyncImage si se sube a Storage
+            AsyncImage(
+                model = "https://cdn.phototourl.com/free/2026-04-16-f75c12f6-7aa0-4e5d-959f-803340165dd0.png",
                 contentDescription = "Logo BeatTreat",
-                modifier           = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)),
-                contentScale       = ContentScale.Fit
+                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Fit,
+                fallback = null,
+                error = null
             )
         }
         Row(
@@ -200,30 +188,18 @@ fun TopBarHome(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text       = "BeatTreat",
-                color      = Color.White,
-                fontSize   = 28.sp,
+                text = "BeatTreat",
+                color = Color.White,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = JaroFont,
-                modifier   = Modifier.weight(1f)
+                modifier = Modifier.weight(1f)
             )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onSearchClick) {
-                    Icon(
-                        Icons.Filled.Search,
-                        contentDescription = "Buscar",
-                        tint               = Color.White,
-                        modifier           = Modifier.size(28.dp)
-                    )
+                    Icon(Icons.Filled.Search, contentDescription = "Buscar", tint = Color.White, modifier = Modifier.size(28.dp))
                 }
-                // Foto de perfil o ícono genérico si aún no hay foto
-                FotoPerfilTopBar(
-                    fotoPerfilUrl = fotoPerfilUrl,
-                    onClick       = onProfileClick
-                )
+                FotoPerfilTopBar(fotoPerfilUrl = fotoPerfilUrl, onClick = onProfileClick)
             }
         }
     }
@@ -232,7 +208,7 @@ fun TopBarHome(
 // ── Banner ──
 @Composable
 fun Banner(
-    bannerIndex: Int,
+    bannerUrl: String,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     modifier: Modifier = Modifier
@@ -243,20 +219,17 @@ fun Banner(
             .height(170.dp)
             .padding(16.dp)
     ) {
-        Image(
-            painter            = painterResource(R.drawable.banner),
-            contentDescription = null,
-            modifier           = Modifier.fillMaxSize(),
-            contentScale       = ContentScale.Crop
+        AsyncImage(
+            model = bannerUrl,
+            contentDescription = "Banner",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
-        Box(
-            modifier         = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text       = "Tu mejor ritmo \n todos los días",
-                color      = Color.White,
-                fontSize   = 22.sp,
+                text = "Tu mejor ritmo \n todos los días",
+                color = Color.White,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -267,29 +240,19 @@ fun Banner(
 
 // ── Flechas del Banner ──
 @Composable
-fun BannerControles(
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun BannerControles(onPrevious: () -> Unit, onNext: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier              = modifier.fillMaxSize(),
-        verticalAlignment     = Alignment.CenterVertically,
+        modifier = modifier.fillMaxSize(),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = onPrevious) {
-            Image(
-                painter            = painterResource(R.drawable.flecha_izquierda),
-                contentDescription = "Anterior",
-                modifier           = Modifier.size(28.dp)
-            )
+            Icon(Icons.Filled.ArrowForward, contentDescription = "Anterior",
+                tint = Color.White, modifier = Modifier.size(28.dp))
         }
         IconButton(onClick = onNext) {
-            Image(
-                painter            = painterResource(R.drawable.flecha_derecha),
-                contentDescription = "Siguiente",
-                modifier           = Modifier.size(28.dp)
-            )
+            Icon(Icons.Filled.ArrowForward, contentDescription = "Siguiente",
+                tint = Color.White, modifier = Modifier.size(28.dp))
         }
     }
 }
@@ -298,15 +261,15 @@ fun BannerControles(
 @Composable
 fun BannerIndicadores(modifier: Modifier = Modifier) {
     Column(
-        modifier              = modifier.fillMaxSize().padding(bottom = 8.dp),
-        verticalArrangement   = Arrangement.Bottom,
-        horizontalAlignment   = Alignment.CenterHorizontally
+        modifier            = modifier.fillMaxSize().padding(bottom = 8.dp),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(
-            painter            = painterResource(R.drawable.puntos),
-            contentDescription = null,
-            modifier           = Modifier.size(40.dp)
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(3) {
+                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.6f)))
+            }
+        }
     }
 }
 
@@ -323,32 +286,14 @@ fun ArtistaSection(
             modifier          = Modifier.fillMaxWidth().clickable { onArtistaClick() },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Filled.AccountCircle,
-                contentDescription = null,
-                tint               = Color.White,
-                modifier           = Modifier.size(26.dp)
-            )
+            Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text       = artista.nombre,
-                color      = Color.White,
-                fontSize   = 20.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Text(text = artista.nombre, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                Icons.Filled.ArrowForward,
-                contentDescription = "Ver más",
-                tint               = Color.White,
-                modifier           = Modifier.size(20.dp)
-            )
+            Icon(Icons.Filled.ArrowForward, contentDescription = "Ver más", tint = Color.White, modifier = Modifier.size(20.dp))
         }
         Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier              = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(30.dp)
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(30.dp)) {
             artista.albumes.take(3).forEach { album ->
                 AlbumItem(album = album, onClick = { onAlbumClick(album.id) })
             }
@@ -358,26 +303,27 @@ fun ArtistaSection(
 
 // ── Item de Álbum ──
 @Composable
-fun AlbumItem(
-    album: AlbumHomeUI,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun AlbumItem(album: AlbumHomeUI, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.clickable { onClick() }) {
         Box(
-            modifier = Modifier
-                .size(100.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(BeatTreatColors.SurfaceVariant)
+            modifier         = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)).background(BeatTreatColors.SurfaceVariant),
+            contentAlignment = Alignment.Center
         ) {
-            if (album.imagenRes != 0) {
-                Image(
-                    painter            = painterResource(id = album.imagenRes),
-                    contentDescription = album.nombre,
-                    modifier           = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)),
-                    contentScale       = ContentScale.Crop
-                )
-            }
+            AsyncImage(
+                model = album.imagenUrl,
+                contentDescription = album.nombre,
+                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
+                error = null,
+                fallback = null
+            )
+            // Fallback visible si no carga la imagen
+            Icon(
+                imageVector = Icons.Filled.MusicNote,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.2f),
+                modifier = Modifier.size(32.dp)
+            )
         }
         Spacer(modifier = Modifier.height(6.dp))
         AlbumItemFooter(nombre = album.nombre)
@@ -386,29 +332,15 @@ fun AlbumItem(
 
 // ── Footer del AlbumItem ──
 @Composable
-fun AlbumItemFooter(
-    nombre: String,
-    modifier: Modifier = Modifier
-) {
+fun AlbumItemFooter(nombre: String, modifier: Modifier = Modifier) {
     Row(
-        modifier              = modifier.width(100.dp),
-        verticalAlignment     = Alignment.CenterVertically,
+        modifier = modifier.width(100.dp),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text     = nombre,
-            color    = Color.White,
-            fontSize = 14.sp,
-            maxLines = 1,
-            modifier = Modifier.weight(1f)
-        )
+        Text(text = nombre, color = Color.White, fontSize = 14.sp, maxLines = 1, modifier = Modifier.weight(1f))
         IconButton(onClick = {}, modifier = Modifier.size(20.dp)) {
-            Icon(
-                Icons.Filled.MoreVert,
-                contentDescription = "Opciones",
-                tint               = Color.White,
-                modifier           = Modifier.size(14.dp)
-            )
+            Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(14.dp))
         }
     }
 }
@@ -427,5 +359,3 @@ fun HomeScreenPreview() {
         )
     }
 }
-
-

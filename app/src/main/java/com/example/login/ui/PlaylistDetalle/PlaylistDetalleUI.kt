@@ -10,7 +10,7 @@ data class PlaylistDetalleUI(
     val id: Int,
     val nombre: String,
     val descripcion: String,
-    val imagenRes: Int,
+    val coverImageUrl: String,
     val canciones: List<CancionPlaylistUI>
 )
 

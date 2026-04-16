@@ -38,11 +38,8 @@ fun ResenaScreen(
     onResenaClick: (ResenaDetalladaUI) -> Unit = {},
     onEscribirResenaClick: () -> Unit = {},
     /**
-     * Callback de Persona 4: navega al perfil del autor de una reseña.
-     * Recibe el userId del backend del autor.
-     * Cuando los datos vengan del backend (Persona 2), usa resena.autorUserId.
-     * Por ahora los datos locales tienen autorNombre pero no userId del backend,
-     * por eso se pasa un valor fijo de ejemplo (2) para usuarios distintos al actual.
+     * Navega al perfil del autor de la reseña.
+     * Recibe el autorUserId real del backend.
      */
     onAutorClick: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -106,11 +103,10 @@ fun ResenaScreenContent(
                         isLiked     = resena.id in uiState.resenasLikeadas,
                         onClick     = { onResenaClick(resena) },
                         onLikeClick = { onLikeClick(resena.id) },
-                        // Cuando el autor no sea el usuario actual (id 1),
-                        // permitimos navegar a su perfil.
-                        // Aquí pasamos resena.id como proxy del userId del autor
-                        // hasta que Persona 2 agregue el campo autorUserId al DTO.
-                        onAutorClick = { onAutorClick(resena.id + 1) }
+                        // ← Usar el autorUserId real, no un proxy
+                        onAutorClick = {
+                            if (resena.autorUserId > 0) onAutorClick(resena.autorUserId)
+                        }
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -255,7 +251,6 @@ fun ResenaAutorRow(
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Avatar + nombre (clicable → va al perfil del autor)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier          = Modifier
@@ -293,13 +288,15 @@ fun ResenaAutorRow(
             }
         }
 
-        // Botón "Ver perfil" → Persona 4
-        TextButton(onClick = onAutorClick) {
-            Text(
-                text     = "Ver perfil",
-                color    = BeatTreatColors.Purple60,
-                fontSize = 12.sp
-            )
+        // Botón "Ver perfil" solo si hay un userId válido
+        if (resena.autorUserId > 0) {
+            TextButton(onClick = onAutorClick) {
+                Text(
+                    text     = "Ver perfil",
+                    color    = BeatTreatColors.Purple60,
+                    fontSize = 12.sp
+                )
+            }
         }
     }
 }

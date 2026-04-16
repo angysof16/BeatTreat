@@ -3,21 +3,25 @@ package com.example.login.navigation
 sealed class Screen(val route: String) {
 
     // ── Pantallas sin argumentos ──────────────────────────────────────────────
-    object Login          : Screen("login")
-    object Registro       : Screen("registro")
-    object Home           : Screen("home")
-    object Biblioteca     : Screen("biblioteca")
-    object Descubre       : Screen("descubre")
-    object EscribirResena : Screen("escribir_resena")
-    object Perfil         : Screen("perfil")
-    object Grupos         : Screen("grupos")
-    object Chat           : Screen("chat")
-    object Buscar         : Screen("buscar")
-    object CrearPlaylist  : Screen("crear_playlist")
-    object EditarPerfil   : Screen("editar_perfil")
-    object MiPerfil : Screen("mi_perfil")
+    object Login         : Screen("login")
+    object Registro      : Screen("registro")
+    object Home          : Screen("home")
+    object Biblioteca    : Screen("biblioteca")
+    object Descubre      : Screen("descubre")
+    object Perfil        : Screen("perfil")
+    object Grupos        : Screen("grupos")
+    object Chat          : Screen("chat")
+    object Buscar        : Screen("buscar")
+    object CrearPlaylist : Screen("crear_playlist")
+    object EditarPerfil  : Screen("editar_perfil")
+    object MiPerfil      : Screen("mi_perfil")
 
     // ── Pantallas con argumentos ──────────────────────────────────────────────
+
+    // EscribirResena ahora lleva albumId como argumento opcional.
+    object EscribirResena : Screen("escribir_resena/{albumId}") {
+        fun createRoute(albumId: Int = 0) = "escribir_resena/$albumId"
+    }
 
     object Resena : Screen("resena/{albumId}") {
         fun createRoute(albumId: Int) = "resena/$albumId"
@@ -55,11 +59,6 @@ sealed class Screen(val route: String) {
         fun createRoute(usuarioId: Int) = "resenas_usuario/$usuarioId"
     }
 
-    /**
-     * Pantalla de perfil de OTRO usuario.
-     * Recibe el userId del backend (Int).
-     * Ejemplo: "perfil_usuario/2"
-     */
     object PerfilOtroUsuario : Screen("perfil_usuario/{userId}") {
         fun createRoute(userId: Int) = "perfil_usuario/$userId"
     }

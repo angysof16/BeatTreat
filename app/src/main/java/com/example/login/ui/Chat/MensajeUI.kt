@@ -8,5 +8,5 @@ data class MensajeUI(
     val hora: String,
     val esPropio: Boolean,
     val tieneImagen: Boolean = false,
-    val imagenRes: Int? = null
+    val imagenUrl: String = ""
 )

@@ -15,12 +15,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import com.example.login.ui.Perfil.PerfilData
 import com.example.login.ui.theme.BeatTreatColors
 
@@ -36,7 +39,6 @@ fun MiPerfilScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Snackbar para éxito / error
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState.successMessage, uiState.errorMessage) {
         val msg = uiState.successMessage ?: uiState.errorMessage
@@ -50,7 +52,7 @@ fun MiPerfilScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { viewModel.abrirFormularioCrear() },
+                onClick        = { viewModel.abrirFormularioCrear() },
                 containerColor = BeatTreatColors.Purple60
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Nueva reseña", tint = Color.White)
@@ -59,31 +61,29 @@ fun MiPerfilScreen(
         containerColor = BeatTreatColors.Background
     ) { padding ->
         MiPerfilContent(
-            uiState       = uiState,
-            onAlbumClick  = onAlbumClick,
-            onEditarClick = { viewModel.abrirFormularioEditar(it) },
+            uiState         = uiState,
+            onAlbumClick    = onAlbumClick,
+            onEditarClick   = { viewModel.abrirFormularioEditar(it) },
             onEliminarClick = { viewModel.pedirConfirmarEliminar(it) },
-            modifier      = modifier.padding(padding)
+            modifier        = modifier.padding(padding)
         )
     }
 
-    // ── Diálogo: Crear / Editar reseña ───────────────────────────────────────
     if (uiState.mostrarFormulario) {
         FormularioResenaDialog(
-            resenaEnEdicion   = uiState.resenaEnEdicion,
-            albumId           = uiState.formularioAlbumId,
-            rating            = uiState.formularioRating,
-            content           = uiState.formularioContent,
-            onAlbumIdChange   = viewModel::onAlbumIdChange,
-            onRatingChange    = viewModel::onRatingChange,
-            onContentChange   = viewModel::onContentChange,
-            onGuardar         = viewModel::guardarResena,
-            onCancelar        = viewModel::cerrarFormulario,
-            isSaving          = uiState.isLoading
+            resenaEnEdicion = uiState.resenaEnEdicion,
+            albumId         = uiState.formularioAlbumId,
+            rating          = uiState.formularioRating,
+            content         = uiState.formularioContent,
+            onAlbumIdChange = viewModel::onAlbumIdChange,
+            onRatingChange  = viewModel::onRatingChange,
+            onContentChange = viewModel::onContentChange,
+            onGuardar       = viewModel::guardarResena,
+            onCancelar      = viewModel::cerrarFormulario,
+            isSaving        = uiState.isLoading
         )
     }
 
-    // ── Diálogo: Confirmar eliminar ───────────────────────────────────────────
     if (uiState.mostrarConfirmarEliminar && uiState.resenaAEliminar != null) {
         ConfirmarEliminarDialog(
             resena    = uiState.resenaAEliminar!!,
@@ -104,14 +104,13 @@ fun MiPerfilContent(
     onEliminarClick: (MiResenaUI) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val perfil = PerfilData.perfilActual   // datos de perfil hardcodeados (id = 1)
+    val perfil = PerfilData.perfilActual
 
     LazyColumn(
-        modifier          = modifier.fillMaxSize(),
-        contentPadding    = PaddingValues(bottom = 80.dp)
+        modifier       = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
-
-        // ── Header: avatar + nombre ──────────────────────────────────────────
+        // ── Header ──────────────────────────────────────────────────────────
         item {
             Column(
                 modifier            = Modifier
@@ -121,30 +120,31 @@ fun MiPerfilContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Box(
-                    modifier          = Modifier
-                        .size(88.dp)
-                        .clip(CircleShape)
-                        .background(BeatTreatColors.SurfaceVariant),
-                    contentAlignment  = Alignment.Center
+                    modifier         = Modifier.size(88.dp).clip(CircleShape).background(BeatTreatColors.SurfaceVariant),
+                    contentAlignment = Alignment.Center
                 ) {
                     if (perfil.fotoPerfilUrl.isNotBlank()) {
                         SubcomposeAsyncImage(
                             model              = perfil.fotoPerfilUrl,
                             contentDescription = perfil.nombre,
-                            modifier           = Modifier.fillMaxSize()
-                        )
+                            modifier           = Modifier.fillMaxSize(),
+                            contentScale       = ContentScale.Crop
+                        ) {
+                            when (painter.state) {
+                                is AsyncImagePainter.State.Loading ->
+                                    CircularProgressIndicator(color = BeatTreatColors.Purple60, modifier = Modifier.size(32.dp), strokeWidth = 2.dp)
+                                is AsyncImagePainter.State.Error ->
+                                    Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(60.dp))
+                                else -> SubcomposeAsyncImageContent()
+                            }
+                        }
                     } else {
-                        Icon(
-                            imageVector        = Icons.Filled.AccountCircle,
-                            contentDescription = null,
-                            tint               = Color.White,
-                            modifier           = Modifier.size(60.dp)
-                        )
+                        Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(60.dp))
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                Text(perfil.nombre,   color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text(perfil.usuario,  color = Color.LightGray, fontSize = 13.sp)
+                Text(perfil.nombre,  color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(perfil.usuario, color = Color.LightGray, fontSize = 13.sp)
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                     StatChip("Siguiendo", perfil.siguiendo)
@@ -154,20 +154,18 @@ fun MiPerfilContent(
             }
         }
 
-        // ── Separador / título sección ───────────────────────────────────────
         item {
             Spacer(Modifier.height(12.dp))
             Text(
-                text     = "Mis reseñas",
-                color    = Color.White,
-                fontSize = 16.sp,
+                text       = "Mis reseñas",
+                color      = Color.White,
+                fontSize   = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                modifier   = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
             Spacer(Modifier.height(4.dp))
         }
 
-        // ── Loading ──────────────────────────────────────────────────────────
         if (uiState.isLoading) {
             item {
                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -176,7 +174,6 @@ fun MiPerfilContent(
             }
         }
 
-        // ── Empty state ──────────────────────────────────────────────────────
         if (!uiState.isLoading && uiState.misResenas.isEmpty()) {
             item {
                 Column(
@@ -191,7 +188,6 @@ fun MiPerfilContent(
             }
         }
 
-        // ── Lista de reseñas ─────────────────────────────────────────────────
         items(uiState.misResenas, key = { it.id }) { resena ->
             MiResenaCard(
                 resena          = resena,
@@ -205,7 +201,7 @@ fun MiPerfilContent(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Card individual de reseña
+// Card individual de reseña — igual que ReviewOtroUsuarioCard pero con menú
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun MiResenaCard(
@@ -217,23 +213,21 @@ fun MiResenaCard(
     var menuExpandido by remember { mutableStateOf(false) }
 
     Card(
-        modifier  = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+        modifier  = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
         colors    = CardDefaults.cardColors(containerColor = BeatTreatColors.Surface),
         shape     = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
 
-            // Fila superior: portada + info álbum + menú opciones
+            // ── Fila: portada + info álbum + menú ───────────────────────────
             Row(verticalAlignment = Alignment.CenterVertically) {
 
-                // Portada álbum
+                // Portada: URL con Coil, fallback icono
                 Box(
                     modifier         = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(6.dp))
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(BeatTreatColors.SurfaceVariant)
                         .clickable { onAlbumClick() },
                     contentAlignment = Alignment.Center
@@ -242,16 +236,25 @@ fun MiResenaCard(
                         SubcomposeAsyncImage(
                             model              = resena.albumCover,
                             contentDescription = resena.albumTitulo,
-                            modifier           = Modifier.fillMaxSize()
-                        )
+                            modifier           = Modifier.fillMaxSize(),
+                            contentScale       = ContentScale.Crop
+                        ) {
+                            when (painter.state) {
+                                is AsyncImagePainter.State.Loading ->
+                                    CircularProgressIndicator(color = BeatTreatColors.Purple60, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                is AsyncImagePainter.State.Error ->
+                                    Icon(Icons.Filled.Album, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(28.dp))
+                                else -> SubcomposeAsyncImageContent()
+                            }
+                        }
                     } else {
                         Icon(Icons.Filled.Album, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(28.dp))
                     }
                 }
 
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(12.dp))
 
-                // Nombre álbum + artista
+                // Info álbum (igual que en PerfilOtroUsuario)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         resena.albumTitulo,
@@ -261,46 +264,45 @@ fun MiResenaCard(
                         maxLines   = 1,
                         overflow   = TextOverflow.Ellipsis
                     )
-                    Text(resena.albumArtist, color = Color.LightGray, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        resena.albumArtist,
+                        color    = BeatTreatColors.Purple60,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     Spacer(Modifier.height(4.dp))
                     EstrellaRating(rating = resena.rating)
                 }
 
-                // Menú contextual (editar / eliminar)
+                // Menú contextual
                 Box {
                     IconButton(onClick = { menuExpandido = true }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(18.dp))
                     }
-                    DropdownMenu(
-                        expanded         = menuExpandido,
-                        onDismissRequest = { menuExpandido = false }
-                    ) {
+                    DropdownMenu(expanded = menuExpandido, onDismissRequest = { menuExpandido = false }) {
                         DropdownMenuItem(
-                            text         = { Text("Editar") },
-                            leadingIcon  = { Icon(Icons.Filled.Edit, contentDescription = null) },
-                            onClick      = { menuExpandido = false; onEditarClick() }
+                            text        = { Text("Editar") },
+                            leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
+                            onClick     = { menuExpandido = false; onEditarClick() }
                         )
                         DropdownMenuItem(
-                            text         = { Text("Eliminar", color = MaterialTheme.colorScheme.error) },
-                            leadingIcon  = { Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-                            onClick      = { menuExpandido = false; onEliminarClick() }
+                            text        = { Text("Eliminar", color = MaterialTheme.colorScheme.error) },
+                            leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                            onClick     = { menuExpandido = false; onEliminarClick() }
                         )
                     }
                 }
             }
 
-            // Contenido de la reseña
+            // ── Contenido de la reseña ───────────────────────────────────────
             Spacer(Modifier.height(10.dp))
             Text(resena.content, color = Color(0xFFDDDDDD), fontSize = 13.sp, lineHeight = 18.sp)
 
-            // Fecha
+            // ── Fecha ────────────────────────────────────────────────────────
             if (resena.createdAt.isNotBlank()) {
                 Spacer(Modifier.height(6.dp))
-                Text(
-                    formatearFecha(resena.createdAt),
-                    color    = Color.Gray,
-                    fontSize = 11.sp
-                )
+                Text(formatearFecha(resena.createdAt), color = Color.Gray, fontSize = 11.sp)
             }
         }
     }
@@ -328,13 +330,9 @@ fun FormularioResenaDialog(
     AlertDialog(
         onDismissRequest = onCancelar,
         containerColor   = BeatTreatColors.Surface,
-        title = {
-            Text(titulo, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        },
+        title = { Text(titulo, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-
-                // ── ID de álbum (solo en modo crear) ──────────────────────
                 if (!esEdicion) {
                     OutlinedTextField(
                         value         = if (albumId == 0) "" else albumId.toString(),
@@ -343,24 +341,47 @@ fun FormularioResenaDialog(
                         singleLine    = true,
                         modifier      = Modifier.fillMaxWidth(),
                         colors        = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor   = Color.White,
-                            unfocusedTextColor = Color.LightGray,
-                            focusedLabelColor  = BeatTreatColors.Purple60,
+                            focusedTextColor    = Color.White,
+                            unfocusedTextColor  = Color.LightGray,
+                            focusedLabelColor   = BeatTreatColors.Purple60,
                             unfocusedLabelColor = Color.Gray,
                             focusedBorderColor  = BeatTreatColors.Purple60,
                             unfocusedBorderColor = Color.Gray
                         )
                     )
                 } else {
-                    // En edición mostramos el álbum como texto no editable
-                    Text(
-                        "Álbum: ${resenaEnEdicion!!.albumTitulo}",
-                        color    = Color.LightGray,
-                        fontSize = 13.sp
-                    )
+                    // En edición: mostrar portada + nombre del álbum
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier         = Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(BeatTreatColors.SurfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (resenaEnEdicion!!.albumCover.isNotBlank()) {
+                                SubcomposeAsyncImage(
+                                    model              = resenaEnEdicion.albumCover,
+                                    contentDescription = resenaEnEdicion.albumTitulo,
+                                    modifier           = Modifier.fillMaxSize(),
+                                    contentScale       = ContentScale.Crop
+                                ) {
+                                    when (painter.state) {
+                                        is AsyncImagePainter.State.Error ->
+                                            Icon(Icons.Filled.Album, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
+                                        else -> SubcomposeAsyncImageContent()
+                                    }
+                                }
+                            } else {
+                                Icon(Icons.Filled.Album, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
+                            }
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(resenaEnEdicion!!.albumTitulo, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                            Text(resenaEnEdicion.albumArtist, color = BeatTreatColors.Purple60, fontSize = 12.sp)
+                        }
+                    }
                 }
 
-                // ── Rating con estrellas ──────────────────────────────────
+                // Rating con estrellas
                 Column {
                     Text("Calificación", color = Color.LightGray, fontSize = 12.sp)
                     Spacer(Modifier.height(4.dp))
@@ -370,15 +391,12 @@ fun FormularioResenaDialog(
                                 imageVector        = if (estrella <= rating.toInt()) Icons.Filled.Star else Icons.Filled.StarBorder,
                                 contentDescription = "Estrella $estrella",
                                 tint               = if (estrella <= rating.toInt()) Color(0xFFFFC107) else Color.Gray,
-                                modifier           = Modifier
-                                    .size(32.dp)
-                                    .clickable { onRatingChange(estrella.toFloat()) }
+                                modifier           = Modifier.size(32.dp).clickable { onRatingChange(estrella.toFloat()) }
                             )
                         }
                     }
                 }
 
-                // ── Texto de la reseña ────────────────────────────────────
                 OutlinedTextField(
                     value         = content,
                     onValueChange = onContentChange,
@@ -396,20 +414,14 @@ fun FormularioResenaDialog(
                     )
                 )
 
-                // Contador de caracteres
-                Text(
-                    "${content.length} caracteres",
-                    color    = Color.Gray,
-                    fontSize = 11.sp,
-                    modifier = Modifier.align(Alignment.End)
-                )
+                Text("${content.length} caracteres", color = Color.Gray, fontSize = 11.sp, modifier = Modifier.align(Alignment.End))
             }
         },
         confirmButton = {
             Button(
-                onClick  = onGuardar,
-                enabled  = !isSaving && content.isNotBlank() && rating > 0f,
-                colors   = ButtonDefaults.buttonColors(containerColor = BeatTreatColors.Purple60)
+                onClick = onGuardar,
+                enabled = !isSaving && content.isNotBlank() && rating > 0f,
+                colors  = ButtonDefaults.buttonColors(containerColor = BeatTreatColors.Purple60)
             ) {
                 if (isSaving) {
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
@@ -425,6 +437,7 @@ fun FormularioResenaDialog(
         }
     )
 }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Diálogo Confirmar eliminar
 // ─────────────────────────────────────────────────────────────────────────────
@@ -437,31 +450,21 @@ fun ConfirmarEliminarDialog(
     AlertDialog(
         onDismissRequest = onCancel,
         containerColor   = BeatTreatColors.Surface,
-        icon = {
-            Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(32.dp))
-        },
-        title = {
-            Text("Eliminar reseña", color = Color.White, fontWeight = FontWeight.Bold)
-        },
-        text = {
+        icon  = { Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(32.dp)) },
+        title = { Text("Eliminar reseña", color = Color.White, fontWeight = FontWeight.Bold) },
+        text  = {
             Text(
                 "¿Seguro que quieres eliminar tu reseña de \"${resena.albumTitulo}\"? Esta acción no se puede deshacer.",
-                color = Color.LightGray,
-                fontSize = 14.sp
+                color = Color.LightGray, fontSize = 14.sp
             )
         },
         confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors  = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-            ) {
+            Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
                 Text("Eliminar", color = Color.White)
             }
         },
         dismissButton = {
-            TextButton(onClick = onCancel) {
-                Text("Cancelar", color = Color.LightGray)
-            }
+            TextButton(onClick = onCancel) { Text("Cancelar", color = Color.LightGray) }
         }
     )
 }
@@ -492,7 +495,6 @@ private fun EstrellaRating(rating: Float) {
 }
 
 private fun formatearFecha(raw: String): String {
-    // Intenta cortar el ISO string: "2024-05-12T..." → "12 may 2024"
     return try {
         val partes = raw.substringBefore("T").split("-")
         "${partes[2]} / ${partes[1]} / ${partes[0]}"
@@ -500,4 +502,3 @@ private fun formatearFecha(raw: String): String {
         raw
     }
 }
-

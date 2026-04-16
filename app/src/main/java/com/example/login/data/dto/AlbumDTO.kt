@@ -16,7 +16,6 @@ data class AlbumDto(
     @SerializedName("createdAt")   val createdAt: String?,
     @SerializedName("updatedAt")   val updatedAt: String?
 ) {
-    // Funcion de mapeo DTO
     fun toAlbumDetalleUI(): AlbumDetalleUI = AlbumDetalleUI(
         id                   = this.id,
         nombre               = this.title,
@@ -24,7 +23,8 @@ data class AlbumDto(
         año                  = this.releaseYear?.toString() ?: "—",
         genero               = this.genre ?: "—",
         descripcion          = this.description ?: "",
-        imagenRes            = 0,
+        // URL de la portada proveniente del backend (o placeholder si es null)
+        imagenUrl            = this.coverImage ?: "https://cdn.phototourl.com/free/2026-04-16-1a69cbb3-1f2c-4752-a2bf-d221040dae34.png",
         duracionTotal        = "—",
         calificacionPromedio = 0f,
         totalResenas         = 0,
@@ -34,6 +34,6 @@ data class AlbumDto(
     fun toAlbumHomeUI(): AlbumHomeUI = AlbumHomeUI(
         id        = this.id,
         nombre    = this.title,
-        imagenRes = 0
+        imagenUrl = this.coverImage ?: "https://cdn.phototourl.com/free/2026-04-16-1a69cbb3-1f2c-4752-a2bf-d221040dae34.png"
     )
 }

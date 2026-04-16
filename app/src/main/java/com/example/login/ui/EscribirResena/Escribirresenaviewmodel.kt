@@ -25,27 +25,54 @@ class EscribirResenaViewModel @Inject constructor(
         cargarAlbumesDelBackend()
     }
 
-    /**
-     * Carga los álbumes reales del backend para poder obtener sus IDs correctos.
-     */
     private fun cargarAlbumesDelBackend() {
         viewModelScope.launch {
             _uiState.update { it.copy(albumesCargando = true) }
             try {
-                // AlbumRepository devuelve Result<List<ArtistaHomeUI>> agrupado,
-                // así que accedemos directamente al datasource a través del repositorio.
-                // Usamos el resultado de getAllAlbums que ya tenemos disponible,
-                // pero necesitamos los DTOs crudos. Lo hacemos con una llamada directa:
                 val result = albumRepository.getAllAlbumsDto()
                 result.onSuccess { dtos ->
-                    _uiState.update { it.copy(albumesBackend = dtos, albumesCargando = false) }
+                    _uiState.update { state ->
+                        // Si el álbum ya fue fijado antes de que cargara la lista,
+                        // buscamos su etiqueta para mostrarla correctamente.
+                        val etiqueta = if (state.albumFijado && state.albumId != 0) {
+                            dtos.find { it.id == state.albumId }
+                                ?.let { "${it.title} — ${it.artist}" }
+                                ?: state.albumSeleccionado
+                        } else state.albumSeleccionado
+
+                        state.copy(
+                            albumesBackend    = dtos,
+                            albumesCargando   = false,
+                            albumSeleccionado = etiqueta
+                        )
+                    }
                 }.onFailure {
-                    // Si falla, dejamos lista vacía; el selector mostrará los locales como fallback
                     _uiState.update { it.copy(albumesCargando = false) }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(albumesCargando = false) }
             }
+        }
+    }
+
+    /**
+     * Llamar desde AppNavegacion cuando se navega desde el detalle de un álbum.
+     * Fija el álbum y oculta el selector.
+     */
+    fun preSeleccionarAlbum(albumId: Int) {
+        if (albumId == 0) return
+        // Busca la etiqueta en la lista ya cargada (o deja en blanco hasta que cargue)
+        val etiqueta = _uiState.value.albumesBackend
+            .find { it.id == albumId }
+            ?.let { "${it.title} — ${it.artist}" }
+            ?: ""
+
+        _uiState.update {
+            it.copy(
+                albumId           = albumId,
+                albumSeleccionado = etiqueta,
+                albumFijado       = true
+            )
         }
     }
 
@@ -57,45 +84,26 @@ class EscribirResenaViewModel @Inject constructor(
         _uiState.update { it.copy(calificacion = calificacion) }
     }
 
-    /**
-     * Busca el álbum seleccionado primero en la lista del backend (IDs reales),
-     * y como fallback en los datos locales.
-     */
     fun onAlbumSeleccionado(albumLabel: String) {
         val state = _uiState.value
+        // No permitir cambio si el álbum está fijado
+        if (state.albumFijado) return
 
-        // 1. Intentar encontrar en la lista del backend (formato "título — artista")
         val dtoEncontrado = state.albumesBackend.find { dto ->
             "${dto.title} — ${dto.artist}" == albumLabel
         }
-
         if (dtoEncontrado != null) {
-            _uiState.update {
-                it.copy(
-                    albumSeleccionado = albumLabel,
-                    albumId           = dtoEncontrado.id
-                )
-            }
+            _uiState.update { it.copy(albumSeleccionado = albumLabel, albumId = dtoEncontrado.id) }
             return
         }
-
-        // 2. Fallback: buscar por título parcial si el formato no coincide exacto
         val dtoParcial = state.albumesBackend.find { dto ->
             albumLabel.contains(dto.title, ignoreCase = true) &&
                     albumLabel.contains(dto.artist, ignoreCase = true)
         }
-
         if (dtoParcial != null) {
-            _uiState.update {
-                it.copy(
-                    albumSeleccionado = albumLabel,
-                    albumId           = dtoParcial.id
-                )
-            }
+            _uiState.update { it.copy(albumSeleccionado = albumLabel, albumId = dtoParcial.id) }
             return
         }
-
-        // 3. Si no hay backend disponible, quedamos sin albumId válido
         _uiState.update {
             it.copy(
                 albumSeleccionado = albumLabel,
@@ -113,7 +121,6 @@ class EscribirResenaViewModel @Inject constructor(
             }
             return
         }
-
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = repository.crearResena(
@@ -125,10 +132,7 @@ class EscribirResenaViewModel @Inject constructor(
                 _uiState.update { it.copy(publicadoExitoso = true, isLoading = false) }
             } else {
                 _uiState.update {
-                    it.copy(
-                        isLoading    = false,
-                        errorMessage = result.exceptionOrNull()?.message
-                    )
+                    it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.message)
                 }
             }
         }

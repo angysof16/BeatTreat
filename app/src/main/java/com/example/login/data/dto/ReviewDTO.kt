@@ -13,25 +13,26 @@ data class ReviewDto(
     @SerializedName("user")      val user: UserInReviewDto
 ) {
     fun toResenaDetalladaUI(): ResenaDetalladaUI = ResenaDetalladaUI(
-        id           = this.id,
-        albumId      = this.albumId,
-        autorNombre  = this.user.name,
-        autorUsuario = "@${this.user.username}",
-        autorFotoRes = 0,
-        albumNombre  = "",
-        albumArtista = "",
-        albumRes     = 0,
-        calificacion = this.rating,
-        texto        = this.content,
-        likes        = 0,
-        comentarios  = 0,
-        fecha        = this.createdAt
+        id            = this.id,
+        albumId       = this.albumId,
+        autorNombre   = this.user.name,
+        autorUsuario  = "@${this.user.username}",
+        autorFotoUrl  = this.user.profileImage ?: "",
+        albumNombre   = "",
+        albumArtista  = "",
+        albumImagenUrl = "",
+        calificacion  = this.rating,
+        texto         = this.content,
+        likes         = 0,
+        comentarios   = 0,
+        fecha         = this.createdAt
     )
 }
 
 data class UserInReviewDto(
-    @SerializedName("id")       val id: Int,
-    @SerializedName("name")     val name: String,
-    @SerializedName("username") val username: String,
-    @SerializedName("email")    val email: String
+    @SerializedName("id")           val id: Int,
+    @SerializedName("name")         val name: String,
+    @SerializedName("username")     val username: String,
+    @SerializedName("email")        val email: String,
+    @SerializedName("profileImage") val profileImage: String?
 )

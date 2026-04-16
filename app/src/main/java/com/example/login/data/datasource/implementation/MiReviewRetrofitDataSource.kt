@@ -6,6 +6,7 @@ import com.example.login.data.dto.ReviewDto
 import com.example.login.data.dto.UpdateReviewDTO
 import com.example.login.data.dto.UserReviewDto
 import com.example.login.data.network.BeatTreatApiService
+import retrofit2.Response
 import javax.inject.Inject
 
 class MiReviewRetrofitDataSource @Inject constructor(
@@ -21,6 +22,6 @@ class MiReviewRetrofitDataSource @Inject constructor(
     override suspend fun updateReview(reviewId: Int, body: UpdateReviewDTO): ReviewDto =
         service.updateReview(reviewId, body)
 
-    override suspend fun deleteReview(reviewId: Int) =
+    override suspend fun deleteReview(reviewId: Int): Response<Unit> =
         service.deleteReview(reviewId)
 }

@@ -24,7 +24,11 @@ class ArtistaDetalleViewModel @Inject constructor() : ViewModel() {
                         id      = artista.id,
                         nombre  = artista.nombre,
                         albumes = artista.albumes.map { a ->
-                            AlbumArtistaUI(id = a.id, nombre = a.nombre, imagenRes = a.imagenRes)
+                            AlbumArtistaUI(
+                                id        = a.id,
+                                nombre    = a.nombre,
+                                imagenUrl = a.imagenUrl
+                            )
                         }
                     ),
                     isLoading = false

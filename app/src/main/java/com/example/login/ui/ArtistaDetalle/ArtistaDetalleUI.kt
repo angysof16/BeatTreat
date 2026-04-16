@@ -1,7 +1,6 @@
 package com.example.login.ui.ArtistaDetalle
 
-// ── Entidades UI ──
-data class AlbumArtistaUI(val id: Int, val nombre: String, val imagenRes: Int)
+data class AlbumArtistaUI(val id: Int, val nombre: String, val imagenUrl: String)
 
 data class ArtistaDetalleUI(
     val id: Int,

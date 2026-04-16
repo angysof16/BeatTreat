@@ -5,13 +5,13 @@ package com.example.login.ui.Home
 data class BannerUI(
     val id: Int,
     val texto: String,
-    val imagenRes: Int
+    val imagenUrl: String
 )
 
 data class AlbumHomeUI(
     val id: Int,
     val nombre: String,
-    val imagenRes: Int
+    val imagenUrl: String
 )
 
 data class ArtistaHomeUI(

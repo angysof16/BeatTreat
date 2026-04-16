@@ -10,7 +10,7 @@ data class AlbumDetalleUI(
     val genero: String,
     val descripcion: String,
     val canciones: List<CancionDetalleUI>,
-    val imagenRes: Int,
+    val imagenUrl: String,
     val duracionTotal: String,
     val calificacionPromedio: Float,
     val totalResenas: Int

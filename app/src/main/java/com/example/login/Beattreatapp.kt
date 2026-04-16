@@ -17,7 +17,6 @@ fun BeatTreatApp() {
     val currentRoute by navController.currentBackStackEntryAsState()
     val rutaActual = currentRoute?.destination?.route
 
-    // Pantallas donde NO se muestra el BottomBar
     val pantallasOcultas = listOf(
         Screen.Login.route,
         Screen.Registro.route
@@ -31,33 +30,17 @@ fun BeatTreatApp() {
                 BottomNavigationBar(
                     rutaActual        = rutaActual ?: "",
                     onHomeClick       = {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Home.route) { inclusive = true }
-                        }
+                        navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } }
                     },
-                    onBibliotecaClick = {
-                        navController.navigate(Screen.Biblioteca.route) {
-                            popUpTo(Screen.Home.route)
-                        }
-                    },
-                    onDescubreClick   = {
-                        navController.navigate(Screen.Descubre.route) {
-                            popUpTo(Screen.Home.route)
-                        }
-                    },
-                    onChatClick       = {
-                        navController.navigate(Screen.Grupos.route) // ← navega a la lista de grupos
-                    },
-                    onAddClick        = {
-                        navController.navigate(Screen.EscribirResena.route)
-                    }
+                    onBibliotecaClick = { navController.navigate(Screen.Biblioteca.route) { popUpTo(Screen.Home.route) } },
+                    onDescubreClick   = { navController.navigate(Screen.Descubre.route) { popUpTo(Screen.Home.route) } },
+                    onChatClick       = { navController.navigate(Screen.Grupos.route) },
+                    // El "+" del BottomBar navega sin album fijado
+                    onAddClick        = { navController.navigate(Screen.EscribirResena.createRoute(0)) }
                 )
             }
         }
     ) { innerPadding ->
-        AppNavegacion(
-            navController = navController,
-            modifier      = Modifier.padding(innerPadding)
-        )
+        AppNavegacion(navController = navController, modifier = Modifier.padding(innerPadding))
     }
 }

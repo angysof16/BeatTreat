@@ -2,13 +2,13 @@ package com.example.login.ui.Resena
 
 data class ResenaDetalladaUI(
     val id: Int,
-    val albumId: Int, // referencia al álbum al que pertenece la reseña
+    val albumId: Int,
     val autorNombre: String,
     val autorUsuario: String,
-    val autorFotoRes: Int,
+    val autorFotoUrl: String,
     val albumNombre: String,
     val albumArtista: String,
-    val albumRes: Int,
+    val albumImagenUrl: String,
     val calificacion: Float,
     val texto: String,
     val likes: Int,
@@ -20,7 +20,7 @@ data class ComentarioUI(
     val id: Int,
     val autorNombre: String,
     val autorUsuario: String,
-    val autorFotoRes: Int,
+    val autorFotoUrl: String,
     val texto: String,
     val likes: Int,
     val fecha: String

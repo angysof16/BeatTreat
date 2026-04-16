@@ -6,6 +6,7 @@ import com.example.login.data.dto.ReviewDto
 import com.example.login.data.dto.UpdateReviewDTO
 import com.example.login.data.dto.UserDto
 import com.example.login.data.dto.UserReviewDto
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -43,7 +44,11 @@ interface BeatTreatApiService {
         @Body body: UpdateReviewDTO
     ): ReviewDto
 
-    /** DELETE /reviews/:id */
+    /**
+     * DELETE /reviews/:id
+     * El backend responde 204 No Content, por eso usamos Response<Unit>
+     * en lugar de Unit directamente (Retrofit lanza error si espera body y no hay).
+     */
     @DELETE("reviews/{id}")
-    suspend fun deleteReview(@Path("id") reviewId: Int)
+    suspend fun deleteReview(@Path("id") reviewId: Int): Response<Unit>
 }

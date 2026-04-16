@@ -54,6 +54,8 @@ class MiPerfilRepository @Inject constructor(
             Result.success(Unit)
         } catch (e: retrofit2.HttpException) {
             Result.failure(Exception("Error del servidor (${e.code()})"))
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("Sin conexión a internet."))
         } catch (e: Exception) {
             Result.failure(Exception("Error al crear la reseña: ${e.message}"))
         }
@@ -65,19 +67,31 @@ class MiPerfilRepository @Inject constructor(
             remoteDataSource.updateReview(reviewId, UpdateReviewDTO(rating, content))
             Result.success(Unit)
         } catch (e: retrofit2.HttpException) {
-            Result.failure(Exception("Error del servidor (${e.code()})"))
+            Result.failure(Exception("Error del servidor (${e.code()}): no se pudo editar"))
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("Sin conexión a internet."))
         } catch (e: Exception) {
             Result.failure(Exception("Error al editar la reseña: ${e.message}"))
         }
     }
 
-    /** DELETE /reviews/:id → elimina la reseña */
+    /**
+     * DELETE /reviews/:id → elimina la reseña.
+     * El backend responde 204 No Content; usamos Response<Unit> para que
+     * Retrofit no intente deserializar un body vacío.
+     */
     suspend fun eliminarResena(reviewId: Int): Result<Unit> {
         return try {
-            remoteDataSource.deleteReview(reviewId)
-            Result.success(Unit)
+            val response = remoteDataSource.deleteReview(reviewId)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error del servidor (${response.code()})"))
+            }
         } catch (e: retrofit2.HttpException) {
-            Result.failure(Exception("Error del servidor (${e.code()})"))
+            Result.failure(Exception("Error del servidor (${e.code()}): no se pudo eliminar"))
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("Sin conexión a internet."))
         } catch (e: Exception) {
             Result.failure(Exception("Error al eliminar la reseña: ${e.message}"))
         }

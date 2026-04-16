@@ -1,7 +1,5 @@
 package com.example.login.ui.AlbumDetalle
 
-import com.example.login.R
-
 object AlbumDetalleData {
 
     private val todos = listOf(
@@ -13,8 +11,8 @@ object AlbumDetalleData {
             artista = "Quiet Riot",
             año = "1983",
             genero = "Heavy Metal",
-            descripcion = "Éxito definitivo de Quiet Riot que catapultó al grupo a la cima del rock duro de los 80. Con una energía desbordante y riffs memorables, el álbum conquistó las listas de todo el mundo.",
-            imagenRes = R.drawable.album1,
+            descripcion = "Éxito definitivo de Quiet Riot que catapultó al grupo a la cima del rock duro de los 80.",
+            imagenUrl = "https://cdn.phototourl.com/free/2026-04-16-9c152d81-5c35-47ec-a295-aa26549c1c38.png",
             duracionTotal = "38 min",
             calificacionPromedio = 4.2f,
             totalResenas = 312,
@@ -36,7 +34,7 @@ object AlbumDetalleData {
             año = "1983",
             genero = "Heavy Metal",
             descripcion = "Versión potente del clásico de Slade que se convirtió en himno del metal de los 80.",
-            imagenRes = R.drawable.album2,
+            imagenUrl = "https://cdn.phototourl.com/free/2026-04-16-12a209bd-bb13-4979-940b-bf7e38d3bb73.jpg",
             duracionTotal = "41 min",
             calificacionPromedio = 4.0f,
             totalResenas = 198,
@@ -56,7 +54,7 @@ object AlbumDetalleData {
             año = "1984",
             genero = "Glam Metal",
             descripcion = "Álbum de seguimiento que muestra la madurez musical del grupo.",
-            imagenRes = R.drawable.album3,
+            imagenUrl = "https://cdn.phototourl.com/free/2026-04-16-9fcaa3c4-af8d-4ceb-b45e-f93ec944b474.jpg",
             duracionTotal = "43 min",
             calificacionPromedio = 3.8f,
             totalResenas = 142,
@@ -77,7 +75,7 @@ object AlbumDetalleData {
             año = "2018",
             genero = "Reggaetón / Trap Latino",
             descripcion = "Álbum debut de Bad Bunny que redefinió el reggaetón moderno.",
-            imagenRes = R.drawable.album4,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/BAD_BUNNY_X100PRE.JPG",
             duracionTotal = "56 min",
             calificacionPromedio = 4.6f,
             totalResenas = 1850,
@@ -101,7 +99,7 @@ object AlbumDetalleData {
             año = "2022",
             genero = "Reggaetón / Latin Pop",
             descripcion = "Obra maestra que celebra la cultura puertorriqueña.",
-            imagenRes = R.drawable.album5,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/BAD_BUNNY_UVST.JPG",
             duracionTotal = "81 min",
             calificacionPromedio = 4.9f,
             totalResenas = 5200,
@@ -125,7 +123,7 @@ object AlbumDetalleData {
             año = "2020",
             genero = "Reggaetón / Trap",
             descripcion = "EP sorpresa lanzado durante la pandemia con 8 canciones introspectivas.",
-            imagenRes = R.drawable.album6,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/BAD_BUNNY_LQNIAS.JPG",
             duracionTotal = "27 min",
             calificacionPromedio = 4.4f,
             totalResenas = 920,
@@ -149,7 +147,7 @@ object AlbumDetalleData {
             año = "1975",
             genero = "Rock Clásico",
             descripcion = "Considerado uno de los mejores álbumes de la historia. Contiene 'Bohemian Rhapsody'.",
-            imagenRes = 0,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/QUEEN_NIGHT_OPERA.JPG",
             duracionTotal = "43 min",
             calificacionPromedio = 5.0f,
             totalResenas = 8700,
@@ -172,7 +170,7 @@ object AlbumDetalleData {
             año = "1980",
             genero = "Rock / Pop Rock",
             descripcion = "El álbum más exitoso comercialmente de Queen.",
-            imagenRes = 0,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/QUEEN_THE_GAME.JPG",
             duracionTotal = "48 min",
             calificacionPromedio = 4.8f,
             totalResenas = 4100,
@@ -196,7 +194,7 @@ object AlbumDetalleData {
             año = "1977",
             genero = "Rock / Arena Rock",
             descripcion = "Hogar de los himnos deportivos definitivos.",
-            imagenRes = 0,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/QUEEN_NEWS_WORLD.JPG",
             duracionTotal = "44 min",
             calificacionPromedio = 4.9f,
             totalResenas = 6300,
@@ -223,7 +221,7 @@ object AlbumDetalleData {
             año = "2022",
             genero = "Synth-Pop / Indie Pop",
             descripcion = "Un viaje por 13 noches de insomnio donde Taylor Swift explora sus miedos y reflexiones más íntimas.",
-            imagenRes = R.drawable.album_midnights,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/TAYLOR_SWIFT_MIDNIGHTS.JPG",
             duracionTotal = "44 min",
             calificacionPromedio = 4.7f,
             totalResenas = 9800,
@@ -250,7 +248,7 @@ object AlbumDetalleData {
             año = "2022",
             genero = "Dance / House / R&B",
             descripcion = "Tributo a la música dance y house de la comunidad LGBTQ+.",
-            imagenRes = R.drawable.album_renaissance,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/BEYONCE_RENAISSANCE.JPG",
             duracionTotal = "62 min",
             calificacionPromedio = 4.8f,
             totalResenas = 7400,
@@ -280,7 +278,7 @@ object AlbumDetalleData {
             año = "2022",
             genero = "Reggaetón / Latin Pop",
             descripcion = "El álbum más escuchado del año.",
-            imagenRes = R.drawable.album5,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/BAD_BUNNY_UVST.JPG",
             duracionTotal = "81 min",
             calificacionPromedio = 4.9f,
             totalResenas = 5200,
@@ -300,7 +298,7 @@ object AlbumDetalleData {
             año = "2022",
             genero = "Pop / Indie Pop / Funk",
             descripcion = "Tercer álbum de Harry Styles, ganador del Grammy al Álbum del Año 2023.",
-            imagenRes = R.drawable.album_harrys_house,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/HARRY_STYLES_HARRYS_HOUSE.JPG",
             duracionTotal = "42 min",
             calificacionPromedio = 4.6f,
             totalResenas = 6100,
@@ -327,7 +325,7 @@ object AlbumDetalleData {
             año = "2022",
             genero = "Synth-Pop / R&B",
             descripcion = "Experiencia conceptual que simula una emisora de radio en el purgatorio.",
-            imagenRes = R.drawable.album_dawn_fm,
+            imagenUrl = "HTTPS://PLACEHOLDER.COM/ALBUMS/WEEKND_DAWN_FM.JPG",
             duracionTotal = "52 min",
             calificacionPromedio = 4.7f,
             totalResenas = 5900,
@@ -352,16 +350,9 @@ object AlbumDetalleData {
         )
     )
 
-    /** Devuelve todos los álbumes disponibles. */
     fun todos(): List<AlbumDetalleUI> = todos
-
-    /** Busca un álbum por su id único. */
     fun findById(id: Int): AlbumDetalleUI? = todos.find { it.id == id }
 
-    /**
-     * Filtra álbumes cuyo género contenga la palabra buscada (case-insensitive).
-     * Si la cadena está vacía devuelve todos.
-     */
     fun porGenero(generoNombre: String): List<AlbumDetalleUI> {
         if (generoNombre.isBlank()) return todos
         val q = generoNombre.trim().lowercase()
