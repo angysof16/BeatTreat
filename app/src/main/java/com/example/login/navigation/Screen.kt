@@ -1,3 +1,8 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// FILE: navigation/Screen.kt  (REEMPLAZA el existente)
+// CAMBIO CLAVE: AlbumDetalle, Resena, EscribirResena y PerfilOtroUsuario
+// ahora usan {albumId} y {userId} como String (para soportar IDs de Firestore).
+// ──────────────────────────────────────────────────────────────────────────────
 package com.example.login.navigation
 
 sealed class Screen(val route: String) {
@@ -18,21 +23,24 @@ sealed class Screen(val route: String) {
 
     // ── Pantallas con argumentos ──────────────────────────────────────────────
 
-    // EscribirResena ahora lleva albumId como argumento opcional.
+    // albumId es ahora String (firestoreId URL-encoded)
     object EscribirResena : Screen("escribir_resena/{albumId}") {
-        fun createRoute(albumId: Int = 0) = "escribir_resena/$albumId"
+        fun createRoute(albumId: String = "") = "escribir_resena/$albumId"
     }
 
+    // albumId es ahora String (firestoreId URL-encoded)
     object Resena : Screen("resena/{albumId}") {
-        fun createRoute(albumId: Int) = "resena/$albumId"
+        fun createRoute(albumId: String) = "resena/$albumId"
     }
 
+    // resenaId sigue siendo Int (ID de comentario local)
     object Comentarios : Screen("comentarios/{resenaId}") {
         fun createRoute(resenaId: Int) = "comentarios/$resenaId"
     }
 
+    // albumId es ahora String (firestoreId URL-encoded)
     object AlbumDetalle : Screen("album_detalle/{albumId}") {
-        fun createRoute(albumId: Int) = "album_detalle/$albumId"
+        fun createRoute(albumId: String) = "album_detalle/$albumId"
     }
 
     object ArtistaDetalle : Screen("artista_detalle/{artistaId}") {
@@ -59,7 +67,9 @@ sealed class Screen(val route: String) {
         fun createRoute(usuarioId: Int) = "resenas_usuario/$usuarioId"
     }
 
+    // userId es ahora String (firestoreId URL-encoded)
     object PerfilOtroUsuario : Screen("perfil_usuario/{userId}") {
-        fun createRoute(userId: Int) = "perfil_usuario/$userId"
+        fun createRoute(userId: String) = "perfil_usuario/$userId"
+        fun createRoute(userId: Int)    = "perfil_usuario/$userId"
     }
 }

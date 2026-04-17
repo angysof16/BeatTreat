@@ -1,8 +1,12 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// FILE: ui/Perfil/ProfileViewModel.kt  (REEMPLAZA el existente)
+// ──────────────────────────────────────────────────────────────────────────────
 package com.example.login.ui.Perfil
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.login.data.repository.AuthRepository
+import com.example.login.data.repository.FirestoreUserRepository
 import com.example.login.data.repository.StorageRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +21,7 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val storageRepository: StorageRepository,
+    private val firestoreUserRepository: FirestoreUserRepository,
     private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
 
@@ -27,31 +32,44 @@ class ProfileViewModel @Inject constructor(
         cargarPerfil()
     }
 
-    private fun cargarPerfil() {
-        val urlDeFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
-
-        // Si es cuenta nueva, urlDeFirebaseAuth estará vacía y no pisamos nada
-        if (urlDeFirebaseAuth.isNotBlank()) {
-            PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = urlDeFirebaseAuth)
-        } else {
-            // ya no hay url residual de la sesion anterior
-            PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = "")
-        }
-
-        _uiState.update {
-            it.copy(
-                perfil           = PerfilData.perfilActual,
-                albumesFavoritos = PerfilData.albumesFavoritos,
-                resenas          = PerfilData.resenasRecientes,
-                isLoading        = false
-            )
+    fun cargarPerfil() {
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        viewModelScope.launch {
+            // Intentamos cargar desde Firestore
+            val result = firestoreUserRepository.getMyProfile()
+            if (result.isSuccess) {
+                val perfil = result.getOrNull()!!
+                _uiState.update {
+                    it.copy(
+                        perfil           = perfil,
+                        albumesFavoritos = PerfilData.albumesFavoritos,
+                        resenas          = PerfilData.resenasRecientes,
+                        isLoading        = false
+                    )
+                }
+            } else {
+                // Fallback: usamos datos locales y mostramos error sutil
+                val urlFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
+                if (urlFirebaseAuth.isNotBlank()) {
+                    PerfilData.perfilActual =
+                        PerfilData.perfilActual.copy(fotoPerfilUrl = urlFirebaseAuth)
+                }
+                _uiState.update {
+                    it.copy(
+                        perfil           = PerfilData.perfilActual,
+                        albumesFavoritos = PerfilData.albumesFavoritos,
+                        resenas          = PerfilData.resenasRecientes,
+                        isLoading        = false,
+                        errorMessage     = result.exceptionOrNull()?.message
+                    )
+                }
+            }
         }
     }
 
     fun refrescarFotoPerfil() {
         val urlFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
         val urlFinal = urlFirebaseAuth.ifBlank { PerfilData.perfilActual.fotoPerfilUrl }
-
         _uiState.update { state ->
             state.copy(perfil = state.perfil?.copy(fotoPerfilUrl = urlFinal))
         }
@@ -59,7 +77,6 @@ class ProfileViewModel @Inject constructor(
 
     fun cerrarSesion() {
         PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = "")
-
         authRepository.signOut()
         _uiState.update { it.copy(cerrarSesionExitoso = true) }
     }

@@ -67,7 +67,9 @@ dependencies {
     implementation(libs.dagger.hilt)
     implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.material3)
-    ksp(libs.dagger.kapt)
+    //ksp(libs.dagger.kapt)
+    ksp(libs.hilt.compiler)
+
     implementation(libs.hilt.compose.navigation)
 
     // Firebase

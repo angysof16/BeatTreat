@@ -1,8 +1,12 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// FILE: ui/EditarPerfil/EditarPerfilViewModel.kt  (REEMPLAZA el existente)
+// ──────────────────────────────────────────────────────────────────────────────
 package com.example.login.ui.EditarPerfil
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.login.data.repository.FirestoreUserRepository
 import com.example.login.data.repository.StorageRepository
 import com.example.login.ui.Perfil.PerfilData
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,20 +19,29 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EditarPerfilViewModel @Inject constructor(
-    private val storageRepository: StorageRepository
+    private val storageRepository: StorageRepository,
+    private val firestoreUserRepository: FirestoreUserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditarPerfilUIState())
     val uiState: StateFlow<EditarPerfilUIState> = _uiState.asStateFlow()
 
+    // Cargamos desde Firestore al abrir la pantalla
     init {
-        val perfil = PerfilData.perfilActual
-        _uiState.update {
-            it.copy(
-                nombre        = perfil.nombre,
-                usuario       = perfil.usuario.removePrefix("@"),
-                fotoPerfilUrl = perfil.fotoPerfilUrl
-            )
+        cargarDatosActuales()
+    }
+
+    private fun cargarDatosActuales() {
+        viewModelScope.launch {
+            val result = firestoreUserRepository.getMyProfile()
+            val perfil = result.getOrElse { PerfilData.perfilActual }
+            _uiState.update {
+                it.copy(
+                    nombre        = perfil.nombre,
+                    usuario       = perfil.usuario.removePrefix("@"),
+                    fotoPerfilUrl = perfil.fotoPerfilUrl
+                )
+            }
         }
     }
 
@@ -44,23 +57,14 @@ class EditarPerfilViewModel @Inject constructor(
 
             if (result.isSuccess) {
                 val nuevaUrl = result.getOrNull() ?: ""
-
-                // Guarda la URL nueva en PerfilData
                 PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = nuevaUrl)
-
-                _uiState.update {
-                    it.copy(fotoPerfilUrl = nuevaUrl, isUploadingPhoto = false)
-                }
+                _uiState.update { it.copy(fotoPerfilUrl = nuevaUrl, isUploadingPhoto = false) }
             } else {
-
-                // en lugar de mostrar siempre el mismo texto genérico
-                val mensajeError = result.exceptionOrNull()?.message
-                    ?: "No se pudo subir la foto. Intenta de nuevo."
-
                 _uiState.update {
                     it.copy(
                         isUploadingPhoto = false,
-                        errorMessage     = mensajeError
+                        errorMessage     = result.exceptionOrNull()?.message
+                            ?: "No se pudo subir la foto."
                     )
                 }
             }
@@ -68,7 +72,33 @@ class EditarPerfilViewModel @Inject constructor(
     }
 
     fun guardar() {
-        _uiState.update { it.copy(guardadoExitoso = true) }
+        val state = _uiState.value
+        if (state.nombre.isBlank() || state.usuario.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Nombre y usuario son obligatorios") }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            val result = firestoreUserRepository.updateProfile(
+                name         = state.nombre,
+                username     = state.usuario,
+                bio          = state.bio.ifBlank { null },
+                profileImage = state.fotoPerfilUrl.ifBlank { null }
+            )
+
+            if (result.isSuccess) {
+                _uiState.update { it.copy(guardadoExitoso = true, isLoading = false) }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isLoading    = false,
+                        errorMessage = result.exceptionOrNull()?.message ?: "Error al guardar"
+                    )
+                }
+            }
+        }
     }
 
     fun resetGuardado() {
