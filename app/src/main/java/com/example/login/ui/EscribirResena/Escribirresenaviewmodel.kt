@@ -32,8 +32,6 @@ class EscribirResenaViewModel @Inject constructor(
                 val result = albumRepository.getAllAlbumsDto()
                 result.onSuccess { dtos ->
                     _uiState.update { state ->
-                        // Si el álbum ya fue fijado antes de que cargara la lista,
-                        // buscamos su etiqueta para mostrarla correctamente.
                         val etiqueta = if (state.albumFijado && state.albumId != 0) {
                             dtos.find { it.id == state.albumId }
                                 ?.let { "${it.title} — ${it.artist}" }
@@ -55,13 +53,8 @@ class EscribirResenaViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Llamar desde AppNavegacion cuando se navega desde el detalle de un álbum.
-     * Fija el álbum y oculta el selector.
-     */
     fun preSeleccionarAlbum(albumId: Int) {
         if (albumId == 0) return
-        // Busca la etiqueta en la lista ya cargada (o deja en blanco hasta que cargue)
         val etiqueta = _uiState.value.albumesBackend
             .find { it.id == albumId }
             ?.let { "${it.title} — ${it.artist}" }
@@ -86,7 +79,6 @@ class EscribirResenaViewModel @Inject constructor(
 
     fun onAlbumSeleccionado(albumLabel: String) {
         val state = _uiState.value
-        // No permitir cambio si el álbum está fijado
         if (state.albumFijado) return
 
         val dtoEncontrado = state.albumesBackend.find { dto ->
@@ -115,12 +107,17 @@ class EscribirResenaViewModel @Inject constructor(
 
     fun publicarResena() {
         val state = _uiState.value
+
+        // Guard: si ya está cargando o ya fue publicado, no hacer nada
+        if (state.isLoading || state.publicadoExitoso) return
+
         if (state.textoResena.isBlank() || state.calificacion == 0f || state.albumId == 0) {
             _uiState.update {
                 it.copy(errorMessage = "Selecciona un álbum válido, calificación y escribe tu reseña.")
             }
             return
         }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = repository.crearResena(
@@ -139,6 +136,15 @@ class EscribirResenaViewModel @Inject constructor(
     }
 
     fun resetPublicado() {
-        _uiState.update { it.copy(publicadoExitoso = false) }
+        _uiState.update {
+            it.copy(
+                publicadoExitoso  = false,
+                textoResena       = "",
+                calificacion      = 0f,
+                albumSeleccionado = if (it.albumFijado) it.albumSeleccionado else "",
+                albumId           = if (it.albumFijado) it.albumId else 0,
+                errorMessage      = null
+            )
+        }
     }
 }

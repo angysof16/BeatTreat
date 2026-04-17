@@ -52,6 +52,8 @@ fun EscribirResenaScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // UN SOLO LaunchedEffect controlado por publicadoExitoso
+    // Se ejecuta solo cuando publicadoExitoso pasa de false a true
     LaunchedEffect(uiState.publicadoExitoso) {
         if (uiState.publicadoExitoso) {
             onPublicarClick(uiState.textoResena, uiState.calificacion)
@@ -84,6 +86,7 @@ fun EscribirResenaScreenContent(
     val puedePublicar = uiState.textoResena.isNotBlank()
             && uiState.calificacion > 0
             && uiState.albumId != 0
+            && !uiState.isLoading  // deshabilitar mientras carga para evitar doble tap
 
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         TopBarEscribirResena(
@@ -105,7 +108,6 @@ fun EscribirResenaScreenContent(
             Spacer(modifier = Modifier.height(24.dp))
             Text("Álbum", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
 
-            // Si el álbum está fijado mostramos solo el nombre, sin selector
             if (uiState.albumFijado) {
                 AlbumFijadoCard(albumSeleccionado = uiState.albumSeleccionado, albumesCargando = uiState.albumesCargando)
             } else {
@@ -180,13 +182,12 @@ fun AlbumFijadoCard(albumSeleccionado: String, albumesCargando: Boolean, modifie
                 )
                 Text("Álbum seleccionado", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
             }
-            // Candado para indicar que no se puede cambiar
             Icon(Icons.Filled.Lock, contentDescription = "Álbum fijado", tint = BeatTreatColors.Purple60, modifier = Modifier.size(20.dp))
         }
     }
 }
 
-// ── Selector de álbum desplegable (solo cuando no hay álbum fijado) ──
+// ── Selector de álbum desplegable ──
 @Composable
 fun SelectorAlbumBackend(
     albumsBackend: List<AlbumDto>,
@@ -298,7 +299,7 @@ fun TopBarEscribirResena(onBackClick: () -> Unit, onPublicarClick: () -> Unit, h
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Box(modifier = Modifier.size(80.dp).clip(RoundedCornerShape(bottomEnd = 12.dp)).background(Color(0xFF1A1A1A)), contentAlignment = Alignment.Center) {
             AsyncImage(
-                model              = "HTTPS://PLACEHOLDER.COM/LOGO/BEATTREAT_LOGO.PNG",
+                model              = "https://cdn.phototourl.com/free/2026-04-16-f75c12f6-7aa0-4e5d-959f-803340165dd0.png",
                 contentDescription = "Logo BeatTreat",
                 modifier           = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp)),
                 contentScale       = ContentScale.Fit

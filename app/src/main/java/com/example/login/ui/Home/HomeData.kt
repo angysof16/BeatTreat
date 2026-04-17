@@ -34,7 +34,7 @@ object HomeData {
             id     = 3,
             nombre = "Queen",
             albumes = listOf(
-                AlbumHomeUI(7, "A Night at the Opera", "https://cdn.phototourl.com/free/2026-04-16-7eb3fce1-c3ac-4657-b20b-56145f2845de.png"),
+                AlbumHomeUI(7, "A Night at the Opera", "https://upload.wikimedia.org/wikipedia/en/4/4d/Queen_A_Night_At_The_Opera.png"),
                 AlbumHomeUI(8, "The Game", "https://cdn.phototourl.com/free/2026-04-16-7eb3fce1-c3ac-4657-b20b-56145f2845de.png"),
                 AlbumHomeUI(9, "News of the World", "https://cdn.phototourl.com/free/2026-04-16-7eb3fce1-c3ac-4657-b20b-56145f2845de.png")
             )

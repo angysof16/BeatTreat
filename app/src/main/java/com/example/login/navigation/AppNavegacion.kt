@@ -43,6 +43,7 @@ import com.example.login.ui.Home.HomeViewModel
 import com.example.login.ui.Login.LoginScreen
 import com.example.login.ui.Login.LoginViewModel
 import com.example.login.ui.MiPerfil.MiPerfilScreen
+import com.example.login.ui.MiPerfil.MiPerfilViewModel
 import com.example.login.ui.Perfil.ProfileScreen
 import com.example.login.ui.Perfil.ProfileViewModel
 import com.example.login.ui.PerfilOtroUsuario.PerfilOtroUsuarioScreen
@@ -199,16 +200,13 @@ fun AppNavegacion(
                 onBackClick           = { navController.popBackStack() },
                 onResenaClick         = { resena -> navController.navigate(Screen.Comentarios.createRoute(resena.id)) },
                 onAutorClick          = { autorUserId -> navController.navigate(Screen.PerfilOtroUsuario.createRoute(autorUserId)) },
-                // AHORA SI FUNCIONA :3 navega a EscribirResena con el albumId fijado
                 onEscribirResenaClick = {
                     navController.navigate(Screen.EscribirResena.createRoute(albumId))
                 }
             )
         }
 
-        // ── 10. Escribir Reseña (con albumId opcional) ────────────────────────
-        // albumId = 0  viene del botón "+" del BottomBar - muestra selector
-        // albumId > 0 viene del detalle de un álbum - álbum fijado, sin selector
+        // ── 10. Escribir Reseña ────────────────────────────────────────────
         composable(
             route     = Screen.EscribirResena.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType; defaultValue = 0 })
@@ -216,28 +214,36 @@ fun AppNavegacion(
             val albumId   = backStackEntry.arguments?.getInt("albumId") ?: 0
             val viewModel: EscribirResenaViewModel = hiltViewModel()
 
-            // Fija el álbum en el ViewModel si viene con uno concreto
             LaunchedEffect(albumId) {
                 if (albumId != 0) viewModel.preSeleccionarAlbum(albumId)
             }
 
             val state by viewModel.uiState.collectAsState()
-            LaunchedEffect(state.publicadoExitoso) {
-                if (state.publicadoExitoso) {
-                    navController.popBackStack()
-                    viewModel.resetPublicado()
-                }
-            }
+            // La navegación de vuelta la maneja el LaunchedEffect dentro de EscribirResenaScreen
             EscribirResenaScreen(
                 viewModel       = viewModel,
                 onBackClick     = { navController.popBackStack() },
-                onPublicarClick = { _, _ -> viewModel.publicarResena() }
+                onPublicarClick = { _, _ ->
+                    // Al publicar, volvemos atrás y refrescamos si es posible
+                    navController.popBackStack()
+                }
             )
         }
 
         // ── 11. Mi Perfil (todas mis reseñas) ─────────────────────────────────
         composable(Screen.MiPerfil.route) {
+            val viewModel: MiPerfilViewModel = hiltViewModel()
+            val lifecycle = it.lifecycle
+            // Refresca las reseñas cada vez que se vuelve a esta pantalla
+            DisposableEffect(lifecycle) {
+                val obs = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) viewModel.cargarMisResenas()
+                }
+                lifecycle.addObserver(obs)
+                onDispose { lifecycle.removeObserver(obs) }
+            }
             MiPerfilScreen(
+                viewModel    = viewModel,
                 onAlbumClick = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) }
             )
         }
@@ -247,7 +253,13 @@ fun AppNavegacion(
             val viewModel: ProfileViewModel = hiltViewModel()
             val lifecycle = it.lifecycle
             DisposableEffect(lifecycle) {
-                val obs = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) viewModel.refrescarFotoPerfil() }
+                val obs = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        viewModel.refrescarFotoPerfil()
+                        // También recargamos las reseñas del backend al volver a esta pantalla
+                        viewModel.refrescarPerfil()
+                    }
+                }
                 lifecycle.addObserver(obs); onDispose { lifecycle.removeObserver(obs) }
             }
             ProfileScreen(

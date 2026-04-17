@@ -20,22 +20,27 @@ class ResenaViewModel @Inject constructor(
     val uiState: StateFlow<ResenaUIState> = _uiState.asStateFlow()
 
     fun cargarResenas(albumId: Int) {
+        // Evitar recargar si ya estamos cargando el mismo álbum
+        if (_uiState.value.albumId == albumId && _uiState.value.isLoading) return
+
         _uiState.update { it.copy(isLoading = true, errorMessage = null, albumId = albumId) }
 
         viewModelScope.launch {
             val result = reviewRepository.getReviewsByAlbum(albumId)
             if (result.isSuccess) {
                 _uiState.update {
-                    it.copy(resenas = result.getOrDefault(emptyList()), isLoading = false)
+                    it.copy(
+                        resenas   = result.getOrDefault(emptyList()),
+                        isLoading = false
+                    )
                 }
             } else {
-                val resenasLocales = ResenaData.porAlbum(albumId)
+                // Sin fallback a datos hardcodeados — mostrar lista vacía con mensaje de error
                 _uiState.update {
                     it.copy(
-                        resenas      = resenasLocales,
+                        resenas      = emptyList(),
                         isLoading    = false,
-                        errorMessage = if (resenasLocales.isEmpty())
-                            result.exceptionOrNull()?.message else null
+                        errorMessage = result.exceptionOrNull()?.message
                     )
                 }
             }

@@ -40,7 +40,6 @@ class MiPerfilViewModel @Inject constructor(
 
     // ── Formulario crear / editar ─────────────────────────────────────────────
 
-    /** Abre el formulario en modo CREAR (albumId preseleccionado si ya venimos del álbum) */
     fun abrirFormularioCrear(albumId: Int = 0) {
         _uiState.update {
             it.copy(
@@ -53,7 +52,6 @@ class MiPerfilViewModel @Inject constructor(
         }
     }
 
-    /** Abre el formulario en modo EDITAR con los datos actuales de la reseña */
     fun abrirFormularioEditar(resena: MiResenaUI) {
         _uiState.update {
             it.copy(
@@ -82,11 +80,13 @@ class MiPerfilViewModel @Inject constructor(
         _uiState.update { it.copy(formularioContent = content) }
     }
 
-    /** Guarda: decide internamente si es POST o PUT según resenaEnEdicion */
     fun guardarResena() {
         val state = _uiState.value
         val content = state.formularioContent.trim()
         if (content.isBlank() || state.formularioRating == 0f) return
+
+        // Guard: no permitir guardar si ya está cargando
+        if (state.isLoading) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -109,16 +109,19 @@ class MiPerfilViewModel @Inject constructor(
 
             result
                 .onSuccess {
+                    val mensajeExito = if (state.resenaEnEdicion == null)
+                        "¡Reseña creada!" else "¡Reseña actualizada!"
+
                     _uiState.update {
                         it.copy(
                             mostrarFormulario = false,
                             resenaEnEdicion   = null,
                             isLoading         = false,
-                            successMessage    = if (state.resenaEnEdicion == null)
-                                "¡Reseña creada!" else "¡Reseña actualizada!"
+                            successMessage    = mensajeExito
                         )
                     }
-                    cargarMisResenas()   // refresca la lista
+                    // Refresca la lista desde el servidor para ver cambios reales
+                    cargarMisResenas()
                 }
                 .onFailure { e ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
@@ -144,9 +147,9 @@ class MiPerfilViewModel @Inject constructor(
                 .onSuccess {
                     _uiState.update {
                         it.copy(
-                            isLoading      = false,
+                            isLoading       = false,
                             resenaAEliminar = null,
-                            successMessage = "Reseña eliminada"
+                            successMessage  = "Reseña eliminada"
                         )
                     }
                     cargarMisResenas()

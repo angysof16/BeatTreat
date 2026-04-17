@@ -2,8 +2,11 @@ package com.example.login.ui.Perfil
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.login.CURRENT_USER_ID
 import com.example.login.data.repository.AuthRepository
+import com.example.login.data.repository.MiPerfilRepository
 import com.example.login.data.repository.StorageRepository
+import com.example.login.ui.MiPerfil.MiResenaUI
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +20,8 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val storageRepository: StorageRepository,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val miPerfilRepository: MiPerfilRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUIState())
@@ -25,16 +29,15 @@ class ProfileViewModel @Inject constructor(
 
     init {
         cargarPerfil()
+        cargarResenasDelBackend()
     }
 
     private fun cargarPerfil() {
         val urlDeFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
 
-        // Si es cuenta nueva, urlDeFirebaseAuth estará vacía y no pisamos nada
         if (urlDeFirebaseAuth.isNotBlank()) {
             PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = urlDeFirebaseAuth)
         } else {
-            // ya no hay url residual de la sesion anterior
             PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = "")
         }
 
@@ -42,10 +45,36 @@ class ProfileViewModel @Inject constructor(
             it.copy(
                 perfil           = PerfilData.perfilActual,
                 albumesFavoritos = PerfilData.albumesFavoritos,
-                resenas          = PerfilData.resenasRecientes,
                 isLoading        = false
             )
         }
+    }
+
+    private fun cargarResenasDelBackend() {
+        viewModelScope.launch {
+            val result = miPerfilRepository.getMisResenas()
+            result.onSuccess { lista ->
+                // Convertir MiResenaUI -> ResenaUI para mostrar en la pantalla de perfil
+                val resenasUI = lista.take(3).map { resena ->
+                    ResenaUI(
+                        id           = resena.id,
+                        autorNombre  = PerfilData.perfilActual.nombre,
+                        autorUsuario = PerfilData.perfilActual.usuario,
+                        autorFotoUrl = PerfilData.perfilActual.fotoPerfilUrl,
+                        texto        = resena.content,
+                        likes        = 0,
+                        comentarios  = 0
+                    )
+                }
+                _uiState.update { it.copy(resenas = resenasUI) }
+            }
+            // Si falla la carga simplemente no mostramos reseñas (lista vacía, sin fallback hardcodeado)
+        }
+    }
+
+    fun refrescarPerfil() {
+        cargarPerfil()
+        cargarResenasDelBackend()
     }
 
     fun refrescarFotoPerfil() {
@@ -59,7 +88,6 @@ class ProfileViewModel @Inject constructor(
 
     fun cerrarSesion() {
         PerfilData.perfilActual = PerfilData.perfilActual.copy(fotoPerfilUrl = "")
-
         authRepository.signOut()
         _uiState.update { it.copy(cerrarSesionExitoso = true) }
     }
