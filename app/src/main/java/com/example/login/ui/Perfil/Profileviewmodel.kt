@@ -1,13 +1,12 @@
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: ui/Perfil/ProfileViewModel.kt  (REEMPLAZA el existente)
-// ──────────────────────────────────────────────────────────────────────────────
 package com.example.login.ui.Perfil
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.login.CURRENT_USER_ID
 import com.example.login.data.repository.AuthRepository
-import com.example.login.data.repository.FirestoreUserRepository
+import com.example.login.data.repository.MiPerfilRepository
 import com.example.login.data.repository.StorageRepository
+import com.example.login.ui.MiPerfil.MiResenaUI
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,8 +20,8 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val storageRepository: StorageRepository,
-    private val firestoreUserRepository: FirestoreUserRepository,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val miPerfilRepository: MiPerfilRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUIState())
@@ -30,46 +29,57 @@ class ProfileViewModel @Inject constructor(
 
     init {
         cargarPerfil()
+        cargarResenasDelBackend()
     }
 
-    fun cargarPerfil() {
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+    private fun cargarPerfil() {
+        val urlDeFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
+
+        PerfilData.perfilActual = if (urlDeFirebaseAuth.isNotBlank()) {
+            PerfilData.perfilActual.copy(fotoPerfilUrl = urlDeFirebaseAuth)
+        } else {
+            PerfilData.perfilActual.copy(fotoPerfilUrl = "")
+        }
+
+        _uiState.update {
+            it.copy(
+                perfil           = PerfilData.perfilActual,
+                albumesFavoritos = PerfilData.albumesFavoritos,
+                isLoading        = false
+            )
+        }
+    }
+
+    private fun cargarResenasDelBackend() {
         viewModelScope.launch {
-            // Intentamos cargar desde Firestore
-            val result = firestoreUserRepository.getMyProfile()
-            if (result.isSuccess) {
-                val perfil = result.getOrNull()!!
-                _uiState.update {
-                    it.copy(
-                        perfil           = perfil,
-                        albumesFavoritos = PerfilData.albumesFavoritos,
-                        resenas          = PerfilData.resenasRecientes,
-                        isLoading        = false
+            val result = miPerfilRepository.getMisResenas()
+            result.onSuccess { lista ->
+                val resenasUI = lista.take(3).map { resena ->
+                    ResenaUI(
+                        id           = resena.id,
+                        autorNombre  = PerfilData.perfilActual.nombre,
+                        autorUsuario = PerfilData.perfilActual.usuario,
+                        autorFotoUrl = PerfilData.perfilActual.fotoPerfilUrl,
+                        texto        = resena.content,
+                        likes        = 0,
+                        comentarios  = 0
                     )
                 }
-            } else {
-                // Fallback: usamos datos locales y mostramos error sutil
-                val urlFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
-                if (urlFirebaseAuth.isNotBlank()) {
-                    PerfilData.perfilActual =
-                        PerfilData.perfilActual.copy(fotoPerfilUrl = urlFirebaseAuth)
-                }
-                _uiState.update {
-                    it.copy(
-                        perfil           = PerfilData.perfilActual,
-                        albumesFavoritos = PerfilData.albumesFavoritos,
-                        resenas          = PerfilData.resenasRecientes,
-                        isLoading        = false,
-                        errorMessage     = result.exceptionOrNull()?.message
-                    )
-                }
+                _uiState.update { it.copy(resenas = resenasUI) }
             }
         }
+    }
+
+    /** Llamado desde AppNavegacion en ON_RESUME para refrescar perfil y reseñas. */
+    fun refrescarPerfil() {
+        cargarPerfil()
+        cargarResenasDelBackend()
     }
 
     fun refrescarFotoPerfil() {
         val urlFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
         val urlFinal = urlFirebaseAuth.ifBlank { PerfilData.perfilActual.fotoPerfilUrl }
+
         _uiState.update { state ->
             state.copy(perfil = state.perfil?.copy(fotoPerfilUrl = urlFinal))
         }

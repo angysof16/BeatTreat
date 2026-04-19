@@ -34,7 +34,6 @@ class FirestoreReviewRepository @Inject constructor(
                     likes                = 0,
                     comentarios          = 0,
                     fecha                = formatTimestamp(dto.createdAt),
-                    // ← FIX: usamos el UID real de Firebase para poder navegar al perfil
                     autorFirestoreUserId = dto.userId,
                     autorUserId          = if (dto.userId.isNotBlank()) 1 else 0
                 )
