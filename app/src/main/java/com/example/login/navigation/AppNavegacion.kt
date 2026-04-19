@@ -2,7 +2,6 @@ package com.example.login.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -210,8 +209,8 @@ fun AppNavegacion(
                 onResenaClick         = { resena ->
                     navController.navigate(Screen.Comentarios.createRoute(resena.id, albumId))
                 },
-                onAutorClick          = { autorUserId ->
-                    navController.navigate(Screen.PerfilOtroUsuario.createRoute(autorUserId))
+                onAutorClick = { firestoreUserId ->
+                    navController.navigate(Screen.PerfilOtroUsuario.createRoute(firestoreUserId))
                 },
                 onEscribirResenaClick = {
                     navController.navigate(Screen.EscribirResena.createRoute(albumId))
@@ -424,14 +423,14 @@ fun AppNavegacion(
         // ── 22. Perfil de OTRO usuario ────────────────────────────────────────
         composable(
             route     = Screen.PerfilOtroUsuario.route,
-            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
             val viewModel: PerfilOtroUsuarioViewModel = hiltViewModel()
             LaunchedEffect(userId) { viewModel.cargarPerfil(userId) }
             PerfilOtroUsuarioScreen(
-                viewModel   = viewModel,
-                userId      = userId,
+                viewModel = viewModel,
+                userId = userId,
                 onBackClick = { navController.popBackStack() }
             )
         }

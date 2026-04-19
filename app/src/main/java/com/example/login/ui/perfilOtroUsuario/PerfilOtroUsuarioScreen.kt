@@ -29,7 +29,7 @@ import com.example.login.ui.theme.BeatTreatTheme
 // ── Stateful ──────────────────────────────────────────────────────────────────
 @Composable
 fun PerfilOtroUsuarioScreen(
-    userId: Int,
+    userId: String,
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: PerfilOtroUsuarioViewModel
