@@ -19,9 +19,9 @@ class FirestoreReviewRepository @Inject constructor(
     suspend fun getReviewsByAlbum(albumId: String): Result<List<ResenaDetalladaUI>> {
         return try {
             val pairs = dataSource.getReviewsByAlbum(albumId)
-            val reviews = pairs.map { (id, dto) ->
+            val reviews = pairs.map { (docId, dto) ->
                 ResenaDetalladaUI(
-                    id                   = id.hashCode(),
+                    id                   = docId.hashCode(),
                     albumId              = albumId.hashCode(),
                     autorNombre          = dto.user.name.ifBlank { "Usuario" },
                     autorUsuario         = "@${dto.user.username}",
@@ -34,8 +34,11 @@ class FirestoreReviewRepository @Inject constructor(
                     likes                = 0,
                     comentarios          = 0,
                     fecha                = formatTimestamp(dto.createdAt),
+                    // ← IMPORTANTE: guardamos el UID del autor para navegar a su perfil
                     autorFirestoreUserId = dto.userId,
-                    autorUserId          = if (dto.userId.isNotBlank()) 1 else 0
+                    autorUserId          = if (dto.userId.isNotBlank()) 1 else 0,
+                    // ← IMPORTANTE: guardamos el docId de Firestore para poder eliminar/editar
+                    firestoreDocId       = docId
                 )
             }
             Result.success(reviews)
@@ -47,9 +50,9 @@ class FirestoreReviewRepository @Inject constructor(
     suspend fun getReviewsByUser(userId: String): Result<List<ResenaDetalladaUI>> {
         return try {
             val pairs = dataSource.getReviewsByUser(userId)
-            val reviews = pairs.map { (id, dto) ->
+            val reviews = pairs.map { (docId, dto) ->
                 ResenaDetalladaUI(
-                    id                   = id.hashCode(),
+                    id                   = docId.hashCode(),
                     albumId              = dto.albumId.hashCode(),
                     autorNombre          = dto.user.name.ifBlank { "Usuario" },
                     autorUsuario         = "@${dto.user.username}",
@@ -63,7 +66,8 @@ class FirestoreReviewRepository @Inject constructor(
                     comentarios          = 0,
                     fecha                = formatTimestamp(dto.createdAt),
                     autorFirestoreUserId = dto.userId,
-                    autorUserId          = if (dto.userId.isNotBlank()) 1 else 0
+                    autorUserId          = if (dto.userId.isNotBlank()) 1 else 0,
+                    firestoreDocId       = docId
                 )
             }
             Result.success(reviews)
@@ -71,7 +75,6 @@ class FirestoreReviewRepository @Inject constructor(
             Result.failure(Exception("Error al cargar reviews del usuario: ${e.message}"))
         }
     }
-
 
     suspend fun getReviewsByUserRaw(userId: String): Result<List<Pair<String, FirestoreReviewDto>>> {
         return try {

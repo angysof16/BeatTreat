@@ -32,18 +32,63 @@ fun AlbumDetalleScreen(
     albumId: Int,
     onBackClick: () -> Unit = {},
     onVerResenasClick: () -> Unit = {},
+    // Navega a EscribirResena pasando el albumId (hash del firestoreId)
+    onEscribirResenaClick: (Int) -> Unit = {},
+    // Navega a Comentarios de una reseña
+    onResenaClick: (resenaId: Int, albumId: Int) -> Unit = { _, _ -> },
+    // Navega al perfil del autor (UID de Firestore)
+    onAutorClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: AlbumDetalleViewModel
 ) {
     LaunchedEffect(albumId) { viewModel.cargarAlbum(albumId) }
     val uiState by viewModel.uiState.collectAsState()
+    val currentUserId = viewModel.getCurrentUserId()
+
+    var resenaAEliminar by remember { mutableStateOf<ResenaDetalladaUI?>(null) }
+    var resenaAEditar   by remember { mutableStateOf<ResenaDetalladaUI?>(null) }
+
+    // Diálogo de confirmación de borrado
+    if (resenaAEliminar != null) {
+        AlertDialog(
+            onDismissRequest = { resenaAEliminar = null },
+            containerColor   = BeatTreatColors.Surface,
+            icon             = { Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(28.dp)) },
+            title            = { Text("Eliminar reseña", color = Color.White, fontWeight = FontWeight.Bold) },
+            text             = { Text("¿Seguro que quieres eliminar esta reseña? No se puede deshacer.", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp) },
+            confirmButton    = {
+                Button(
+                    onClick = {
+                        resenaAEliminar?.let { r ->
+                            // autorFirestoreUserId aquí actúa como firestoreDocId fue mapeado
+                            // En FirestoreReviewRepository getReviewsByAlbum, el "id" del par es el docId
+                            // y lo guardamos como autorFirestoreUserId = dto.userId; pero el docId real
+                            // se perdió. Usamos la función del VM que recibe el docId desde el hashCode.
+                            // El firestoreDocId viene del ResenaDetalladaUI — ver nota en comentario abajo.
+                            viewModel.eliminarResena(r.firestoreDocId)
+                        }
+                        resenaAEliminar = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Eliminar", color = Color.White) }
+            },
+            dismissButton    = {
+                TextButton(onClick = { resenaAEliminar = null }) { Text("Cancelar", color = Color.White.copy(alpha = 0.7f)) }
+            }
+        )
+    }
 
     AlbumDetalleScreenContent(
-        uiState           = uiState,
-        onBackClick       = onBackClick,
-        onVerResenasClick = onVerResenasClick,
-        onFavoritoClick   = { viewModel.toggleFavorito() },
-        modifier          = modifier
+        uiState               = uiState,
+        currentUserId         = currentUserId,
+        onBackClick           = onBackClick,
+        onVerResenasClick     = onVerResenasClick,
+        onFavoritoClick       = { viewModel.toggleFavorito() },
+        onEscribirResenaClick = { onEscribirResenaClick(albumId) },
+        onResenaClick         = { resena -> onResenaClick(resena.id, albumId) },
+        onAutorClick          = onAutorClick,
+        onEliminarResena      = { resena -> resenaAEliminar = resena },
+        modifier              = modifier
     )
 }
 
@@ -51,9 +96,14 @@ fun AlbumDetalleScreen(
 @Composable
 fun AlbumDetalleScreenContent(
     uiState: AlbumDetalleUIState,
+    currentUserId: String = "",
     onBackClick: () -> Unit,
     onVerResenasClick: () -> Unit,
     onFavoritoClick: () -> Unit,
+    onEscribirResenaClick: () -> Unit = {},
+    onResenaClick: (ResenaDetalladaUI) -> Unit = {},
+    onAutorClick: (String) -> Unit = {},
+    onEliminarResena: (ResenaDetalladaUI) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     if (uiState.album == null) {
@@ -83,6 +133,28 @@ fun AlbumDetalleScreenContent(
                 onClick      = onVerResenasClick
             )
         }
+
+        // Botón para escribir reseña
+        item {
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(BeatTreatColors.SurfaceVariant)
+                        .clickable { onEscribirResenaClick() }
+                        .padding(horizontal = 20.dp, vertical = 14.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Edit, contentDescription = null, tint = BeatTreatColors.Purple60, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text("Escribir reseña", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
+            }
+        }
+
         item {
             Spacer(modifier = Modifier.height(20.dp))
             Text("Canciones", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold,
@@ -113,31 +185,60 @@ fun AlbumDetalleScreenContent(
             }
         }
         items(uiState.resenas.size) { index ->
-            ResenaItem(resena = uiState.resenas[index])
+            val resena = uiState.resenas[index]
+            ResenaItemCompleto(
+                resena        = resena,
+                esMia         = resena.autorFirestoreUserId == currentUserId,
+                onClick       = { onResenaClick(resena) },
+                onAutorClick  = { if (resena.autorFirestoreUserId.isNotBlank()) onAutorClick(resena.autorFirestoreUserId) },
+                onEliminar    = { onEliminarResena(resena) }
+            )
         }
     }
 }
 
-// ── Card de reseña dentro del detalle ──
+// ── Card de reseña COMPLETA dentro del detalle ──
 @Composable
-fun ResenaItem(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
+fun ResenaItemCompleto(
+    resena: ResenaDetalladaUI,
+    esMia: Boolean,
+    onClick: () -> Unit,
+    onAutorClick: () -> Unit,
+    onEliminar: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var menuExpandido by remember { mutableStateOf(false) }
+
     Card(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
         shape  = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Avatar del autor — usa URL si la tiene
+            // Fila autor
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier          = Modifier.weight(1f).clickable { onAutorClick() }
+                ) {
                     Box(
                         modifier         = Modifier.size(32.dp).clip(CircleShape).background(BeatTreatColors.SurfaceVariant),
                         contentAlignment = Alignment.Center
                     ) {
                         if (resena.autorFotoUrl.isNotBlank()) {
-                            AsyncImage(model = resena.autorFotoUrl, contentDescription = resena.autorNombre,
-                                modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            AsyncImage(
+                                model              = resena.autorFotoUrl,
+                                contentDescription = resena.autorNombre,
+                                modifier           = Modifier.fillMaxSize(),
+                                contentScale       = ContentScale.Crop
+                            )
                         } else {
                             Icon(Icons.Filled.AccountCircle, contentDescription = resena.autorNombre,
                                 tint = Color.White, modifier = Modifier.size(32.dp))
@@ -145,13 +246,35 @@ fun ResenaItem(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text(resena.autorNombre, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(resena.autorNombre,  color = Color.White,                    fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         Text(resena.autorUsuario, color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
                     }
                 }
-                Text(resena.fecha, color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(resena.fecha, color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
+
+                    // Menú de opciones (solo para reseñas propias)
+                    if (esMia) {
+                        Box {
+                            IconButton(onClick = { menuExpandido = true }, modifier = Modifier.size(28.dp)) {
+                                Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                            }
+                            DropdownMenu(expanded = menuExpandido, onDismissRequest = { menuExpandido = false }) {
+                                DropdownMenuItem(
+                                    text        = { Text("Eliminar", color = MaterialTheme.colorScheme.error) },
+                                    leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                                    onClick     = { menuExpandido = false; onEliminar() }
+                                )
+                            }
+                        }
+                    }
+                }
             }
+
             Spacer(modifier = Modifier.height(10.dp))
+
+            // Estrellas
             Row(verticalAlignment = Alignment.CenterVertically) {
                 repeat(5) { index ->
                     val icono = when {
@@ -160,15 +283,41 @@ fun ResenaItem(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
                         else -> Icons.Filled.StarBorder
                     }
                     Icon(icono, contentDescription = null,
-                        tint = if (index < resena.calificacion.toInt()) Color(0xFFFFC107) else Color.Gray,
+                        tint     = if (index < resena.calificacion.toInt()) Color(0xFFFFC107) else Color.Gray,
                         modifier = Modifier.size(16.dp))
                 }
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(resena.calificacion.toString(), color = Color.White, fontSize = 12.sp)
             }
+
             Spacer(modifier = Modifier.height(8.dp))
             Text(resena.texto, color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp,
                 lineHeight = 18.sp, maxLines = 4, overflow = TextOverflow.Ellipsis)
+
+            // Pie: botón "Ver perfil" si tiene UID, y hint de comentarios
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment     = Alignment.CenterVertically
+            ) {
+                if (resena.autorFirestoreUserId.isNotBlank()) {
+                    TextButton(
+                        onClick          = onAutorClick,
+                        contentPadding   = PaddingValues(horizontal = 0.dp)
+                    ) {
+                        Text("Ver perfil", color = BeatTreatColors.Purple60, fontSize = 12.sp)
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(1.dp))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.ChatBubbleOutline, contentDescription = "Comentarios",
+                        tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Ver comentarios", color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
+                }
+            }
         }
     }
 }
@@ -203,18 +352,15 @@ fun AlbumPortadaHeader(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxWidth().height(380.dp)) {
-        // Imagen de fondo
         AsyncImage(
             model              = album.imagenUrl,
             contentDescription = album.nombre,
             modifier           = Modifier.fillMaxSize(),
             contentScale       = ContentScale.Crop
         )
-        // Fallback gradient si no hay imagen
         Box(modifier = Modifier.fillMaxSize().background(
             Brush.verticalGradient(colors = listOf(BeatTreatColors.Purple60.copy(alpha = 0.3f), Color(0xFF1A1A1A)))
         ))
-        // Gradiente inferior
         Box(modifier = Modifier.fillMaxSize().background(
             Brush.verticalGradient(colorStops = arrayOf(
                 0.0f  to Color.Black.copy(alpha = 0.4f),
@@ -222,7 +368,6 @@ fun AlbumPortadaHeader(
                 1.0f  to Color(0xFF121212)
             ))
         ))
-        // Botones top
         Row(
             modifier              = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp).align(Alignment.TopStart),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -246,7 +391,6 @@ fun AlbumPortadaHeader(
                 }
             }
         }
-        // Portada centrada pequeña
         AsyncImage(
             model              = album.imagenUrl,
             contentDescription = album.nombre,
@@ -330,7 +474,7 @@ fun BotonVerResenas(totalResenas: Int, calificacion: Float, onClick: () -> Unit,
             Icon(Icons.Filled.ChatBubbleOutline, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text("Ver reseñas", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("Ver todas las reseñas", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Text("$totalResenas opiniones de usuarios", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
             }
         }

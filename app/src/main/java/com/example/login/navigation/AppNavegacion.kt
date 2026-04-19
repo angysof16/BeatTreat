@@ -314,10 +314,19 @@ fun AppNavegacion(
             val viewModel: AlbumDetalleViewModel = hiltViewModel()
             LaunchedEffect(albumId) { viewModel.cargarAlbum(albumId) }
             AlbumDetalleScreen(
-                viewModel         = viewModel,
-                albumId           = albumId,
-                onBackClick       = { navController.popBackStack() },
-                onVerResenasClick = { navController.navigate(Screen.Resena.createRoute(albumId)) }
+                viewModel             = viewModel,
+                albumId               = albumId,
+                onBackClick           = { navController.popBackStack() },
+                onVerResenasClick     = { navController.navigate(Screen.Resena.createRoute(albumId)) },
+                onEscribirResenaClick = { id ->
+                    navController.navigate(Screen.EscribirResena.createRoute(id))
+                },
+                onResenaClick         = { resenaId, albId ->
+                    navController.navigate(Screen.Comentarios.createRoute(resenaId, albId))
+                },
+                onAutorClick          = { firestoreUserId ->
+                    navController.navigate(Screen.PerfilOtroUsuario.createRoute(firestoreUserId))
+                }
             )
         }
 

@@ -9,5 +9,6 @@ data class AlbumDetalleUIState(
     val errorMessage: String? = null,
     val resenas: List<ResenaDetalladaUI> = emptyList(),
     val resenasLoading: Boolean = false,
-    val resenasError: String? = null
+    val resenasError: String? = null,
+    val firestoreAlbumId: String = ""
 )

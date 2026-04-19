@@ -17,7 +17,8 @@ data class ResenaDetalladaUI(
     val autorUserId: Int = 0,
     val autorFirestoreUserId: String = "",
     val autorFotoRes: Int = 0,
-    val albumRes: Int = 0
+    val albumRes: Int = 0,
+    val firestoreDocId: String = ""
 )
 
 data class ComentarioUI(

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.login.data.repository.FirestoreAlbumRepository
 import com.example.login.data.repository.FirestoreReviewRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,8 @@ import kotlin.math.round
 @HiltViewModel
 class AlbumDetalleViewModel @Inject constructor(
     private val firestoreAlbumRepository: FirestoreAlbumRepository,
-    private val firestoreReviewRepository: FirestoreReviewRepository
+    private val firestoreReviewRepository: FirestoreReviewRepository,
+    private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AlbumDetalleUIState())
@@ -26,12 +28,9 @@ class AlbumDetalleViewModel @Inject constructor(
     private var firestoreAlbumId: String = ""
 
     fun cargarAlbum(albumId: Int) {
-        // albumId here is hashCode(firestoreDocId). We need the original string.
-        // We store it when we first load.
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
-            // Get all albums to find the one matching this hashCode
             val rawResult = firestoreAlbumRepository.getAllAlbumsRaw()
             if (rawResult.isSuccess) {
                 val albumsMap = rawResult.getOrDefault(emptyMap())
@@ -53,10 +52,15 @@ class AlbumDetalleViewModel @Inject constructor(
                         totalResenas         = 0,
                         canciones            = emptyList()
                     )
-                    _uiState.update { it.copy(album = album, isLoading = false) }
+                    _uiState.update {
+                        it.copy(
+                            album            = album,
+                            isLoading        = false,
+                            firestoreAlbumId = firestoreAlbumId
+                        )
+                    }
                     cargarResenas(entry.key)
                 } else {
-                    // Fallback: try treating albumId as a direct int ID for legacy navigation
                     _uiState.update { it.copy(isLoading = false, errorMessage = "Álbum no encontrado") }
                 }
             } else {
@@ -96,6 +100,18 @@ class AlbumDetalleViewModel @Inject constructor(
         }
     }
 
+    fun recargarResenas() {
+        val id = firestoreAlbumId
+        if (id.isNotBlank()) cargarResenas(id)
+    }
+
+    fun eliminarResena(firestoreDocId: String) {
+        viewModelScope.launch {
+            firestoreReviewRepository.deleteReview(firestoreDocId)
+            recargarResenas()
+        }
+    }
+
     private fun calcularPromedio(calificaciones: List<Float>): Float {
         if (calificaciones.isEmpty()) return 0f
         return (round(calificaciones.average() * 10) / 10).toFloat()
@@ -104,4 +120,6 @@ class AlbumDetalleViewModel @Inject constructor(
     fun toggleFavorito() {
         _uiState.update { it.copy(esFavorito = !it.esFavorito) }
     }
+
+    fun getCurrentUserId(): String = firebaseAuth.currentUser?.uid ?: ""
 }
