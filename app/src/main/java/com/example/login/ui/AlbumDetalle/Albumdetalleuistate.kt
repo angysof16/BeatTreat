@@ -10,5 +10,10 @@ data class AlbumDetalleUIState(
     val resenas: List<ResenaDetalladaUI> = emptyList(),
     val resenasLoading: Boolean = false,
     val resenasError: String? = null,
-    val firestoreAlbumId: String = ""
+    val firestoreAlbumId: String = "",
+    val mostrarDialogoEditar: Boolean = false,
+    val resenaEditando: ResenaDetalladaUI? = null,
+    val editRating: Float = 0f,
+    val editContent: String = "",
+    val editGuardando: Boolean = false
 )

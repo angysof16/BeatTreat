@@ -24,18 +24,15 @@ class AlbumDetalleViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AlbumDetalleUIState())
     val uiState: StateFlow<AlbumDetalleUIState> = _uiState.asStateFlow()
 
-    // The Firestore string ID for this album (needed to load reviews)
     private var firestoreAlbumId: String = ""
 
     fun cargarAlbum(albumId: Int) {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
         viewModelScope.launch {
             val rawResult = firestoreAlbumRepository.getAllAlbumsRaw()
             if (rawResult.isSuccess) {
                 val albumsMap = rawResult.getOrDefault(emptyMap())
                 val entry = albumsMap.entries.find { it.key.hashCode() == albumId }
-
                 if (entry != null) {
                     firestoreAlbumId = entry.key
                     val dto = entry.value
@@ -52,21 +49,13 @@ class AlbumDetalleViewModel @Inject constructor(
                         totalResenas         = 0,
                         canciones            = emptyList()
                     )
-                    _uiState.update {
-                        it.copy(
-                            album            = album,
-                            isLoading        = false,
-                            firestoreAlbumId = firestoreAlbumId
-                        )
-                    }
+                    _uiState.update { it.copy(album = album, isLoading = false, firestoreAlbumId = firestoreAlbumId) }
                     cargarResenas(entry.key)
                 } else {
                     _uiState.update { it.copy(isLoading = false, errorMessage = "Álbum no encontrado") }
                 }
             } else {
-                _uiState.update {
-                    it.copy(isLoading = false, errorMessage = rawResult.exceptionOrNull()?.message)
-                }
+                _uiState.update { it.copy(isLoading = false, errorMessage = rawResult.exceptionOrNull()?.message) }
             }
         }
     }
@@ -78,32 +67,23 @@ class AlbumDetalleViewModel @Inject constructor(
             if (result.isSuccess) {
                 val resenas = result.getOrDefault(emptyList())
                 _uiState.update { state ->
-                    val albumActualizado = if (state.album != null && resenas.isNotEmpty()) {
-                        val promedio = calcularPromedio(resenas.map { it.calificacion })
-                        state.album.copy(
-                            calificacionPromedio = promedio,
-                            totalResenas         = resenas.size
-                        )
-                    } else state.album
-
-                    state.copy(
-                        resenas        = resenas,
-                        resenasLoading = false,
-                        album          = albumActualizado
-                    )
+                    val albumActualizado = state.album?.takeIf { resenas.isNotEmpty() }?.copy(
+                        calificacionPromedio = calcularPromedio(resenas.map { it.calificacion }),
+                        totalResenas         = resenas.size
+                    ) ?: state.album
+                    state.copy(resenas = resenas, resenasLoading = false, album = albumActualizado)
                 }
             } else {
-                _uiState.update {
-                    it.copy(resenasLoading = false, resenasError = result.exceptionOrNull()?.message)
-                }
+                _uiState.update { it.copy(resenasLoading = false, resenasError = result.exceptionOrNull()?.message) }
             }
         }
     }
 
     fun recargarResenas() {
-        val id = firestoreAlbumId
-        if (id.isNotBlank()) cargarResenas(id)
+        if (firestoreAlbumId.isNotBlank()) cargarResenas(firestoreAlbumId)
     }
+
+    // ── Eliminar ──────────────────────────────────────────────────────────────
 
     fun eliminarResena(firestoreDocId: String) {
         viewModelScope.launch {
@@ -112,14 +92,52 @@ class AlbumDetalleViewModel @Inject constructor(
         }
     }
 
+    // ── Editar ────────────────────────────────────────────────────────────────
+
+    fun abrirEditar(resena: com.example.login.ui.Resena.ResenaDetalladaUI) {
+        _uiState.update {
+            it.copy(
+                resenaEditando   = resena,
+                editRating       = resena.calificacion,
+                editContent      = resena.texto,
+                mostrarDialogoEditar = true
+            )
+        }
+    }
+
+    fun cerrarEditar() {
+        _uiState.update { it.copy(mostrarDialogoEditar = false, resenaEditando = null) }
+    }
+
+    fun onEditRatingChange(v: Float) { _uiState.update { it.copy(editRating = v) } }
+    fun onEditContentChange(v: String) { _uiState.update { it.copy(editContent = v) } }
+
+    fun guardarEdicion() {
+        val state  = _uiState.value
+        val resena = state.resenaEditando ?: return
+        if (state.editContent.isBlank() || state.editRating == 0f) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(editGuardando = true) }
+            firestoreReviewRepository.updateReview(resena.firestoreDocId, state.editRating, state.editContent.trim())
+                .onSuccess {
+                    _uiState.update { it.copy(mostrarDialogoEditar = false, resenaEditando = null, editGuardando = false) }
+                    recargarResenas()
+                }
+                .onFailure { e ->
+                    _uiState.update { it.copy(editGuardando = false, resenasError = e.message) }
+                }
+        }
+    }
+
+    // ── Util ──────────────────────────────────────────────────────────────────
+
+    fun toggleFavorito() { _uiState.update { it.copy(esFavorito = !it.esFavorito) } }
+
+    fun getCurrentUserId(): String = firebaseAuth.currentUser?.uid ?: ""
+
     private fun calcularPromedio(calificaciones: List<Float>): Float {
         if (calificaciones.isEmpty()) return 0f
         return (round(calificaciones.average() * 10) / 10).toFloat()
     }
-
-    fun toggleFavorito() {
-        _uiState.update { it.copy(esFavorito = !it.esFavorito) }
-    }
-
-    fun getCurrentUserId(): String = firebaseAuth.currentUser?.uid ?: ""
 }

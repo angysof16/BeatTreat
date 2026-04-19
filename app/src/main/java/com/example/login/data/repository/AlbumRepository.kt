@@ -10,10 +10,7 @@ class AlbumRepository @Inject constructor(
     private val remoteDataSource: AlbumRetrofitDataSourceImplementation
 ) {
 
-    /**
-     * Devuelve los DTOs crudos del backend. Útil para obtener IDs reales
-     * cuando se va a enviar datos al servidor (ej: crear reseña).
-     */
+
     suspend fun getAllAlbumsDto(): Result<List<AlbumDto>> {
         return try {
             Result.success(remoteDataSource.getAllAlbums())

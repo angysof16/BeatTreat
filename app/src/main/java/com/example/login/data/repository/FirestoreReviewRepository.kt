@@ -13,6 +13,7 @@ import javax.inject.Inject
 class FirestoreReviewRepository @Inject constructor(
     private val dataSource: FirestoreReviewRemoteDataSource,
     private val userRepository: FirestoreUserRepository,
+    private val firestoreAlbumRepository: FirestoreAlbumRepository,
     private val firebaseAuth: FirebaseAuth
 ) {
 
@@ -34,10 +35,8 @@ class FirestoreReviewRepository @Inject constructor(
                     likes                = 0,
                     comentarios          = 0,
                     fecha                = formatTimestamp(dto.createdAt),
-                    // ← IMPORTANTE: guardamos el UID del autor para navegar a su perfil
                     autorFirestoreUserId = dto.userId,
                     autorUserId          = if (dto.userId.isNotBlank()) 1 else 0,
-                    // ← IMPORTANTE: guardamos el docId de Firestore para poder eliminar/editar
                     firestoreDocId       = docId
                 )
             }
@@ -49,17 +48,21 @@ class FirestoreReviewRepository @Inject constructor(
 
     suspend fun getReviewsByUser(userId: String): Result<List<ResenaDetalladaUI>> {
         return try {
-            val pairs = dataSource.getReviewsByUser(userId)
+            val pairs     = dataSource.getReviewsByUser(userId)
+            // Carga el mapa de álbumes una sola vez para enriquecer todas las reseñas
+            val albumsMap = firestoreAlbumRepository.getAllAlbumsRaw().getOrDefault(emptyMap())
+
             val reviews = pairs.map { (docId, dto) ->
+                val albumDto = albumsMap[dto.albumId]
                 ResenaDetalladaUI(
                     id                   = docId.hashCode(),
                     albumId              = dto.albumId.hashCode(),
                     autorNombre          = dto.user.name.ifBlank { "Usuario" },
                     autorUsuario         = "@${dto.user.username}",
                     autorFotoUrl         = dto.user.profileImage ?: "",
-                    albumNombre          = "",
-                    albumArtista         = "",
-                    albumImagenUrl       = "",
+                    albumNombre          = albumDto?.title     ?: "Álbum desconocido",
+                    albumArtista         = albumDto?.artist    ?: "",
+                    albumImagenUrl       = albumDto?.coverImage ?: "",
                     calificacion         = dto.rating,
                     texto                = dto.content,
                     likes                = 0,
@@ -84,35 +87,25 @@ class FirestoreReviewRepository @Inject constructor(
         }
     }
 
-    suspend fun createReview(
-        albumId: String,
-        rating: Float,
-        content: String
-    ): Result<Unit> {
+    suspend fun createReview(albumId: String, rating: Float, content: String): Result<Unit> {
         return try {
             val currentUser = firebaseAuth.currentUser
                 ?: throw Exception("Debes iniciar sesión para escribir una reseña")
-
-            val userId = currentUser.uid
+            val userId  = currentUser.uid
             val userDto = userRepository.getUserById(userId).getOrNull()
-
-            val reviewDto = FirestoreReviewDto(
+            val dto = FirestoreReviewDto(
                 userId    = userId,
                 albumId   = albumId,
                 rating    = rating,
                 content   = content,
                 createdAt = System.currentTimeMillis(),
                 user      = FirestoreReviewUserDto(
-                    name         = userDto?.name?.takeIf { it.isNotBlank() }
-                        ?: currentUser.displayName
-                        ?: "Usuario",
+                    name         = userDto?.name?.takeIf { it.isNotBlank() } ?: currentUser.displayName ?: "Usuario",
                     username     = userDto?.username?.takeIf { it.isNotBlank() } ?: "",
-                    profileImage = userDto?.profileImage
-                        ?: currentUser.photoUrl?.toString()
+                    profileImage = userDto?.profileImage ?: currentUser.photoUrl?.toString()
                 )
             )
-
-            dataSource.createReview(reviewDto)
+            dataSource.createReview(dto)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(Exception("Error al crear review: ${e.message}"))
@@ -128,11 +121,7 @@ class FirestoreReviewRepository @Inject constructor(
         }
     }
 
-    suspend fun updateReview(
-        reviewDocId: String,
-        rating: Float,
-        content: String
-    ): Result<Unit> {
+    suspend fun updateReview(reviewDocId: String, rating: Float, content: String): Result<Unit> {
         return try {
             dataSource.updateReview(reviewDocId, rating, content)
             Result.success(Unit)
@@ -141,13 +130,10 @@ class FirestoreReviewRepository @Inject constructor(
         }
     }
 
-    private fun formatTimestamp(timestamp: Long): String {
-        if (timestamp == 0L) return ""
+    private fun formatTimestamp(ts: Long): String {
+        if (ts == 0L) return ""
         return try {
-            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            sdf.format(Date(timestamp))
-        } catch (e: Exception) {
-            ""
-        }
+            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(ts))
+        } catch (e: Exception) { "" }
     }
 }
