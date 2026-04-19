@@ -44,7 +44,6 @@ class FirestoreReviewRepository @Inject constructor(
         }
     }
 
-    // ← NUEVO: obtiene reviews de un usuario para mostrarse en PerfilOtroUsuario
     suspend fun getReviewsByUser(userId: String): Result<List<ResenaDetalladaUI>> {
         return try {
             val pairs = dataSource.getReviewsByUser(userId)
@@ -73,6 +72,15 @@ class FirestoreReviewRepository @Inject constructor(
         }
     }
 
+
+    suspend fun getReviewsByUserRaw(userId: String): Result<List<Pair<String, FirestoreReviewDto>>> {
+        return try {
+            Result.success(dataSource.getReviewsByUser(userId))
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al cargar reviews del usuario: ${e.message}"))
+        }
+    }
+
     suspend fun createReview(
         albumId: String,
         rating: Float,
@@ -83,8 +91,6 @@ class FirestoreReviewRepository @Inject constructor(
                 ?: throw Exception("Debes iniciar sesión para escribir una reseña")
 
             val userId = currentUser.uid
-
-            // ← FIX: getOrNull() en lugar del cast roto con getOrElse
             val userDto = userRepository.getUserById(userId).getOrNull()
 
             val reviewDto = FirestoreReviewDto(
@@ -94,7 +100,6 @@ class FirestoreReviewRepository @Inject constructor(
                 content   = content,
                 createdAt = System.currentTimeMillis(),
                 user      = FirestoreReviewUserDto(
-                    // ← FIX: ahora userDto es FirestoreUserDto directamente, sin cast
                     name         = userDto?.name?.takeIf { it.isNotBlank() }
                         ?: currentUser.displayName
                         ?: "Usuario",
@@ -108,6 +113,28 @@ class FirestoreReviewRepository @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(Exception("Error al crear review: ${e.message}"))
+        }
+    }
+
+    suspend fun deleteReview(reviewDocId: String): Result<Unit> {
+        return try {
+            dataSource.deleteReview(reviewDocId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al eliminar reseña: ${e.message}"))
+        }
+    }
+
+    suspend fun updateReview(
+        reviewDocId: String,
+        rating: Float,
+        content: String
+    ): Result<Unit> {
+        return try {
+            dataSource.updateReview(reviewDocId, rating, content)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al actualizar reseña: ${e.message}"))
         }
     }
 

@@ -34,6 +34,7 @@ import com.example.login.ui.theme.BeatTreatColors
 fun MiPerfilScreen(
     onAlbumClick: (Int) -> Unit = {},
     onBackClick: () -> Unit = {},
+    onEscribirResenaClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: MiPerfilViewModel = hiltViewModel()
 ) {
@@ -51,7 +52,6 @@ fun MiPerfilScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            // ── Back button top bar ──
             Row(
                 modifier          = Modifier
                     .fillMaxWidth()
@@ -78,7 +78,8 @@ fun MiPerfilScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick        = { viewModel.abrirFormularioCrear() },
+                // Navigate to EscribirResenaScreen so the user can pick an album
+                onClick        = onEscribirResenaClick,
                 containerColor = BeatTreatColors.Purple60
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Nueva reseña", tint = Color.White)
@@ -95,13 +96,14 @@ fun MiPerfilScreen(
         )
     }
 
+    // Edit dialog (create is now handled by navigating to EscribirResenaScreen)
     if (uiState.mostrarFormulario) {
         FormularioResenaDialog(
             resenaEnEdicion = uiState.resenaEnEdicion,
             albumId         = uiState.formularioAlbumId,
             rating          = uiState.formularioRating,
             content         = uiState.formularioContent,
-            onAlbumIdChange = viewModel::onAlbumIdChange,
+            onAlbumIdChange = {},   // no-op — album cannot change in edit mode
             onRatingChange  = viewModel::onRatingChange,
             onContentChange = viewModel::onContentChange,
             onGuardar       = viewModel::guardarResena,
@@ -136,7 +138,6 @@ fun MiPerfilContent(
         modifier       = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 80.dp)
     ) {
-        // ── Header ──────────────────────────────────────────────────────────
         item {
             Column(
                 modifier            = Modifier
@@ -169,7 +170,7 @@ fun MiPerfilContent(
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                Text(perfil.nombre,  color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(perfil.nombre,  color = Color.White,     fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Text(perfil.usuario, color = Color.LightGray, fontSize = 13.sp)
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
@@ -327,9 +328,6 @@ fun MiResenaCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Diálogo Crear / Editar reseña
-// ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun FormularioResenaDialog(
     resenaEnEdicion: MiResenaUI?,
@@ -352,23 +350,8 @@ fun FormularioResenaDialog(
         title = { Text(titulo, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                if (!esEdicion) {
-                    OutlinedTextField(
-                        value         = if (albumId == 0) "" else albumId.toString(),
-                        onValueChange = { txt -> txt.toIntOrNull()?.let { onAlbumIdChange(it) } },
-                        label         = { Text("ID del álbum") },
-                        singleLine    = true,
-                        modifier      = Modifier.fillMaxWidth(),
-                        colors        = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor    = Color.White,
-                            unfocusedTextColor  = Color.LightGray,
-                            focusedLabelColor   = BeatTreatColors.Purple60,
-                            unfocusedLabelColor = Color.Gray,
-                            focusedBorderColor  = BeatTreatColors.Purple60,
-                            unfocusedBorderColor = Color.Gray
-                        )
-                    )
-                } else {
+                // Show album info row in edit mode
+                if (esEdicion) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier         = Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(BeatTreatColors.SurfaceVariant),
@@ -394,7 +377,7 @@ fun FormularioResenaDialog(
                         Spacer(Modifier.width(10.dp))
                         Column {
                             Text(resenaEnEdicion!!.albumTitulo, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                            Text(resenaEnEdicion.albumArtist, color = BeatTreatColors.Purple60, fontSize = 12.sp)
+                            Text(resenaEnEdicion.albumArtist,   color = BeatTreatColors.Purple60, fontSize = 12.sp)
                         }
                     }
                 }
@@ -422,11 +405,11 @@ fun FormularioResenaDialog(
                     maxLines      = 8,
                     modifier      = Modifier.fillMaxWidth(),
                     colors        = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor    = Color.White,
-                        unfocusedTextColor  = Color.LightGray,
-                        focusedLabelColor   = BeatTreatColors.Purple60,
-                        unfocusedLabelColor = Color.Gray,
-                        focusedBorderColor  = BeatTreatColors.Purple60,
+                        focusedTextColor     = Color.White,
+                        unfocusedTextColor   = Color.LightGray,
+                        focusedLabelColor    = BeatTreatColors.Purple60,
+                        unfocusedLabelColor  = Color.Gray,
+                        focusedBorderColor   = BeatTreatColors.Purple60,
                         unfocusedBorderColor = Color.Gray
                     )
                 )
@@ -456,7 +439,7 @@ fun FormularioResenaDialog(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Diálogo Confirmar eliminar
+// Confirm delete dialog
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun ConfirmarEliminarDialog(
@@ -513,8 +496,14 @@ private fun EstrellaRating(rating: Float) {
 
 private fun formatearFecha(raw: String): String {
     return try {
-        val partes = raw.substringBefore("T").split("-")
-        "${partes[2]} / ${partes[1]} / ${partes[0]}"
+        val millis = raw.toLongOrNull()
+        if (millis != null) {
+            val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+            sdf.format(java.util.Date(millis))
+        } else {
+            val partes = raw.substringBefore("T").split("-")
+            "${partes[2]} / ${partes[1]} / ${partes[0]}"
+        }
     } catch (e: Exception) {
         raw
     }

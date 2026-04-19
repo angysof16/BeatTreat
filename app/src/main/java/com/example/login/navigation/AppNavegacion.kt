@@ -118,7 +118,6 @@ fun AppNavegacion(
             HomeScreen(
                 viewModel      = viewModel,
                 onAlbumClick   = { albumId ->
-                    // albumId is hashCode(firestoreId) — pass directly, AlbumDetalleViewModel resolves it
                     navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
                 },
                 onArtistaClick = { artistaId -> navController.navigate(Screen.ArtistaDetalle.createRoute(artistaId)) },
@@ -249,9 +248,10 @@ fun AppNavegacion(
                 onDispose { lifecycle.removeObserver(obs) }
             }
             MiPerfilScreen(
-                viewModel    = viewModel,
-                onBackClick  = { navController.popBackStack() },   // ← FIX: back button
-                onAlbumClick = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) }
+                viewModel             = viewModel,
+                onBackClick           = { navController.popBackStack() },
+                onAlbumClick          = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) },
+                onEscribirResenaClick = { navController.navigate(Screen.EscribirResena.createRoute()) }
             )
         }
 
