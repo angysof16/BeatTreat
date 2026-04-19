@@ -1,6 +1,3 @@
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: ui/Home/HomeViewModel.kt  (REEMPLAZA el existente)
-// ──────────────────────────────────────────────────────────────────────────────
 package com.example.login.ui.Home
 
 import androidx.lifecycle.ViewModel
@@ -23,7 +20,7 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUIState())
     val uiState: StateFlow<HomeUIState> = _uiState.asStateFlow()
 
-    // Guarda los IDs reales de Firestore para navegación
+    // Maps hashCode(firestoreId) -> firestoreId string, for navigation
     private val _firestoreAlbumIds = mutableMapOf<Int, String>()
     val firestoreAlbumIds: Map<Int, String> get() = _firestoreAlbumIds
 
@@ -35,30 +32,51 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
-            val result = firestoreAlbumRepository.getAllAlbums()
+            // Get raw map to build correct AlbumHomeUI with real images and correct IDs
+            val rawResult = firestoreAlbumRepository.getAllAlbumsRaw()
 
-            if (result.isSuccess) {
+            if (rawResult.isSuccess) {
+                val albumsMap = rawResult.getOrDefault(emptyMap())
+
+                // Clear and rebuild ID map
+                _firestoreAlbumIds.clear()
+                albumsMap.forEach { (firestoreId, _) ->
+                    _firestoreAlbumIds[firestoreId.hashCode()] = firestoreId
+                }
+
+                // Group by artist, using the real coverImage from Firestore
+                val artistasAgrupados = albumsMap.entries
+                    .groupBy { it.value.artist }
+                    .entries
+                    .mapIndexed { index, (artista, entries) ->
+                        ArtistaHomeUI(
+                            id     = index + 1,
+                            nombre = artista,
+                            albumes = entries.map { (firestoreId, dto) ->
+                                AlbumHomeUI(
+                                    id        = firestoreId.hashCode(),
+                                    nombre    = dto.title,
+                                    imagenUrl = dto.coverImage  // real URL from Firestore
+                                )
+                            }
+                        )
+                    }
+
                 _uiState.update {
                     it.copy(
-                        artistas      = result.getOrDefault(emptyList()),
+                        artistas      = artistasAgrupados,
                         fotoPerfilUrl = PerfilData.perfilActual.fotoPerfilUrl,
                         isLoading     = false
                     )
                 }
-                // Guarda los IDs de Firestore para navegación
-                firestoreAlbumRepository.getAllAlbumsRaw().getOrNull()
-                    ?.entries
-                    ?.forEach { (firestoreId, dto) ->
-                        _firestoreAlbumIds[firestoreId.hashCode()] = firestoreId
-                    }
             } else {
-                // Fallback a datos locales si Firestore falla
+                // Fallback to local data
                 _uiState.update {
                     it.copy(
                         artistas      = HomeData.artistas,
                         fotoPerfilUrl = PerfilData.perfilActual.fotoPerfilUrl,
                         isLoading     = false,
-                        errorMessage  = result.exceptionOrNull()?.message
+                        errorMessage  = rawResult.exceptionOrNull()?.message
                     )
                 }
             }

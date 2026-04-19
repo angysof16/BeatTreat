@@ -2,6 +2,7 @@ package com.example.login.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -116,7 +117,10 @@ fun AppNavegacion(
             }
             HomeScreen(
                 viewModel      = viewModel,
-                onAlbumClick   = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) },
+                onAlbumClick   = { albumId ->
+                    // albumId is hashCode(firestoreId) — pass directly, AlbumDetalleViewModel resolves it
+                    navController.navigate(Screen.AlbumDetalle.createRoute(albumId))
+                },
                 onArtistaClick = { artistaId -> navController.navigate(Screen.ArtistaDetalle.createRoute(artistaId)) },
                 onSearchClick  = { navController.navigate(Screen.Buscar.route) },
                 onProfileClick = { navController.navigate(Screen.Perfil.route) }
@@ -204,8 +208,6 @@ fun AppNavegacion(
                 viewModel             = viewModel,
                 albumId               = albumId,
                 onBackClick           = { navController.popBackStack() },
-                // Pasamos albumId junto con resenaId para que Comentarios pueda
-                // buscar la reseña en el backend sin Parcelable
                 onResenaClick         = { resena ->
                     navController.navigate(Screen.Comentarios.createRoute(resena.id, albumId))
                 },
@@ -248,6 +250,7 @@ fun AppNavegacion(
             }
             MiPerfilScreen(
                 viewModel    = viewModel,
+                onBackClick  = { navController.popBackStack() },   // ← FIX: back button
                 onAlbumClick = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) }
             )
         }
@@ -274,10 +277,6 @@ fun AppNavegacion(
                 onMessageClick         = { navController.navigate(Screen.Chat.route) },
                 onAlbumClick           = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) },
                 onVerTodasResenasClick = { navController.navigate(Screen.MiPerfil.route) },
-                // Desde ProfileScreen no tenemos albumId; pasamos 0 y el VM usará datos locales
-                onResenaClick          = { resena ->
-                    navController.navigate(Screen.Comentarios.createRoute(resena.id, 0))
-                },
                 onCerrarSesionClick    = {
                     navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
                 }

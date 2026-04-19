@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,7 +68,6 @@ fun ProfileScreen(
         onMessageClick         = onMessageClick,
         onAlbumClick           = onAlbumClick,
         onVerTodasResenasClick = onVerTodasResenasClick,
-        onResenaClick          = onResenaClick,
         onCerrarSesionClick    = { viewModel.cerrarSesion() },
         modifier               = modifier
     )
@@ -85,7 +85,6 @@ fun ProfileScreenContent(
     onMessageClick: () -> Unit,
     onAlbumClick: (Int) -> Unit,
     onVerTodasResenasClick: () -> Unit,
-    onResenaClick: (ResenaUI) -> Unit,
     onCerrarSesionClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -130,8 +129,11 @@ fun ProfileScreenContent(
                 Spacer(modifier = Modifier.height(22.dp))
             }
             item {
-                ReviewsSection(resenas = uiState.resenas, fotoPerfilUrl = uiState.fotoPerfilUrl,
-                    onVerTodasClick = onVerTodasResenasClick, onResenaClick = onResenaClick)
+                // MiPerfil-style reviews section
+                ResenasConAlbumSection(
+                    resenas         = uiState.resenasConAlbum,
+                    onVerTodasClick = onVerTodasResenasClick
+                )
             }
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
@@ -279,26 +281,123 @@ fun AlbumPerfilItem(album: AlbumPerfilUI, onClick: () -> Unit, modifier: Modifie
     }
 }
 
-// ── Reseñas recientes ──
+// ── Reseñas recientes — estilo MiPerfil ──
 @Composable
-fun ReviewsSection(resenas: List<ResenaUI>, fotoPerfilUrl: String, onVerTodasClick: () -> Unit, onResenaClick: (ResenaUI) -> Unit = {}, modifier: Modifier = Modifier) {
+fun ResenasConAlbumSection(
+    resenas: List<ResenaConAlbumUI>,
+    onVerTodasClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(
+            modifier              = Modifier.fillMaxWidth(),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text("Reseñas recientes", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { onVerTodasClick() }) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier          = Modifier.clickable { onVerTodasClick() }
+            ) {
                 Text("Ver todas", color = Color.White, fontSize = 12.sp)
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(Icons.Filled.ArrowForward, contentDescription = "Ver todas", tint = Color.White, modifier = Modifier.size(14.dp))
             }
         }
         Spacer(modifier = Modifier.height(12.dp))
-        resenas.forEach { resena ->
-            ReviewCard(resena = resena, fotoPerfilUrl = fotoPerfilUrl, onClick = { onResenaClick(resena) })
-            Spacer(modifier = Modifier.height(8.dp))
+
+        if (resenas.isEmpty()) {
+            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
+                Text("Aún no has escrito reseñas", color = Color.White.copy(alpha = 0.4f), fontSize = 13.sp)
+            }
+        } else {
+            resenas.forEach { resena ->
+                ResenaConAlbumCard(resena = resena)
+                Spacer(modifier = Modifier.height(10.dp))
+            }
         }
     }
 }
 
+@Composable
+fun ResenaConAlbumCard(
+    resena: ResenaConAlbumUI,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier  = modifier.fillMaxWidth(),
+        colors    = CardDefaults.cardColors(containerColor = BeatTreatColors.Surface),
+        shape     = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            // Album row (portada + título + artista + estrellas)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier         = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(BeatTreatColors.SurfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (resena.albumCover.isNotBlank()) {
+                        SubcomposeAsyncImage(
+                            model              = resena.albumCover,
+                            contentDescription = resena.albumNombre,
+                            modifier           = Modifier.fillMaxSize(),
+                            contentScale       = ContentScale.Crop
+                        ) {
+                            when (painter.state) {
+                                is AsyncImagePainter.State.Error ->
+                                    Icon(Icons.Filled.Album, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(28.dp))
+                                else -> SubcomposeAsyncImageContent()
+                            }
+                        }
+                    } else {
+                        Icon(Icons.Filled.Album, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(28.dp))
+                    }
+                }
+
+                Spacer(Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        resena.albumNombre,
+                        color      = Color.White,
+                        fontSize   = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines   = 1,
+                        overflow   = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        resena.albumArtista,
+                        color    = BeatTreatColors.Purple60,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    // Stars
+                    Row {
+                        (1..5).forEach { i ->
+                            Icon(
+                                imageVector        = if (i <= resena.calificacion.toInt()) Icons.Filled.Star else Icons.Filled.StarBorder,
+                                contentDescription = null,
+                                tint               = if (i <= resena.calificacion.toInt()) Color(0xFFFFC107) else Color.Gray,
+                                modifier           = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(10.dp))
+            Text(resena.texto, color = Color(0xFFDDDDDD), fontSize = 13.sp, lineHeight = 18.sp)
+        }
+    }
+}
+
+// ── Legacy ReviewCard (kept for potential reuse) ──
 @Composable
 fun ReviewCard(resena: ResenaUI, fotoPerfilUrl: String = "", onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     Card(modifier = modifier.fillMaxWidth().clickable { onClick() }, border = BorderStroke(1.dp, Color.Gray), colors = CardDefaults.cardColors(containerColor = Color(0xFF2A0A57))) {
@@ -352,7 +451,8 @@ fun ProfileScreenPreview() {
             ProfileScreenContent(
                 uiState = ProfileUIState(perfil = perfil), perfil = perfil,
                 onSearchClick = {}, onEditProfileClick = {}, onSiguiendoClick = {}, onSeguidoresClick = {},
-                onMessageClick = {}, onAlbumClick = {}, onVerTodasResenasClick = {}, onResenaClick = {}, onCerrarSesionClick = {}
+                onMessageClick = {}, onAlbumClick = {}, onVerTodasResenasClick = {},
+                onCerrarSesionClick = {}
             )
         }
     }

@@ -33,7 +33,7 @@ import com.example.login.ui.theme.BeatTreatColors
 @Composable
 fun MiPerfilScreen(
     onAlbumClick: (Int) -> Unit = {},
-    onCerrarSesionClick: () -> Unit = {},
+    onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: MiPerfilViewModel = hiltViewModel()
 ) {
@@ -50,6 +50,32 @@ fun MiPerfilScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            // ── Back button top bar ──
+            Row(
+                modifier          = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(horizontal = 8.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector        = Icons.Filled.ArrowBack,
+                        contentDescription = "Volver",
+                        tint               = Color.White,
+                        modifier           = Modifier.size(26.dp)
+                    )
+                }
+                Text(
+                    text       = "Mis reseñas",
+                    color      = Color.White,
+                    fontSize   = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier   = Modifier.padding(start = 4.dp)
+                )
+            }
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick        = { viewModel.abrirFormularioCrear() },
@@ -201,7 +227,7 @@ fun MiPerfilContent(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Card individual de reseña — igual que ReviewOtroUsuarioCard pero con menú
+// Card individual de reseña
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun MiResenaCard(
@@ -220,10 +246,7 @@ fun MiResenaCard(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
 
-            // ── Fila: portada + info álbum + menú ───────────────────────────
             Row(verticalAlignment = Alignment.CenterVertically) {
-
-                // Portada: URL con Coil, fallback icono
                 Box(
                     modifier         = Modifier
                         .size(56.dp)
@@ -254,7 +277,6 @@ fun MiResenaCard(
 
                 Spacer(Modifier.width(12.dp))
 
-                // Info álbum (igual que en PerfilOtroUsuario)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         resena.albumTitulo,
@@ -275,7 +297,6 @@ fun MiResenaCard(
                     EstrellaRating(rating = resena.rating)
                 }
 
-                // Menú contextual
                 Box {
                     IconButton(onClick = { menuExpandido = true }) {
                         Icon(Icons.Filled.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(18.dp))
@@ -295,11 +316,9 @@ fun MiResenaCard(
                 }
             }
 
-            // ── Contenido de la reseña ───────────────────────────────────────
             Spacer(Modifier.height(10.dp))
             Text(resena.content, color = Color(0xFFDDDDDD), fontSize = 13.sp, lineHeight = 18.sp)
 
-            // ── Fecha ────────────────────────────────────────────────────────
             if (resena.createdAt.isNotBlank()) {
                 Spacer(Modifier.height(6.dp))
                 Text(formatearFecha(resena.createdAt), color = Color.Gray, fontSize = 11.sp)
@@ -350,7 +369,6 @@ fun FormularioResenaDialog(
                         )
                     )
                 } else {
-                    // En edición: mostrar portada + nombre del álbum
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier         = Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(BeatTreatColors.SurfaceVariant),
@@ -381,7 +399,6 @@ fun FormularioResenaDialog(
                     }
                 }
 
-                // Rating con estrellas
                 Column {
                     Text("Calificación", color = Color.LightGray, fontSize = 12.sp)
                     Spacer(Modifier.height(4.dp))
