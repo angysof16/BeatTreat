@@ -1,13 +1,3 @@
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: navigation/AppNavegacion.kt  (REEMPLAZA el existente)
-// ──────────────────────────────────────────────────────────────────────────────
-// CAMBIOS CLAVE respecto al original:
-//  1. HomeScreen ahora llama onAlbumClick con el firestoreId (String) obtenido del ViewModel.
-//  2. AlbumDetalle recibe firestoreId como String en la ruta.
-//  3. ResenaScreen recibe firestoreAlbumId y lo pasa a EscribirResena.
-//  4. PerfilOtroUsuario recibe userId como String.
-//  5. Se llama FirestoreSeedHelper.seedIfEmpty al iniciar.
-// ──────────────────────────────────────────────────────────────────────────────
 package com.example.login.navigation
 
 import androidx.compose.foundation.background
@@ -159,7 +149,6 @@ fun AppNavegacion(
             HomeScreen(
                 viewModel      = viewModel,
                 onAlbumClick   = { hashId ->
-                    // Intentamos obtener el firestoreId real; fallback al hashId string
                     val firestoreId = viewModel.getFirestoreId(hashId) ?: hashId.toString()
                     val encoded = URLEncoder.encode(firestoreId, "UTF-8")
                     navController.navigate(Screen.AlbumDetalle.createRoute(encoded))
@@ -262,7 +251,7 @@ fun AppNavegacion(
             route     = Screen.Resena.route,
             arguments = listOf(navArgument("albumId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val encodedId = backStackEntry.arguments?.getString("albumId") ?: ""
+            val encodedId        = backStackEntry.arguments?.getString("albumId") ?: ""
             val firestoreAlbumId = URLDecoder.decode(encodedId, "UTF-8")
             val viewModel: ResenaViewModel = hiltViewModel()
             LaunchedEffect(firestoreAlbumId) { viewModel.cargarResenas(firestoreAlbumId) }
@@ -274,10 +263,13 @@ fun AppNavegacion(
                 onResenaClick         = { resena ->
                     navController.navigate(Screen.Comentarios.createRoute(resena.id))
                 },
-                onAutorClick          = { autorUserId ->
-                    navController.navigate(Screen.PerfilOtroUsuario.createRoute(
-                        URLEncoder.encode(autorUserId.toString(), "UTF-8")
-                    ))
+                // ← FIX: onAutorClick recibe el UID real de Firebase (String)
+                onAutorClick          = { autorFirestoreUserId ->
+                    if (autorFirestoreUserId.isNotBlank()) {
+                        navController.navigate(Screen.PerfilOtroUsuario.createRoute(
+                            URLEncoder.encode(autorFirestoreUserId, "UTF-8")
+                        ))
+                    }
                 },
                 onEscribirResenaClick = {
                     val encoded = URLEncoder.encode(firestoreAlbumId, "UTF-8")
@@ -296,8 +288,8 @@ fun AppNavegacion(
                 }
             )
         ) { backStackEntry ->
-            val encodedId    = backStackEntry.arguments?.getString("albumId") ?: ""
-            val firestoreId  = URLDecoder.decode(encodedId, "UTF-8")
+            val encodedId   = backStackEntry.arguments?.getString("albumId") ?: ""
+            val firestoreId = URLDecoder.decode(encodedId, "UTF-8")
             val viewModel: EscribirResenaViewModel = hiltViewModel()
 
             LaunchedEffect(firestoreId) {
@@ -377,13 +369,13 @@ fun AppNavegacion(
             )
         }
 
-        // ── 14. Detalle de Álbum (usa String firestoreId) ─────────────────────
+        // ── 14. Detalle de Álbum ──────────────────────────────────────────────
         composable(
             route     = Screen.AlbumDetalle.route,
             arguments = listOf(navArgument("albumId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val encodedId    = backStackEntry.arguments?.getString("albumId") ?: ""
-            val firestoreId  = URLDecoder.decode(encodedId, "UTF-8")
+            val encodedId   = backStackEntry.arguments?.getString("albumId") ?: ""
+            val firestoreId = URLDecoder.decode(encodedId, "UTF-8")
             val viewModel: AlbumDetalleViewModel = hiltViewModel()
             LaunchedEffect(firestoreId) { viewModel.cargarAlbum(firestoreId) }
 
@@ -515,8 +507,8 @@ fun AppNavegacion(
             route     = Screen.PerfilOtroUsuario.route,
             arguments = listOf(navArgument("userId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val encodedId  = backStackEntry.arguments?.getString("userId") ?: ""
-            val userId     = URLDecoder.decode(encodedId, "UTF-8")
+            val encodedId = backStackEntry.arguments?.getString("userId") ?: ""
+            val userId    = URLDecoder.decode(encodedId, "UTF-8")
             val viewModel: PerfilOtroUsuarioViewModel = hiltViewModel()
             LaunchedEffect(userId) { viewModel.cargarPerfil(userId) }
             PerfilOtroUsuarioScreen(

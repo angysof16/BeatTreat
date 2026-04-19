@@ -1,6 +1,3 @@
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: data/repository/FirestoreReviewRepository.kt
-// ──────────────────────────────────────────────────────────────────────────────
 package com.example.login.data.repository
 
 import com.example.login.data.datasource.FirestoreReviewRemoteDataSource
@@ -22,28 +19,58 @@ class FirestoreReviewRepository @Inject constructor(
     suspend fun getReviewsByAlbum(albumId: String): Result<List<ResenaDetalladaUI>> {
         return try {
             val pairs = dataSource.getReviewsByAlbum(albumId)
-
             val reviews = pairs.map { (id, dto) ->
                 ResenaDetalladaUI(
-                    id             = id.hashCode(),
-                    albumId        = albumId.hashCode(),
-                    autorNombre    = dto.user.name.ifBlank { "Usuario" },
-                    autorUsuario   = "@${dto.user.username}",
-                    autorFotoUrl   = dto.user.profileImage ?: "",
-                    albumNombre    = "",
-                    albumArtista   = "",
-                    albumImagenUrl = "",
-                    calificacion   = dto.rating,
-                    texto          = dto.content,
-                    likes          = 0,
-                    comentarios    = 0,
-                    fecha          = formatTimestamp(dto.createdAt),
-                    autorUserId    = 0
+                    id                   = id.hashCode(),
+                    albumId              = albumId.hashCode(),
+                    autorNombre          = dto.user.name.ifBlank { "Usuario" },
+                    autorUsuario         = "@${dto.user.username}",
+                    autorFotoUrl         = dto.user.profileImage ?: "",
+                    albumNombre          = "",
+                    albumArtista         = "",
+                    albumImagenUrl       = "",
+                    calificacion         = dto.rating,
+                    texto                = dto.content,
+                    likes                = 0,
+                    comentarios          = 0,
+                    fecha                = formatTimestamp(dto.createdAt),
+                    // ← FIX: usamos el UID real de Firebase para poder navegar al perfil
+                    autorFirestoreUserId = dto.userId,
+                    autorUserId          = if (dto.userId.isNotBlank()) 1 else 0
                 )
             }
             Result.success(reviews)
         } catch (e: Exception) {
             Result.failure(Exception("Error al cargar reviews: ${e.message}"))
+        }
+    }
+
+    // ← NUEVO: obtiene reviews de un usuario para mostrarse en PerfilOtroUsuario
+    suspend fun getReviewsByUser(userId: String): Result<List<ResenaDetalladaUI>> {
+        return try {
+            val pairs = dataSource.getReviewsByUser(userId)
+            val reviews = pairs.map { (id, dto) ->
+                ResenaDetalladaUI(
+                    id                   = id.hashCode(),
+                    albumId              = dto.albumId.hashCode(),
+                    autorNombre          = dto.user.name.ifBlank { "Usuario" },
+                    autorUsuario         = "@${dto.user.username}",
+                    autorFotoUrl         = dto.user.profileImage ?: "",
+                    albumNombre          = "",
+                    albumArtista         = "",
+                    albumImagenUrl       = "",
+                    calificacion         = dto.rating,
+                    texto                = dto.content,
+                    likes                = 0,
+                    comentarios          = 0,
+                    fecha                = formatTimestamp(dto.createdAt),
+                    autorFirestoreUserId = dto.userId,
+                    autorUserId          = if (dto.userId.isNotBlank()) 1 else 0
+                )
+            }
+            Result.success(reviews)
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al cargar reviews del usuario: ${e.message}"))
         }
     }
 
@@ -58,9 +85,8 @@ class FirestoreReviewRepository @Inject constructor(
 
             val userId = currentUser.uid
 
-            // Obtenemos datos del usuario para desnormalizar
-            val userDto = userRepository.getUserById(userId)
-                .getOrElse { FirestoreReviewUserDto().let { return@getOrElse null } }
+            // ← FIX: getOrNull() en lugar del cast roto con getOrElse
+            val userDto = userRepository.getUserById(userId).getOrNull()
 
             val reviewDto = FirestoreReviewDto(
                 userId    = userId,
@@ -69,10 +95,12 @@ class FirestoreReviewRepository @Inject constructor(
                 content   = content,
                 createdAt = System.currentTimeMillis(),
                 user      = FirestoreReviewUserDto(
-                    name         = (userDto as? com.example.login.data.dto.FirestoreUserDto)?.name
-                        ?: currentUser.displayName ?: "Usuario",
-                    username     = (userDto as? com.example.login.data.dto.FirestoreUserDto)?.username ?: "",
-                    profileImage = (userDto as? com.example.login.data.dto.FirestoreUserDto)?.profileImage
+                    // ← FIX: ahora userDto es FirestoreUserDto directamente, sin cast
+                    name         = userDto?.name?.takeIf { it.isNotBlank() }
+                        ?: currentUser.displayName
+                        ?: "Usuario",
+                    username     = userDto?.username?.takeIf { it.isNotBlank() } ?: "",
+                    profileImage = userDto?.profileImage
                         ?: currentUser.photoUrl?.toString()
                 )
             )

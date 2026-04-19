@@ -37,7 +37,8 @@ fun ResenaScreen(
     onBackClick: () -> Unit = {},
     onResenaClick: (ResenaDetalladaUI) -> Unit = {},
     onEscribirResenaClick: () -> Unit = {},
-    onAutorClick: (Int) -> Unit = {},
+    // ← FIX: String en lugar de Int para poder pasar el UID real de Firebase
+    onAutorClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ResenaViewModel
 ) {
@@ -62,7 +63,8 @@ fun ResenaScreenContent(
     onResenaClick: (ResenaDetalladaUI) -> Unit,
     onLikeClick: (Int) -> Unit,
     onEscribirResenaClick: () -> Unit,
-    onAutorClick: (Int) -> Unit = {},
+    // ← FIX: String
+    onAutorClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -88,7 +90,12 @@ fun ResenaScreenContent(
                         isLiked      = resena.id in uiState.resenasLikeadas,
                         onClick      = { onResenaClick(resena) },
                         onLikeClick  = { onLikeClick(resena.id) },
-                        onAutorClick = { if (resena.autorUserId > 0) onAutorClick(resena.autorUserId) }
+                        // ← FIX: usamos autorFirestoreUserId (UID real) en lugar del Int
+                        onAutorClick = {
+                            if (resena.autorFirestoreUserId.isNotBlank()) {
+                                onAutorClick(resena.autorFirestoreUserId)
+                            }
+                        }
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -184,7 +191,6 @@ fun ResenaAutorRow(resena: ResenaDetalladaUI, onAutorClick: () -> Unit = {}, mod
             verticalAlignment = Alignment.CenterVertically,
             modifier          = Modifier.weight(1f).clickable { onAutorClick() }
         ) {
-            // Foto del autor — siempre URL, sin drawable
             if (resena.autorFotoUrl.isNotBlank()) {
                 AsyncImage(
                     model              = resena.autorFotoUrl,
@@ -207,7 +213,8 @@ fun ResenaAutorRow(resena: ResenaDetalladaUI, onAutorClick: () -> Unit = {}, mod
             }
         }
 
-        if (resena.autorUserId > 0) {
+        // ← FIX: mostramos el botón cuando hay UID real de Firestore
+        if (resena.autorFirestoreUserId.isNotBlank()) {
             TextButton(onClick = onAutorClick) {
                 Text("Ver perfil", color = BeatTreatColors.Purple60, fontSize = 12.sp)
             }
@@ -218,7 +225,6 @@ fun ResenaAutorRow(resena: ResenaDetalladaUI, onAutorClick: () -> Unit = {}, mod
 @Composable
 fun ResenaAlbumRow(resena: ResenaDetalladaUI, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        // Portada del álbum — siempre URL, sin drawable
         if (resena.albumImagenUrl.isNotBlank()) {
             AsyncImage(
                 model              = resena.albumImagenUrl,
