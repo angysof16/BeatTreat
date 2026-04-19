@@ -1,12 +1,9 @@
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: ui/EscribirResena/EscribirResenaViewModel.kt  (REEMPLAZA el existente)
-// ──────────────────────────────────────────────────────────────────────────────
 package com.example.login.ui.EscribirResena
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.login.data.repository.FirestoreAlbumRepository
-import com.example.login.data.repository.FirestoreReviewRepository
+import com.example.login.data.repository.AlbumRepository
+import com.example.login.data.repository.MiPerfilRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,79 +14,78 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EscribirResenaViewModel @Inject constructor(
-    private val firestoreReviewRepository: FirestoreReviewRepository,
-    private val firestoreAlbumRepository: FirestoreAlbumRepository
+    private val repository: MiPerfilRepository,
+    private val albumRepository: AlbumRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EscribirResenaUIState())
     val uiState: StateFlow<EscribirResenaUIState> = _uiState.asStateFlow()
 
-    // Map de título mostrado → firestoreId real
-    private val albumLabelToFirestoreId = mutableMapOf<String, String>()
+    // Guardamos el albumId pendiente en caso de que llegue antes de que carguen los álbumes
+    private var albumIdPendiente: Int = 0
 
     init {
-        cargarAlbumesDeFirestore()
+        cargarAlbumesDelBackend()
     }
 
-    private fun cargarAlbumesDeFirestore() {
+    private fun cargarAlbumesDelBackend() {
         viewModelScope.launch {
             _uiState.update { it.copy(albumesCargando = true) }
-            firestoreAlbumRepository.getAllAlbumsRaw()
-                .onSuccess { albumsMap ->
-                    albumLabelToFirestoreId.clear()
-                    val dtosList = albumsMap.entries.map { (id, dto) ->
-                        albumLabelToFirestoreId["${dto.title} — ${dto.artist}"] = id
-                        // Convertimos a AlbumDto para reutilizar el selector existente
-                        com.example.login.data.dto.AlbumDto(
-                            id          = id.hashCode(),
-                            title       = dto.title,
-                            artist      = dto.artist,
-                            genre       = dto.genre,
-                            releaseYear = dto.releaseYear,
-                            coverImage  = dto.coverImage,
-                            description = dto.description,
-                            createdAt   = null,
-                            updatedAt   = null
-                        )
-                    }
+            try {
+                val result = albumRepository.getAllAlbumsDto()
+                result.onSuccess { dtos ->
                     _uiState.update { state ->
-                        val etiqueta = if (state.albumFijado && state.firestoreAlbumId.isNotBlank()) {
-                            dtosList.find { it.id == state.albumId }
+                        // Si había un albumId pendiente de pre-selección, aplicarlo ahora
+                        val idToUse = if (albumIdPendiente != 0) albumIdPendiente else state.albumId
+                        val etiqueta = if (idToUse != 0) {
+                            dtos.find { it.id == idToUse }
                                 ?.let { "${it.title} — ${it.artist}" }
                                 ?: state.albumSeleccionado
                         } else state.albumSeleccionado
+
                         state.copy(
-                            albumesBackend  = dtosList,
-                            albumesCargando = false,
-                            albumSeleccionado = etiqueta
+                            albumesBackend    = dtos,
+                            albumesCargando   = false,
+                            albumId           = if (albumIdPendiente != 0) albumIdPendiente else state.albumId,
+                            albumSeleccionado = etiqueta,
+                            albumFijado       = if (albumIdPendiente != 0) true else state.albumFijado
                         )
                     }
-                }
-                .onFailure {
+                    albumIdPendiente = 0
+                }.onFailure {
                     _uiState.update { it.copy(albumesCargando = false) }
                 }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(albumesCargando = false) }
+            }
         }
     }
 
-    fun preSeleccionarAlbum(firestoreId: String) {
-        if (firestoreId.isBlank()) return
-        val etiqueta = albumLabelToFirestoreId.entries
-            .find { it.value == firestoreId }?.key ?: ""
-        _uiState.update {
-            it.copy(
-                firestoreAlbumId  = firestoreId,
-                albumId           = firestoreId.hashCode(),
-                albumSeleccionado = etiqueta,
-                albumFijado       = true
-            )
-        }
-    }
-
-    // Mantiene compatibilidad con el flujo que pasa Int
     fun preSeleccionarAlbum(albumId: Int) {
         if (albumId == 0) return
-        _uiState.update {
-            it.copy(albumId = albumId, albumFijado = true)
+
+        val dtos = _uiState.value.albumesBackend
+        if (dtos.isNotEmpty()) {
+            // Los álbumes ya cargaron, aplicar inmediatamente
+            val etiqueta = dtos.find { it.id == albumId }
+                ?.let { "${it.title} — ${it.artist}" }
+                ?: ""
+            _uiState.update {
+                it.copy(
+                    albumId           = albumId,
+                    albumSeleccionado = etiqueta,
+                    albumFijado       = true
+                )
+            }
+        } else {
+            // Los álbumes aún no cargaron: guardar como pendiente
+            albumIdPendiente = albumId
+            _uiState.update {
+                it.copy(
+                    albumId     = albumId,
+                    albumFijado = true
+                )
+            }
         }
     }
 
@@ -104,38 +100,47 @@ class EscribirResenaViewModel @Inject constructor(
     fun onAlbumSeleccionado(albumLabel: String) {
         val state = _uiState.value
         if (state.albumFijado) return
-        val firestoreId = albumLabelToFirestoreId[albumLabel]
-        if (firestoreId != null) {
-            _uiState.update {
-                it.copy(
-                    albumSeleccionado = albumLabel,
-                    albumId           = firestoreId.hashCode(),
-                    firestoreAlbumId  = firestoreId,
-                    errorMessage      = null
-                )
-            }
-        } else {
-            _uiState.update {
-                it.copy(albumSeleccionado = albumLabel, errorMessage = "No se pudo identificar el álbum.")
-            }
+
+        val dtoEncontrado = state.albumesBackend.find { dto ->
+            "${dto.title} — ${dto.artist}" == albumLabel
+        }
+        if (dtoEncontrado != null) {
+            _uiState.update { it.copy(albumSeleccionado = albumLabel, albumId = dtoEncontrado.id) }
+            return
+        }
+        val dtoParcial = state.albumesBackend.find { dto ->
+            albumLabel.contains(dto.title, ignoreCase = true) &&
+                    albumLabel.contains(dto.artist, ignoreCase = true)
+        }
+        if (dtoParcial != null) {
+            _uiState.update { it.copy(albumSeleccionado = albumLabel, albumId = dtoParcial.id) }
+            return
+        }
+        _uiState.update {
+            it.copy(
+                albumSeleccionado = albumLabel,
+                albumId           = 0,
+                errorMessage      = "No se pudo identificar el álbum. Verifica la conexión."
+            )
         }
     }
 
     fun publicarResena() {
         val state = _uiState.value
-        val firestoreId = state.firestoreAlbumId
 
-        if (state.textoResena.isBlank() || state.calificacion == 0f || firestoreId.isBlank()) {
+        if (state.isLoading || state.publicadoExitoso) return
+
+        if (state.textoResena.isBlank() || state.calificacion == 0f || state.albumId == 0) {
             _uiState.update {
-                it.copy(errorMessage = "Selecciona un álbum, calificación y escribe tu reseña.")
+                it.copy(errorMessage = "Selecciona un álbum válido, calificación y escribe tu reseña.")
             }
             return
         }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = firestoreReviewRepository.createReview(
-                albumId = firestoreId,
+            val result = repository.crearResena(
+                albumId = state.albumId,
                 rating  = state.calificacion,
                 content = state.textoResena
             )
@@ -150,6 +155,15 @@ class EscribirResenaViewModel @Inject constructor(
     }
 
     fun resetPublicado() {
-        _uiState.update { it.copy(publicadoExitoso = false) }
+        _uiState.update {
+            it.copy(
+                publicadoExitoso  = false,
+                textoResena       = "",
+                calificacion      = 0f,
+                albumSeleccionado = if (it.albumFijado) it.albumSeleccionado else "",
+                albumId           = if (it.albumFijado) it.albumId else 0,
+                errorMessage      = null
+            )
+        }
     }
 }

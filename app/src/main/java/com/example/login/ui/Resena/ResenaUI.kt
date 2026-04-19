@@ -15,7 +15,6 @@ data class ResenaDetalladaUI(
     val comentarios: Int,
     val fecha: String,
     val autorUserId: Int = 0,
-    val autorFirestoreUserId: String = "",
     val autorFotoRes: Int = 0,
     val albumRes: Int = 0
 )

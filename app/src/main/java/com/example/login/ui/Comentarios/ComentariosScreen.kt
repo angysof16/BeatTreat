@@ -61,12 +61,13 @@ private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 @Composable
 fun ComentariosScreen(
     resenaId: Int,
+    albumId: Int = 0,          // nuevo parámetro
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ComentariosViewModel
 ) {
-    LaunchedEffect(resenaId) {
-        viewModel.cargarComentarios(resenaId)
+    LaunchedEffect(resenaId, albumId) {
+        viewModel.cargarComentarios(resenaId, albumId)
     }
 
     val uiState by viewModel.uiState.collectAsState()
@@ -139,7 +140,6 @@ fun ComentariosScreenContent(
     }
 }
 
-// ── TopBar consistente con el resto de la app ──
 @Composable
 fun TopBarComentarios(
     onBackClick: () -> Unit,
@@ -195,7 +195,6 @@ fun TopBarComentarios(
     }
 }
 
-// ── Encabezado: la reseña original resumida ──
 @Composable
 fun ResenaEncabezado(
     resena: ResenaDetalladaUI,
@@ -218,22 +217,23 @@ fun ResenaEncabezado(
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text       = "${resena.albumNombre} — ${resena.albumArtista}",
+                    text       = if (resena.albumNombre.isNotBlank()) "${resena.albumNombre} — ${resena.albumArtista}" else "Reseña",
                     color      = Color.White.copy(alpha = 0.8f),
                     fontSize   = 13.sp,
                     fontWeight = FontWeight.Medium,
                     modifier   = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                ResenaEstrellasCompactas(calificacion = resena.calificacion)
+                if (resena.calificacion > 0f) ResenaEstrellasCompactas(calificacion = resena.calificacion)
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = resena.texto, color = Color.White, fontSize = 13.sp, lineHeight = 18.sp)
+            if (resena.texto.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = resena.texto, color = Color.White, fontSize = 13.sp, lineHeight = 18.sp)
+            }
         }
     }
 }
 
-// ── Estrellas compactas ──
 @Composable
 fun ResenaEstrellasCompactas(
     calificacion: Float,
@@ -253,7 +253,6 @@ fun ResenaEstrellasCompactas(
     }
 }
 
-// ── Sin comentarios ──
 @Composable
 fun SinComentarios(modifier: Modifier = Modifier) {
     Box(
@@ -264,7 +263,6 @@ fun SinComentarios(modifier: Modifier = Modifier) {
     }
 }
 
-// ── Card de Comentario ──
 @Composable
 fun ComentarioCard(
     comentario: ComentarioUI,
@@ -298,7 +296,6 @@ fun ComentarioCard(
     }
 }
 
-// ── Like del comentario ──
 @Composable
 fun ComentarioLikeRow(
     likes: Int,
@@ -323,7 +320,6 @@ fun ComentarioLikeRow(
     }
 }
 
-// ── Input nuevo comentario ──
 @Composable
 fun InputComentario(
     texto: String,

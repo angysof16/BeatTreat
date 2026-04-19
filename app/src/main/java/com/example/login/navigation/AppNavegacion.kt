@@ -1,19 +1,13 @@
 package com.example.login.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -49,6 +43,7 @@ import com.example.login.ui.Home.HomeViewModel
 import com.example.login.ui.Login.LoginScreen
 import com.example.login.ui.Login.LoginViewModel
 import com.example.login.ui.MiPerfil.MiPerfilScreen
+import com.example.login.ui.MiPerfil.MiPerfilViewModel
 import com.example.login.ui.Perfil.ProfileScreen
 import com.example.login.ui.Perfil.ProfileViewModel
 import com.example.login.ui.PerfilOtroUsuario.PerfilOtroUsuarioScreen
@@ -61,49 +56,29 @@ import com.example.login.ui.Resena.ResenaScreen
 import com.example.login.ui.Resena.ResenaViewModel
 import com.example.login.ui.Seguidores.SeguidoresScreen
 import com.example.login.ui.Seguidores.SeguidoresViewModel
+import androidx.compose.runtime.getValue
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.example.login.util.FirestoreSeedHelper
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.net.URLDecoder
-import java.net.URLEncoder
 
 @Composable
 fun AppNavegacion(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    // Seed de datos iniciales al arrancar
-    LaunchedEffect(Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
-            FirestoreSeedHelper.seedIfEmpty(FirebaseFirestore.getInstance())
-        }
-    }
-
     val startDestination = if (FirebaseAuth.getInstance().currentUser != null) {
         Screen.Perfil.route
     } else {
         Screen.Login.route
     }
 
-    NavHost(
-        navController    = navController,
-        startDestination = startDestination,
-        modifier         = modifier
-    ) {
+    NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
 
         // ── 1. Login ──────────────────────────────────────────────────────────
         composable(Screen.Login.route) {
             val viewModel: LoginViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
-
             LaunchedEffect(state.loginExitoso) {
                 if (state.loginExitoso) {
-                    navController.navigate(Screen.Perfil.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.Perfil.route) { popUpTo(Screen.Login.route) { inclusive = true } }
                     viewModel.resetLoginExitoso()
                 }
             }
@@ -120,18 +95,13 @@ fun AppNavegacion(
         composable(Screen.Registro.route) {
             val viewModel: RegistroViewModel = hiltViewModel()
             val state by viewModel.uiState.collectAsState()
-
             LaunchedEffect(state.registroExitoso) {
                 if (state.registroExitoso) {
-                    navController.navigate(Screen.Perfil.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.Perfil.route) { popUpTo(Screen.Login.route) { inclusive = true } }
                     viewModel.resetRegistroExitoso()
                 }
             }
-            LaunchedEffect(state.selectedTab) {
-                if (state.selectedTab == 0) navController.popBackStack()
-            }
+            LaunchedEffect(state.selectedTab) { if (state.selectedTab == 0) navController.popBackStack() }
             RegistroScreen(viewModel = viewModel, onGoogleClick = {})
         }
 
@@ -143,19 +113,12 @@ fun AppNavegacion(
                 val obs = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME) viewModel.refrescarFotoPerfil()
                 }
-                lifecycle.addObserver(obs)
-                onDispose { lifecycle.removeObserver(obs) }
+                lifecycle.addObserver(obs); onDispose { lifecycle.removeObserver(obs) }
             }
             HomeScreen(
                 viewModel      = viewModel,
-                onAlbumClick   = { hashId ->
-                    val firestoreId = viewModel.getFirestoreId(hashId) ?: hashId.toString()
-                    val encoded = URLEncoder.encode(firestoreId, "UTF-8")
-                    navController.navigate(Screen.AlbumDetalle.createRoute(encoded))
-                },
-                onArtistaClick = { artistaId ->
-                    navController.navigate(Screen.ArtistaDetalle.createRoute(artistaId))
-                },
+                onAlbumClick   = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) },
+                onArtistaClick = { artistaId -> navController.navigate(Screen.ArtistaDetalle.createRoute(artistaId)) },
                 onSearchClick  = { navController.navigate(Screen.Buscar.route) },
                 onProfileClick = { navController.navigate(Screen.Perfil.route) }
             )
@@ -179,22 +142,13 @@ fun AppNavegacion(
                 val obs = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME) viewModel.refrescarFotoPerfil()
                 }
-                lifecycle.addObserver(obs)
-                onDispose { lifecycle.removeObserver(obs) }
+                lifecycle.addObserver(obs); onDispose { lifecycle.removeObserver(obs) }
             }
             DescubreScreen(
                 viewModel        = viewModel,
-                onCategoriaClick = { categoria ->
-                    navController.navigate(Screen.CategoriaDetalle.createRoute(categoria.id))
-                },
-                onGeneroClick    = { genero ->
-                    navController.navigate(Screen.GeneroDetalle.createRoute(genero.id))
-                },
-                onAlbumClick     = { album ->
-                    navController.navigate(Screen.AlbumDetalle.createRoute(
-                        URLEncoder.encode((album.id + 100).toString(), "UTF-8")
-                    ))
-                },
+                onCategoriaClick = { categoria -> navController.navigate(Screen.CategoriaDetalle.createRoute(categoria.id)) },
+                onGeneroClick    = { genero -> navController.navigate(Screen.GeneroDetalle.createRoute(genero.id)) },
+                onAlbumClick     = { album -> navController.navigate(Screen.AlbumDetalle.createRoute(album.id + 100)) },
                 onSearchClick    = { navController.navigate(Screen.Buscar.route) },
                 onProfileClick   = { navController.navigate(Screen.Perfil.route) }
             )
@@ -208,8 +162,7 @@ fun AppNavegacion(
                 val obs = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME) viewModel.refrescarFotoPerfil()
                 }
-                lifecycle.addObserver(obs)
-                onDispose { lifecycle.removeObserver(obs) }
+                lifecycle.addObserver(obs); onDispose { lifecycle.removeObserver(obs) }
             }
             GruposScreen(
                 viewModel      = viewModel,
@@ -235,89 +188,68 @@ fun AppNavegacion(
             BuscarScreen(
                 viewModel      = viewModel,
                 onBackClick    = { navController.popBackStack() },
-                onAlbumClick   = { albumId ->
-                    navController.navigate(Screen.AlbumDetalle.createRoute(
-                        URLEncoder.encode(albumId.toString(), "UTF-8")
-                    ))
-                },
-                onArtistaClick = { artistaId ->
-                    navController.navigate(Screen.ArtistaDetalle.createRoute(artistaId))
-                }
+                onAlbumClick   = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) },
+                onArtistaClick = { artistaId -> navController.navigate(Screen.ArtistaDetalle.createRoute(artistaId)) }
             )
         }
 
         // ── 9. Reseñas ────────────────────────────────────────────────────────
         composable(
             route     = Screen.Resena.route,
-            arguments = listOf(navArgument("albumId") { type = NavType.StringType })
+            arguments = listOf(navArgument("albumId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val encodedId        = backStackEntry.arguments?.getString("albumId") ?: ""
-            val firestoreAlbumId = URLDecoder.decode(encodedId, "UTF-8")
+            val albumId = backStackEntry.arguments?.getInt("albumId") ?: 0
             val viewModel: ResenaViewModel = hiltViewModel()
-            LaunchedEffect(firestoreAlbumId) { viewModel.cargarResenas(firestoreAlbumId) }
-
+            LaunchedEffect(albumId) { viewModel.cargarResenas(albumId) }
             ResenaScreen(
                 viewModel             = viewModel,
-                albumId               = firestoreAlbumId.hashCode(),
+                albumId               = albumId,
                 onBackClick           = { navController.popBackStack() },
+                // Pasamos albumId junto con resenaId para que Comentarios pueda
+                // buscar la reseña en el backend sin Parcelable
                 onResenaClick         = { resena ->
-                    navController.navigate(Screen.Comentarios.createRoute(resena.id))
+                    navController.navigate(Screen.Comentarios.createRoute(resena.id, albumId))
                 },
-                // ← FIX: onAutorClick recibe el UID real de Firebase (String)
-                onAutorClick          = { autorFirestoreUserId ->
-                    if (autorFirestoreUserId.isNotBlank()) {
-                        navController.navigate(Screen.PerfilOtroUsuario.createRoute(
-                            URLEncoder.encode(autorFirestoreUserId, "UTF-8")
-                        ))
-                    }
+                onAutorClick          = { autorUserId ->
+                    navController.navigate(Screen.PerfilOtroUsuario.createRoute(autorUserId))
                 },
                 onEscribirResenaClick = {
-                    val encoded = URLEncoder.encode(firestoreAlbumId, "UTF-8")
-                    navController.navigate(Screen.EscribirResena.createRoute(encoded))
+                    navController.navigate(Screen.EscribirResena.createRoute(albumId))
                 }
             )
         }
 
-        // ── 10. Escribir Reseña ────────────────────────────────────────────────
+        // ── 10. Escribir Reseña ───────────────────────────────────────────────
         composable(
             route     = Screen.EscribirResena.route,
-            arguments = listOf(
-                navArgument("albumId") {
-                    type         = NavType.StringType
-                    defaultValue = ""
-                }
-            )
+            arguments = listOf(navArgument("albumId") { type = NavType.IntType; defaultValue = 0 })
         ) { backStackEntry ->
-            val encodedId   = backStackEntry.arguments?.getString("albumId") ?: ""
-            val firestoreId = URLDecoder.decode(encodedId, "UTF-8")
+            val albumId = backStackEntry.arguments?.getInt("albumId") ?: 0
             val viewModel: EscribirResenaViewModel = hiltViewModel()
-
-            LaunchedEffect(firestoreId) {
-                if (firestoreId.isNotBlank()) viewModel.preSeleccionarAlbum(firestoreId)
-            }
-
-            val state by viewModel.uiState.collectAsState()
-            LaunchedEffect(state.publicadoExitoso) {
-                if (state.publicadoExitoso) {
-                    navController.popBackStack()
-                    viewModel.resetPublicado()
-                }
+            LaunchedEffect(albumId) {
+                if (albumId != 0) viewModel.preSeleccionarAlbum(albumId)
             }
             EscribirResenaScreen(
                 viewModel       = viewModel,
                 onBackClick     = { navController.popBackStack() },
-                onPublicarClick = { _, _ -> viewModel.publicarResena() }
+                onPublicarClick = { _, _ -> navController.popBackStack() }
             )
         }
 
         // ── 11. Mi Perfil ─────────────────────────────────────────────────────
         composable(Screen.MiPerfil.route) {
-            MiPerfilScreen(
-                onAlbumClick = { albumId ->
-                    navController.navigate(Screen.AlbumDetalle.createRoute(
-                        URLEncoder.encode(albumId.toString(), "UTF-8")
-                    ))
+            val viewModel: MiPerfilViewModel = hiltViewModel()
+            val lifecycle = it.lifecycle
+            DisposableEffect(lifecycle) {
+                val obs = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) viewModel.cargarMisResenas()
                 }
+                lifecycle.addObserver(obs)
+                onDispose { lifecycle.removeObserver(obs) }
+            }
+            MiPerfilScreen(
+                viewModel    = viewModel,
+                onAlbumClick = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) }
             )
         }
 
@@ -327,10 +259,12 @@ fun AppNavegacion(
             val lifecycle = it.lifecycle
             DisposableEffect(lifecycle) {
                 val obs = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_RESUME) viewModel.refrescarFotoPerfil()
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        viewModel.refrescarFotoPerfil()
+                        viewModel.refrescarPerfil()
+                    }
                 }
-                lifecycle.addObserver(obs)
-                onDispose { lifecycle.removeObserver(obs) }
+                lifecycle.addObserver(obs); onDispose { lifecycle.removeObserver(obs) }
             }
             ProfileScreen(
                 viewModel              = viewModel,
@@ -339,14 +273,11 @@ fun AppNavegacion(
                 onSiguiendoClick       = { navController.navigate(Screen.Seguidores.createRoute("siguiendo")) },
                 onSeguidoresClick      = { navController.navigate(Screen.Seguidores.createRoute("seguidores")) },
                 onMessageClick         = { navController.navigate(Screen.Chat.route) },
-                onAlbumClick           = { albumId ->
-                    navController.navigate(Screen.AlbumDetalle.createRoute(
-                        URLEncoder.encode(albumId.toString(), "UTF-8")
-                    ))
-                },
+                onAlbumClick           = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) },
                 onVerTodasResenasClick = { navController.navigate(Screen.MiPerfil.route) },
+                // Desde ProfileScreen no tenemos albumId; pasamos 0 y el VM usará datos locales
                 onResenaClick          = { resena ->
-                    navController.navigate(Screen.Comentarios.createRoute(resena.id))
+                    navController.navigate(Screen.Comentarios.createRoute(resena.id, 0))
                 },
                 onCerrarSesionClick    = {
                     navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
@@ -357,36 +288,38 @@ fun AppNavegacion(
         // ── 13. Comentarios ───────────────────────────────────────────────────
         composable(
             route     = Screen.Comentarios.route,
-            arguments = listOf(navArgument("resenaId") { type = NavType.IntType })
+            arguments = listOf(
+                navArgument("resenaId") { type = NavType.IntType },
+                navArgument("albumId")  { type = NavType.IntType }
+            )
         ) { backStackEntry ->
-            val resenaId  = backStackEntry.arguments?.getInt("resenaId") ?: 0
+            val resenaId = backStackEntry.arguments?.getInt("resenaId") ?: 0
+            val albumId  = backStackEntry.arguments?.getInt("albumId")  ?: 0
             val viewModel: ComentariosViewModel = hiltViewModel()
-            LaunchedEffect(resenaId) { viewModel.cargarComentarios(resenaId) }
+            LaunchedEffect(resenaId, albumId) {
+                viewModel.cargarComentarios(resenaId, albumId)
+            }
             ComentariosScreen(
-                viewModel    = viewModel,
-                resenaId     = resenaId,
-                onBackClick  = { navController.popBackStack() }
+                viewModel  = viewModel,
+                resenaId   = resenaId,
+                albumId    = albumId,
+                onBackClick = { navController.popBackStack() }
             )
         }
 
         // ── 14. Detalle de Álbum ──────────────────────────────────────────────
         composable(
             route     = Screen.AlbumDetalle.route,
-            arguments = listOf(navArgument("albumId") { type = NavType.StringType })
+            arguments = listOf(navArgument("albumId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val encodedId   = backStackEntry.arguments?.getString("albumId") ?: ""
-            val firestoreId = URLDecoder.decode(encodedId, "UTF-8")
+            val albumId = backStackEntry.arguments?.getInt("albumId") ?: 0
             val viewModel: AlbumDetalleViewModel = hiltViewModel()
-            LaunchedEffect(firestoreId) { viewModel.cargarAlbum(firestoreId) }
-
+            LaunchedEffect(albumId) { viewModel.cargarAlbum(albumId) }
             AlbumDetalleScreen(
-                albumId           = firestoreId.hashCode(),
+                viewModel         = viewModel,
+                albumId           = albumId,
                 onBackClick       = { navController.popBackStack() },
-                onVerResenasClick = {
-                    val encoded = URLEncoder.encode(firestoreId, "UTF-8")
-                    navController.navigate(Screen.Resena.createRoute(encoded))
-                },
-                viewModel         = viewModel
+                onVerResenasClick = { navController.navigate(Screen.Resena.createRoute(albumId)) }
             )
         }
 
@@ -402,11 +335,7 @@ fun AppNavegacion(
                 viewModel    = viewModel,
                 artistaId    = artistaId,
                 onBackClick  = { navController.popBackStack() },
-                onAlbumClick = { albumId ->
-                    navController.navigate(Screen.AlbumDetalle.createRoute(
-                        URLEncoder.encode(albumId.toString(), "UTF-8")
-                    ))
-                }
+                onAlbumClick = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) }
             )
         }
 
@@ -415,18 +344,14 @@ fun AppNavegacion(
             route     = Screen.GeneroDetalle.route,
             arguments = listOf(navArgument("generoId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val generoId  = backStackEntry.arguments?.getInt("generoId") ?: 0
+            val generoId = backStackEntry.arguments?.getInt("generoId") ?: 0
             val viewModel: GeneroDetalleViewModel = hiltViewModel()
             LaunchedEffect(generoId) { viewModel.cargarGenero(generoId) }
             GeneroDetalleScreen(
                 viewModel    = viewModel,
                 generoId     = generoId,
                 onBackClick  = { navController.popBackStack() },
-                onAlbumClick = { albumId ->
-                    navController.navigate(Screen.AlbumDetalle.createRoute(
-                        URLEncoder.encode(albumId.toString(), "UTF-8")
-                    ))
-                }
+                onAlbumClick = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) }
             )
         }
 
@@ -442,11 +367,7 @@ fun AppNavegacion(
                 viewModel    = viewModel,
                 generoId     = categoriaId,
                 onBackClick  = { navController.popBackStack() },
-                onAlbumClick = { albumId ->
-                    navController.navigate(Screen.AlbumDetalle.createRoute(
-                        URLEncoder.encode(albumId.toString(), "UTF-8")
-                    ))
-                }
+                onAlbumClick = { albumId -> navController.navigate(Screen.AlbumDetalle.createRoute(albumId)) }
             )
         }
 
@@ -480,7 +401,7 @@ fun AppNavegacion(
             route     = Screen.Seguidores.route,
             arguments = listOf(navArgument("tipo") { type = NavType.StringType })
         ) { backStackEntry ->
-            val tipo      = backStackEntry.arguments?.getString("tipo") ?: "seguidores"
+            val tipo = backStackEntry.arguments?.getString("tipo") ?: "seguidores"
             val viewModel: SeguidoresViewModel = hiltViewModel()
             LaunchedEffect(tipo) { viewModel.cargar(tipo) }
             SeguidoresScreen(
@@ -492,28 +413,25 @@ fun AppNavegacion(
 
         // ── 21. Crear Playlist ────────────────────────────────────────────────
         composable(Screen.CrearPlaylist.route) {
-            Box(
-                modifier         = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center
+            androidx.compose.foundation.layout.Box(
+                modifier         = Modifier.fillMaxSize().background(androidx.compose.material3.MaterialTheme.colorScheme.background),
+                contentAlignment = androidx.compose.ui.Alignment.Center
             ) {
-                Text("Crear Playlist — Próximamente", color = Color.White)
+                androidx.compose.material3.Text("Crear Playlist — Próximamente", color = androidx.compose.ui.graphics.Color.White)
             }
         }
 
-        // ── 22. Perfil de OTRO usuario (recibe String firestoreUserId) ─────────
+        // ── 22. Perfil de OTRO usuario ────────────────────────────────────────
         composable(
             route     = Screen.PerfilOtroUsuario.route,
-            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+            arguments = listOf(navArgument("userId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val encodedId = backStackEntry.arguments?.getString("userId") ?: ""
-            val userId    = URLDecoder.decode(encodedId, "UTF-8")
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
             val viewModel: PerfilOtroUsuarioViewModel = hiltViewModel()
             LaunchedEffect(userId) { viewModel.cargarPerfil(userId) }
             PerfilOtroUsuarioScreen(
                 viewModel   = viewModel,
-                userId      = userId.toIntOrNull() ?: userId.hashCode(),
+                userId      = userId,
                 onBackClick = { navController.popBackStack() }
             )
         }

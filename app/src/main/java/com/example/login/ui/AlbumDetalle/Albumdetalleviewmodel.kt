@@ -1,12 +1,9 @@
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: ui/AlbumDetalle/AlbumDetalleViewModel.kt  (REEMPLAZA el existente)
-// ──────────────────────────────────────────────────────────────────────────────
 package com.example.login.ui.AlbumDetalle
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.login.data.repository.FirestoreAlbumRepository
-import com.example.login.data.repository.FirestoreReviewRepository
+import com.example.login.data.repository.AlbumRepository
+import com.example.login.data.repository.ReviewRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,70 +11,73 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.round
 
 @HiltViewModel
 class AlbumDetalleViewModel @Inject constructor(
-    private val firestoreAlbumRepository: FirestoreAlbumRepository,
-    private val firestoreReviewRepository: FirestoreReviewRepository
+    private val albumRepository: AlbumRepository,
+    private val reviewRepository: ReviewRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AlbumDetalleUIState())
     val uiState: StateFlow<AlbumDetalleUIState> = _uiState.asStateFlow()
 
-    // Guarda el firestoreId del álbum actual para los reviews
-    private var currentFirestoreId: String = ""
-
-    fun cargarAlbum(firestoreId: String) {
-        currentFirestoreId = firestoreId
+    fun cargarAlbum(albumId: Int) {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
+        // Carga del álbum
         viewModelScope.launch {
-            // Carga álbum
-            val albumResult = firestoreAlbumRepository.getAlbumById(firestoreId)
-            if (albumResult.isSuccess) {
-                _uiState.update { it.copy(album = albumResult.getOrNull(), isLoading = false) }
+            val result = albumRepository.getAlbumById(albumId)
+            if (result.isSuccess) {
+                _uiState.update { state ->
+                    val album = result.getOrNull()
+                    // Si las reseñas ya cargaron antes que el álbum (race condition), aplicar promedio
+                    val albumConPromedio = if (album != null && state.resenas.isNotEmpty()) {
+                        val promedio = calcularPromedio(state.resenas.map { it.calificacion })
+                        album.copy(calificacionPromedio = promedio, totalResenas = state.resenas.size)
+                    } else album
+                    state.copy(album = albumConPromedio, isLoading = false)
+                }
             } else {
                 _uiState.update {
-                    it.copy(
-                        isLoading    = false,
-                        errorMessage = albumResult.exceptionOrNull()?.message
-                    )
+                    it.copy(isLoading = false, errorMessage = result.exceptionOrNull()?.message)
                 }
             }
+        }
 
-            // Carga reviews
+        // Carga de reseñas en paralelo
+        viewModelScope.launch {
             _uiState.update { it.copy(resenasLoading = true) }
-            val reviewsResult = firestoreReviewRepository.getReviewsByAlbum(firestoreId)
-            if (reviewsResult.isSuccess) {
-                val resenas = reviewsResult.getOrDefault(emptyList())
+            val result = reviewRepository.getReviewsByAlbum(albumId)
+            if (result.isSuccess) {
+                val resenas = result.getOrDefault(emptyList())
                 _uiState.update { state ->
+                    val albumActualizado = if (state.album != null && resenas.isNotEmpty()) {
+                        val promedio = calcularPromedio(resenas.map { it.calificacion })
+                        state.album.copy(
+                            calificacionPromedio = promedio,
+                            totalResenas         = resenas.size
+                        )
+                    } else state.album
+
                     state.copy(
                         resenas        = resenas,
                         resenasLoading = false,
-                        album = state.album?.let { alb ->
-                            if (resenas.isNotEmpty()) {
-                                val promedio = resenas.map { it.calificacion }.average().toFloat()
-                                alb.copy(
-                                    calificacionPromedio = promedio,
-                                    totalResenas         = resenas.size
-                                )
-                            } else alb
-                        }
+                        album          = albumActualizado
                     )
                 }
             } else {
-                _uiState.update { it.copy(resenasLoading = false) }
+                _uiState.update {
+                    it.copy(resenasLoading = false, resenasError = result.exceptionOrNull()?.message)
+                }
             }
         }
     }
 
-    // Sobrecarga para compatibilidad con código existente que pasa Int
-    fun cargarAlbum(albumId: Int) {
-        // Si no tenemos el firestoreId real, usamos el hashCode como fallback
-        cargarAlbum(albumId.toString())
+    private fun calcularPromedio(calificaciones: List<Float>): Float {
+        if (calificaciones.isEmpty()) return 0f
+        return (round(calificaciones.average() * 10) / 10).toFloat()
     }
-
-    fun getCurrentFirestoreId(): String = currentFirestoreId
 
     fun toggleFavorito() {
         _uiState.update { it.copy(esFavorito = !it.esFavorito) }
