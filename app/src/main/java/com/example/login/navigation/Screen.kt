@@ -16,6 +16,8 @@ sealed class Screen(val route: String) {
     object EditarPerfil  : Screen("editar_perfil")
     object MiPerfil      : Screen("mi_perfil")
 
+    object FeedSiguiendo : Screen("feed_siguiendo")
+
     // ── Pantallas con argumentos ──────────────────────────────────────────────
 
     object EscribirResena : Screen("escribir_resena/{albumId}") {

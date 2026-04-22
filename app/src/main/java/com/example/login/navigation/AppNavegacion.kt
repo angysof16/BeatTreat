@@ -58,6 +58,8 @@ import com.example.login.ui.Seguidores.SeguidoresScreen
 import com.example.login.ui.Seguidores.SeguidoresViewModel
 import androidx.compose.runtime.getValue
 import com.google.firebase.auth.FirebaseAuth
+import com.example.login.ui.FeedSiguiendo.FeedSiguiendoScreen
+import com.example.login.ui.FeedSiguiendo.FeedSiguiendoViewModel
 
 @Composable
 fun AppNavegacion(
@@ -442,5 +444,22 @@ fun AppNavegacion(
                 onBackClick = { navController.popBackStack() }
             )
         }
+
+        // ── Feed Siguiendo (datos en tiempo real) ─────────────────────────────────
+        composable(Screen.FeedSiguiendo.route) {
+            val viewModel: FeedSiguiendoViewModel = hiltViewModel()
+            FeedSiguiendoScreen(
+                viewModel     = viewModel,
+                onAutorClick  = { userId ->
+                    navController.navigate(Screen.PerfilOtroUsuario.createRoute(userId))
+                },
+                onResenaClick = { resena ->
+                    navController.navigate(
+                        Screen.Comentarios.createRoute(resena.id, resena.albumId)
+                    )
+                }
+            )
+        }
+
     }
 }

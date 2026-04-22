@@ -3,6 +3,7 @@ package com.example.login.ui.Perfil
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.login.data.repository.AuthRepository
+import com.example.login.data.repository.FollowRepository
 import com.example.login.data.repository.FirestoreAlbumRepository
 import com.example.login.data.repository.FirestoreReviewRepository
 import com.example.login.data.repository.FirestoreUserRepository
@@ -17,6 +18,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * FIX Sprint 3 — Bug #1
+ *
+ * Problema original: los contadores de seguidores y siguiendo usaban
+ * los valores hardcodeados de PerfilData (siguiendo: 127, seguidores: 89)
+ * porque ProfileViewModel nunca llamaba a FollowRepository.
+ *
+ * Solución: se inyecta FollowRepository y se cargan los contadores reales
+ * de Firestore junto con el resto del perfil.
+ */
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
@@ -24,11 +35,16 @@ class ProfileViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestoreUserRepository: FirestoreUserRepository,
     private val firestoreReviewRepository: FirestoreReviewRepository,
-    private val firestoreAlbumRepository: FirestoreAlbumRepository
+    private val firestoreAlbumRepository: FirestoreAlbumRepository,
+    // FIX: inyección del repositorio de follows para contadores reales
+    private val followRepository: FollowRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUIState())
     val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
+
+    private val currentUserId: String
+        get() = firebaseAuth.currentUser?.uid ?: ""
 
     init {
         cargarPerfil()
@@ -37,14 +53,35 @@ class ProfileViewModel @Inject constructor(
 
     private fun cargarPerfil() {
         viewModelScope.launch {
-            // Try Firestore first, fallback to FirebaseAuth photo
-            val result = firestoreUserRepository.getMyProfile()
-            val perfil = result.getOrElse {
-                // Fallback: use local data with FirebaseAuth photo
+            // FIX: carga contadores reales en paralelo con el perfil
+            val perfilDeferred    = async { firestoreUserRepository.getMyProfile() }
+            val followersDeferred = async {
+                if (currentUserId.isNotBlank())
+                    followRepository.getFollowersCount(currentUserId).getOrNull() ?: 0
+                else 0
+            }
+            val followingDeferred = async {
+                if (currentUserId.isNotBlank())
+                    followRepository.getFollowingCount(currentUserId).getOrNull() ?: 0
+                else 0
+            }
+
+            val perfilResult   = perfilDeferred.await()
+            val followersCount = followersDeferred.await()
+            val followingCount = followingDeferred.await()
+
+            val perfil = perfilResult.getOrElse {
                 val urlDeFirebaseAuth = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
                 PerfilData.perfilActual.copy(fotoPerfilUrl = urlDeFirebaseAuth)
             }
-            PerfilData.perfilActual = perfil
+
+            // FIX: sobreescribe los contadores hardcodeados con los reales de Firestore
+            val perfilConContadores = perfil.copy(
+                seguidores = followersCount,
+                siguiendo  = followingCount
+            )
+
+            PerfilData.perfilActual = perfilConContadores
             _uiState.update {
                 it.copy(
                     perfil           = PerfilData.perfilActual,
@@ -56,11 +93,10 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun cargarResenasFirestore() {
-        val userId = firebaseAuth.currentUser?.uid ?: return
+        if (currentUserId.isBlank()) return
 
         viewModelScope.launch {
-            // Load reviews and album data in parallel
-            val reviewsDeferred = async { firestoreReviewRepository.getReviewsByUser(userId) }
+            val reviewsDeferred = async { firestoreReviewRepository.getReviewsByUser(currentUserId) }
             val albumsDeferred  = async { firestoreAlbumRepository.getAllAlbumsRaw() }
 
             val reviewsResult = reviewsDeferred.await()
@@ -69,9 +105,10 @@ class ProfileViewModel @Inject constructor(
 
             reviewsResult.onSuccess { resenas ->
                 val resenasUI = resenas.take(3).map { resena ->
-                    // Find album info from the map using albumId (which is a Firestore doc ID)
                     val albumDto = albumsMap[resena.albumId.toString()]
-                        ?: albumsMap.entries.find { it.key.hashCode().toString() == resena.albumId.toString() }?.value
+                        ?: albumsMap.entries.find {
+                            it.key.hashCode().toString() == resena.albumId.toString()
+                        }?.value
 
                     ResenaConAlbumUI(
                         id           = resena.id,
@@ -81,7 +118,7 @@ class ProfileViewModel @Inject constructor(
                         texto        = resena.texto,
                         likes        = 0,
                         comentarios  = 0,
-                        albumNombre  = albumDto?.title ?: resena.albumNombre,
+                        albumNombre  = albumDto?.title  ?: resena.albumNombre,
                         albumArtista = albumDto?.artist ?: resena.albumArtista,
                         albumCover   = albumDto?.coverImage ?: resena.albumImagenUrl,
                         calificacion = resena.calificacion
@@ -92,6 +129,9 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    /**
+     * FIX: refrescarPerfil también recarga los contadores de followers/following.
+     */
     fun refrescarPerfil() {
         cargarPerfil()
         cargarResenasFirestore()

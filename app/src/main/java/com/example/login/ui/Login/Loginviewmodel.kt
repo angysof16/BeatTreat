@@ -3,6 +3,7 @@ package com.example.login.ui.Login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.login.data.repository.AuthRepository
+import com.example.login.util.FcmTokenHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +54,9 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val result = authRepository.signIn(state.email, state.password)
             if (result.isSuccess) {
+
+                FcmTokenHelper.registrarToken()
+
                 _uiState.update { it.copy(loginExitoso = true, isLoading = false) }
             } else {
                 val mensaje = result.exceptionOrNull()?.message ?: "Error al iniciar sesión"

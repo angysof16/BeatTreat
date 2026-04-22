@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.login.data.repository.AuthRepository
 import com.example.login.data.repository.FirestoreUserRepository
+import com.example.login.util.FcmTokenHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -89,6 +90,8 @@ class RegistroViewModel @Inject constructor(
                     "Firestore error: ${firestoreResult.exceptionOrNull()?.message}"
                 )
             }
+
+            FcmTokenHelper.registrarToken()
 
             _uiState.update { it.copy(registroExitoso = true, isLoading = false) }
         }
