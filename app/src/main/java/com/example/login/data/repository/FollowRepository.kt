@@ -1,3 +1,4 @@
+// FollowRepository.kt
 package com.example.login.data.repository
 
 import com.example.login.data.datasource.FollowRemoteDataSource
@@ -69,6 +70,7 @@ class FollowRepository @Inject constructor(
 
     /**
      * Obtiene la lista de seguidores como UsuarioUI para mostrar en pantalla.
+     * FIX: ahora incluye el firestoreId real
      */
     suspend fun getFollowersAsUI(userId: String): Result<List<UsuarioUI>> {
         return try {
@@ -76,8 +78,9 @@ class FollowRepository @Inject constructor(
             val dtos  = followDataSource.getFollowersUsers(userId)
             val users = ids.zip(dtos).mapIndexed { idx, (id, dto) ->
                 UsuarioUI(
-                    id      = id.hashCode(),
-                    nombre  = dto.name.ifBlank { "Usuario" },
+                    id = id.hashCode(),
+                    firestoreId = id,  // ← CLAVE: guardar el UID real de Firebase
+                    nombre = dto.name.ifBlank { "Usuario" },
                     usuario = "@${dto.username}"
                 )
             }
@@ -89,6 +92,7 @@ class FollowRepository @Inject constructor(
 
     /**
      * Obtiene la lista de seguidos como UsuarioUI para mostrar en pantalla.
+     * FIX: ahora incluye el firestoreId real
      */
     suspend fun getFollowingAsUI(userId: String): Result<List<UsuarioUI>> {
         return try {
@@ -96,8 +100,9 @@ class FollowRepository @Inject constructor(
             val dtos  = followDataSource.getFollowingUsers(userId)
             val users = ids.zip(dtos).mapIndexed { idx, (id, dto) ->
                 UsuarioUI(
-                    id      = id.hashCode(),
-                    nombre  = dto.name.ifBlank { "Usuario" },
+                    id = id.hashCode(),
+                    firestoreId = id,  // ← CLAVE: guardar el UID real de Firebase
+                    nombre = dto.name.ifBlank { "Usuario" },
                     usuario = "@${dto.username}"
                 )
             }

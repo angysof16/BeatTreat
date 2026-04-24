@@ -1,3 +1,4 @@
+// SeguidoresViewModel.kt
 package com.example.login.ui.Seguidores
 
 import androidx.lifecycle.ViewModel
@@ -13,13 +14,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * FIX Sprint 3 — Bug #3
+ * FIX Sprint 3 — Bug #3 (completo)
  *
- * Problema original: SeguidoresViewModel usaba listas hardcodeadas locales
- * (listaSiguiendo, listaSeguidores) y nunca llamaba a FollowRepository.
+ * Problema original: 
+ *   - UsuarioUI solo guardaba Int (hashCode) y no el firestoreId real
+ *   - toggleSeguir nunca llamaba a Firestore
  *
- * Solución: se inyectan FollowRepository y FirebaseAuth para cargar
- * la lista real de seguidores/siguiendo del usuario actual desde Firestore.
+ * Solución completa:
+ *   1. UsuarioUI ahora guarda firestoreId (UID real de Firebase)
+ *   2. siguiendoIds es Set<String> con los UIDs reales
+ *   3. toggleSeguir llama a followRepository.followOrUnfollow con los UIDs reales
  */
 @HiltViewModel
 class SeguidoresViewModel @Inject constructor(
@@ -35,35 +39,40 @@ class SeguidoresViewModel @Inject constructor(
 
     fun cargar(tipo: String) {
         if (currentUserId.isBlank()) {
-            _uiState.update { it.copy(tipo = tipo, isLoading = false, usuarios = emptyList()) }
+            _uiState.update {
+                it.copy(tipo = tipo, isLoading = false, usuarios = emptyList())
+            }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(tipo = tipo, isLoading = true) }
+            _uiState.update { it.copy(tipo = tipo, isLoading = true, errorMessage = null) }
 
             val result = if (tipo == "siguiendo") {
-                // Carga los IDs de usuarios que el usuario actual sigue
                 followRepository.getFollowingAsUI(currentUserId)
             } else {
-                // Carga los IDs de usuarios que siguen al usuario actual
                 followRepository.getFollowersAsUI(currentUserId)
             }
 
             result.onSuccess { usuarios ->
-                // Si es "siguiendo", todos ya están siendo seguidos por definición
+                // Para "siguiendo", todos ya están siendo seguidos por definición
                 val siguiendoIds = if (tipo == "siguiendo") {
-                    usuarios.map { it.id }.toSet()
+                    usuarios.map { it.firestoreId }.toSet()  // ← usa firestoreId real
                 } else {
-                    // Para seguidores, verificar cuáles también sigo yo
-                    // (se usa para el botón "Seguir de vuelta")
-                    emptySet()
+                    // Para seguidores, necesitamos ver cuáles de ellos YA sigo
+                    // Cargamos los IDs que sigo actualmente
+                    val myFollowingIds = followRepository.getFollowingIds(currentUserId)
+                        .getOrDefault(emptyList())
+                        .toSet()
+                    myFollowingIds
                 }
+
                 _uiState.update {
                     it.copy(
-                        usuarios    = usuarios,
+                        usuarios     = usuarios,
                         siguiendoIds = siguiendoIds,
-                        isLoading   = false
+                        isLoading    = false,
+                        errorMessage = null
                     )
                 }
             }.onFailure { error ->
@@ -79,20 +88,35 @@ class SeguidoresViewModel @Inject constructor(
     }
 
     /**
-     * FIX: toggleSeguir ahora llama a Firestore en lugar de solo
-     * actualizar el Set local en memoria.
+     * FIX: toggleSeguir ahora llama a Firestore correctamente
+     * usando el firestoreId real del usuario.
      */
-    fun toggleSeguir(usuarioId: Int) {
-        val usuarios = _uiState.value.usuarios
-        // Busca el userId real (String de Firebase) a partir del hashCode
-        // En FollowRepository, el id del UsuarioUI es el hashCode del userId String
-        // Necesitamos el userId String original para Firestore
-        // Por ahora actualizamos el estado local (la subcolección ya fue creada correctamente)
-        _uiState.update { state ->
-            val ids = state.siguiendoIds
-            state.copy(
-                siguiendoIds = if (usuarioId in ids) ids - usuarioId else ids + usuarioId
-            )
+    fun toggleSeguir(usuarioFirestoreId: String) {
+        if (currentUserId.isBlank() || usuarioFirestoreId.isBlank()) return
+
+        viewModelScope.launch {
+            // Llamar a Firestore con los UIDs reales
+            val result = followRepository.followOrUnfollow(currentUserId, usuarioFirestoreId)
+
+            result.onSuccess { ahoraEstasSiguiendo ->
+                // Actualizar el estado local con el resultado REAL
+                _uiState.update { state ->
+                    val nuevosSiguiendoIds = if (ahoraEstasSiguiendo) {
+                        state.siguiendoIds + usuarioFirestoreId
+                    } else {
+                        state.siguiendoIds - usuarioFirestoreId
+                    }
+                    state.copy(siguiendoIds = nuevosSiguiendoIds)
+                }
+
+                // Nota: No necesitamos recargar toda la lista porque los contadores
+                // se actualizarán cuando el usuario vuelva a abrir la pantalla
+                // o cuando refresque manualmente
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(errorMessage = "Error al segu@r: ${error.message}")
+                }
+            }
         }
     }
 }

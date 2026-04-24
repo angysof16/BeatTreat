@@ -42,7 +42,7 @@ fun SeguidoresScreen(
     SeguidoresScreenContent(
         uiState        = uiState,
         onBackClick    = onBackClick,
-        onToggleSeguir = { id -> viewModel.toggleSeguir(id) },
+        onToggleSeguir = { firestoreId -> viewModel.toggleSeguir(firestoreId) },  // ← pasar firestoreId
         modifier       = modifier
     )
 }
@@ -51,7 +51,7 @@ fun SeguidoresScreen(
 fun SeguidoresScreenContent(
     uiState: SeguidoresUIState,
     onBackClick: () -> Unit,
-    onToggleSeguir: (Int) -> Unit,
+    onToggleSeguir: (String) -> Unit,  // ← ahora recibe String (firestoreId)
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -144,8 +144,8 @@ fun SeguidoresScreenContent(
                         items(uiState.usuarios) { usuario ->
                             UsuarioItem(
                                 usuario       = usuario,
-                                esSiguiendo   = usuario.id in uiState.siguiendoIds,
-                                onSeguirClick = { onToggleSeguir(usuario.id) }
+                                esSiguiendo   = usuario.firestoreId in uiState.siguiendoIds,
+                                onSeguirClick = { onToggleSeguir(usuario.firestoreId) }
                             )
                         }
                     }
