@@ -22,8 +22,8 @@ class FirestoreReviewRepository @Inject constructor(
             val pairs = dataSource.getReviewsByAlbum(albumId)
             val reviews = pairs.map { (docId, dto) ->
                 ResenaDetalladaUI(
-                    id                   = docId.hashCode(),
-                    albumId              = albumId.hashCode(),
+                    id                   = docId,
+                    albumId              = albumId,
                     autorNombre          = dto.user.name.ifBlank { "Usuario" },
                     autorUsuario         = "@${dto.user.username}",
                     autorFotoUrl         = dto.user.profileImage ?: "",
@@ -55,8 +55,8 @@ class FirestoreReviewRepository @Inject constructor(
             val reviews = pairs.map { (docId, dto) ->
                 val albumDto = albumsMap[dto.albumId]
                 ResenaDetalladaUI(
-                    id                   = docId.hashCode(),
-                    albumId              = dto.albumId.hashCode(),
+                    id                   = docId,
+                    albumId              = dto.albumId,
                     autorNombre          = dto.user.name.ifBlank { "Usuario" },
                     autorUsuario         = "@${dto.user.username}",
                     autorFotoUrl         = dto.user.profileImage ?: "",

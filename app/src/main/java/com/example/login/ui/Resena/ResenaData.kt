@@ -4,8 +4,8 @@ object ResenaData {
 
     val todasLasResenas = listOf(
         ResenaDetalladaUI(
-            id            = 1,
-            albumId       = 7,
+            id            = "1",
+            albumId       = "7",
             autorNombre   = "Alex Morrison",
             autorUsuario  = "@alexmrrsn",
             autorFotoUrl  = "HTTPS://PLACEHOLDER.COM/USERS/ALEX_MORRISON_AVATAR.JPG",
@@ -19,8 +19,8 @@ object ResenaData {
             fecha         = "Hace 2 días"
         ),
         ResenaDetalladaUI(
-            id            = 2,
-            albumId       = 5,
+            id            = "2",
+            albumId       = "5",
             autorNombre   = "María García",
             autorUsuario  = "@mariagrck",
             autorFotoUrl  = "HTTPS://PLACEHOLDER.COM/USERS/MARIA_GARCIA_AVATAR.JPG",
@@ -34,8 +34,8 @@ object ResenaData {
             fecha         = "Hace 5 días"
         ),
         ResenaDetalladaUI(
-            id            = 3,
-            albumId       = 103,
+            id            = "3",
+            albumId       = "103",
             autorNombre   = "Carlos Ruiz",
             autorUsuario  = "@carlosrz",
             autorFotoUrl  = "HTTPS://PLACEHOLDER.COM/USERS/CARLOS_RUIZ_AVATAR.JPG",
@@ -49,8 +49,8 @@ object ResenaData {
             fecha         = "Hace 1 semana"
         ),
         ResenaDetalladaUI(
-            id            = 4,
-            albumId       = 101,
+            id            = "4",
+            albumId       = "101",
             autorNombre   = "Laura Pérez",
             autorUsuario  = "@laurapz",
             autorFotoUrl  = "HTTPS://PLACEHOLDER.COM/USERS/LAURA_PEREZ_AVATAR.JPG",
@@ -64,8 +64,8 @@ object ResenaData {
             fecha         = "Hace 3 días"
         ),
         ResenaDetalladaUI(
-            id            = 5,
-            albumId       = 102,
+            id            = "5",
+            albumId       = "102",
             autorNombre   = "Diego Torres",
             autorUsuario  = "@diegot",
             autorFotoUrl  = "HTTPS://PLACEHOLDER.COM/USERS/DIEGO_TORRES_AVATAR.JPG",
@@ -80,7 +80,7 @@ object ResenaData {
         )
     )
 
-    fun porAlbum(albumId: Int): List<ResenaDetalladaUI> =
+    fun porAlbum(albumId: String): List<ResenaDetalladaUI> =
         todasLasResenas.filter { it.albumId == albumId }
 
     val comentariosEjemplo = listOf(

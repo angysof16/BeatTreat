@@ -72,7 +72,7 @@ class PerfilOtroUsuarioViewModel @Inject constructor(
                 val reviews = if (reviewsResult.isSuccess) {
                     reviewsResult.getOrDefault(emptyList()).map { resena ->
                         ReviewOtroUsuarioUI(
-                            id           = resena.id,
+                            id           = resena.id.hashCode(),
                             albumNombre  = resena.albumNombre.ifBlank { "Álbum" },
                             albumArtista = resena.albumArtista,
                             rating       = resena.calificacion,

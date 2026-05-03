@@ -13,8 +13,8 @@ data class ReviewDto(
     @SerializedName("user")      val user: UserInReviewDto
 ) {
     fun toResenaDetalladaUI(): ResenaDetalladaUI = ResenaDetalladaUI(
-        id = this.id,
-        albumId = this.albumId,
+        id = this.id.toString(),
+        albumId = this.albumId.toString(),
         autorNombre = this.user.name,
         autorUsuario = "@${this.user.username}",
         autorFotoUrl = this.user.profileImage ?: "",

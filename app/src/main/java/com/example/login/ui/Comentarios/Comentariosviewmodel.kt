@@ -22,24 +22,16 @@ class ComentariosViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ComentariosUIState())
     val uiState: StateFlow<ComentariosUIState> = _uiState.asStateFlow()
 
-    /**
-     * Carga la reseña buscándola en el backend por albumId, luego filtra por resenaId.
-     * Así evitamos necesitar Parcelable: solo navegamos con dos ints.
-     *
-     * Flujo:
-     * 1. GET /albums/:albumId/reviews  → lista de ReviewDto con user incluido
-     * 2. Filtramos por resenaId
-     * 3. Mostramos comentarios de ejemplo (el backend no tiene endpoint de comentarios aún)
-     */
-    fun cargarComentarios(resenaId: Int, albumId: Int) {
-        _uiState.update { it.copy(isLoading = true) }
 
-        if (albumId != 0) {
+    fun cargarComentarios(resenaId: String, albumId: String) {
+        _uiState.update { it.copy(isLoading = true) }
+        val albumIdInt = albumId.toIntOrNull() ?: 0
+        if (albumIdInt != 0) {
             viewModelScope.launch {
-                val result = reviewRepository.getReviewsByAlbum(albumId)
+                val result = reviewRepository.getReviewsByAlbum(albumIdInt)
                 if (result.isSuccess) {
                     val resena = result.getOrDefault(emptyList())
-                        .find { it.id == resenaId }
+                        .find { it.id == resenaId }  // id es String en ResenaDetalladaUI
                     _uiState.update {
                         it.copy(
                             resena      = resena ?: buscarEnLocal(resenaId),
@@ -48,7 +40,6 @@ class ComentariosViewModel @Inject constructor(
                         )
                     }
                 } else {
-                    // Si el backend falla, intentamos los datos locales
                     _uiState.update {
                         it.copy(
                             resena      = buscarEnLocal(resenaId),
@@ -59,7 +50,6 @@ class ComentariosViewModel @Inject constructor(
                 }
             }
         } else {
-            // Sin albumId: solo datos locales (compatibilidad con ProfileScreen)
             _uiState.update {
                 it.copy(
                     resena      = buscarEnLocal(resenaId),
@@ -70,8 +60,7 @@ class ComentariosViewModel @Inject constructor(
         }
     }
 
-    /** Busca en los datos hardcodeados locales como fallback */
-    private fun buscarEnLocal(resenaId: Int): ResenaDetalladaUI? =
+    private fun buscarEnLocal(resenaId: String): ResenaDetalladaUI? =
         ResenaData.todasLasResenas.find { it.id == resenaId }
 
     fun onNuevoComentarioChange(texto: String) {

@@ -7,8 +7,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -302,7 +305,7 @@ fun ResenaItemCompleto(
                 repeat(5) { i ->
                     val icon = when {
                         i < resena.calificacion.toInt() -> Icons.Filled.Star
-                        i == resena.calificacion.toInt() && (resena.calificacion - resena.calificacion.toInt()) >= 0.5f -> Icons.Filled.StarHalf
+                        i == resena.calificacion.toInt() && (resena.calificacion - resena.calificacion.toInt()) >= 0.5f -> Icons.AutoMirrored.Filled.StarHalf
                         else -> Icons.Filled.StarBorder
                     }
                     Icon(icon, null, tint = if (i < resena.calificacion.toInt()) Color(0xFFFFC107) else Color.Gray, modifier = Modifier.size(16.dp))
@@ -345,7 +348,13 @@ fun CancionItem(cancion: CancionDetalleUI, esUltima: Boolean, modifier: Modifier
             Text(cancion.titulo, color = Color.White, fontSize = 15.sp, modifier = Modifier.weight(1f))
             Text(cancion.duracion, color = Color.White.copy(alpha = 0.5f), fontSize = 13.sp)
         }
-        if (!esUltima) Divider(color = Color.White.copy(alpha = 0.07f), modifier = Modifier.padding(horizontal = 20.dp))
+        if (!esUltima) {
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                thickness = DividerDefaults.Thickness,
+                color = Color.White.copy(alpha = 0.07f)
+            )
+        }
     }
 }
 
@@ -359,7 +368,7 @@ fun AlbumPortadaHeader(album: AlbumDetalleUI, esFavorito: Boolean, onBackClick: 
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp).align(Alignment.TopStart), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBackClick) {
                 Box(Modifier.size(38.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.ArrowBack, "Volver", tint = Color.White, modifier = Modifier.size(22.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White, modifier = Modifier.size(22.dp))
                 }
             }
             IconButton(onClick = onFavoritoClick) {
@@ -414,7 +423,7 @@ fun EstrellasCalificacion(calificacion: Float, modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         val entero = calificacion.toInt(); val tieneMedia = (calificacion - entero) >= 0.5f
         repeat(5) { i ->
-            val icon = when { i < entero -> Icons.Filled.Star; i == entero && tieneMedia -> Icons.Filled.StarHalf; else -> Icons.Filled.StarBorder }
+            val icon = when { i < entero -> Icons.Filled.Star; i == entero && tieneMedia -> Icons.AutoMirrored.Filled.StarHalf; else -> Icons.Filled.StarBorder }
             Icon(icon, null, tint = if (i < entero || (i == entero && tieneMedia)) Color(0xFFFFC107) else Color.Gray, modifier = Modifier.size(28.dp))
         }
     }

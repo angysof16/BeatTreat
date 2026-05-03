@@ -114,7 +114,7 @@ class ProfileViewModel @Inject constructor(
                         }?.value
 
                     ResenaConAlbumUI(
-                        id           = resena.id,
+                        id           = resena.id.hashCode(),
                         autorNombre  = PerfilData.perfilActual.nombre,
                         autorUsuario = PerfilData.perfilActual.usuario,
                         autorFotoUrl = PerfilData.perfilActual.fotoPerfilUrl,

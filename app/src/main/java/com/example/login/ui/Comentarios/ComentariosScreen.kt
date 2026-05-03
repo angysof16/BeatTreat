@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -60,8 +62,8 @@ private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 // ── Stateful ──
 @Composable
 fun ComentariosScreen(
-    resenaId: Int,
-    albumId: Int = 0,          // nuevo parámetro
+    resenaId: String,
+    albumId: String,
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ComentariosViewModel
@@ -172,7 +174,7 @@ fun TopBarComentarios(
         ) {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    Icons.Filled.ArrowBack,
+                    Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Volver",
                     tint               = Color.White,
                     modifier           = Modifier.size(26.dp)
@@ -356,7 +358,7 @@ fun InputComentario(
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = onEnviarClick, enabled = texto.isNotBlank()) {
-                Icon(Icons.Filled.Send, contentDescription = "Enviar comentario", tint = Color.White, modifier = Modifier.size(20.dp))
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar comentario", tint = Color.White, modifier = Modifier.size(20.dp))
             }
         }
     }
