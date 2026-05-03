@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.beattreat.data.repository.FirestoreAlbumRepository
 import com.example.beattreat.data.repository.FirestoreReviewRepository
+import com.example.beattreat.data.repository.FirestoreUserRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ import kotlin.math.round
 class AlbumDetalleViewModel @Inject constructor(
     private val firestoreAlbumRepository: FirestoreAlbumRepository,
     private val firestoreReviewRepository: FirestoreReviewRepository,
+    private val firestoreUserRepository: FirestoreUserRepository,
     private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
 
@@ -65,16 +67,44 @@ class AlbumDetalleViewModel @Inject constructor(
             _uiState.update { it.copy(resenasLoading = true) }
             val result = firestoreReviewRepository.getReviewsByAlbum(firestoreId)
             if (result.isSuccess) {
-                val resenas = result.getOrDefault(emptyList())
+                val resenasCrudas = result.getOrDefault(emptyList())
+
+                // NUEVO: enriquecer la foto de cada reseña si está vacía
+                val resenasEnriquecidas = resenasCrudas.map { resena ->
+                    if (resena.autorFotoUrl.isBlank() && resena.autorFirestoreUserId.isNotBlank()) {
+                        val fotoActual = firestoreUserRepository
+                            .getUserById(resena.autorFirestoreUserId)
+                            .getOrNull()
+                            ?.profileImage
+                            ?: ""
+                        resena.copy(autorFotoUrl = fotoActual)
+                    } else {
+                        resena
+                    }
+                }
+
                 _uiState.update { state ->
-                    val albumActualizado = state.album?.takeIf { resenas.isNotEmpty() }?.copy(
-                        calificacionPromedio = calcularPromedio(resenas.map { it.calificacion }),
-                        totalResenas         = resenas.size
-                    ) ?: state.album
-                    state.copy(resenas = resenas, resenasLoading = false, album = albumActualizado)
+                    val albumActualizado = state.album
+                        ?.takeIf { resenasEnriquecidas.isNotEmpty() }
+                        ?.copy(
+                            calificacionPromedio = calcularPromedio(
+                                resenasEnriquecidas.map { it.calificacion }
+                            ),
+                            totalResenas = resenasEnriquecidas.size
+                        ) ?: state.album
+                    state.copy(
+                        resenas = resenasEnriquecidas,
+                        resenasLoading = false,
+                        album = albumActualizado
+                    )
                 }
             } else {
-                _uiState.update { it.copy(resenasLoading = false, resenasError = result.exceptionOrNull()?.message) }
+                _uiState.update {
+                    it.copy(
+                        resenasLoading = false,
+                        resenasError = result.exceptionOrNull()?.message
+                    )
+                }
             }
         }
     }

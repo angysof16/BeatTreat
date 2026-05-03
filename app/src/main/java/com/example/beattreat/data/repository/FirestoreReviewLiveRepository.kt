@@ -43,7 +43,9 @@ class FirestoreReviewLiveRepository @Inject constructor(
                         albumId = albumId,
                         autorNombre = userInfo?.name ?: dto.user.name.ifBlank { "Usuario" },
                         autorUsuario = userInfo?.username?.let { "@$it" } ?: dto.user.username,
-                        autorFotoUrl = userInfo?.profileImage ?: dto.user.profileImage ?: "",
+                        autorFotoUrl = userInfo?.profileImage?.takeIf { it.isNotBlank() }
+                            ?: dto.user.profileImage?.takeIf { it.isNotBlank() }
+                            ?: "",
                         albumNombre = albumInfo?.title ?: "",  // ← title de FirestoreAlbumDto
                         albumArtista = albumInfo?.artist ?: "",  // ← artist de FirestoreAlbumDto
                         albumImagenUrl = albumInfo?.coverImage ?: "",  // ← coverImage de FirestoreAlbumDto
@@ -81,7 +83,9 @@ class FirestoreReviewLiveRepository @Inject constructor(
                         albumId = dto.albumId,
                         autorNombre = userInfo?.name ?: dto.user.name.ifBlank { "Usuario" },
                         autorUsuario = userInfo?.username?.let { "@$it" } ?: dto.user.username,
-                        autorFotoUrl = userInfo?.profileImage ?: dto.user.profileImage ?: "",
+                        autorFotoUrl = userInfo?.profileImage?.takeIf { it.isNotBlank() }
+                            ?: dto.user.profileImage?.takeIf { it.isNotBlank() }
+                            ?: "",
                         albumNombre = albumInfo?.title ?: "",
                         albumArtista = albumInfo?.artist ?: "",
                         albumImagenUrl = albumInfo?.coverImage ?: "",
