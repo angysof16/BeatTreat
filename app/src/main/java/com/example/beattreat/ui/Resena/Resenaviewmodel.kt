@@ -33,10 +33,18 @@ class ResenaViewModel @Inject constructor(
 
     // Esta función ya existía para String — la dejamos igual
     fun cargarResenas(albumId: String) {
+        // Si el albumId es un número (hashCode del firestoreId), lo resolvemos primero
+        val albumIdAsInt = albumId.toIntOrNull()
+        if (albumIdAsInt != null) {
+            cargarResenas(albumIdAsInt)
+            return
+        }
+        // Ya es un firestoreId real (string)
         _uiState.update { it.copy(isLoading = true, albumId = albumId) }
         collectionJob?.cancel()
         collectionJob = viewModelScope.launch {
             liveReviewRepository.listenReviewsByAlbum(albumId).collect { resenas ->
+
                 val likedIds = mutableSetOf<String>()
                 if (currentUserId.isNotBlank()) {
                     for (resena in resenas) {
