@@ -1,7 +1,10 @@
+// data/repository/FirestoreReviewLiveRepository.kt
 package com.example.login.data.repository
 
+import com.example.login.data.datasource.FirestoreAlbumRemoteDataSource
 import com.example.login.data.datasource.FirestoreReviewLiveDataSource
-import com.example.login.data.repository.FirestoreAlbumRepository
+import com.example.login.data.dto.FirestoreAlbumDto
+import com.example.login.data.dto.FirestoreReviewDto
 import com.example.login.ui.Resena.ResenaDetalladaUI
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -12,19 +15,11 @@ import javax.inject.Inject
 
 /**
  * Repositorio de reviews en tiempo real.
- *
- * Mapea el Flow<List<Pair<String, FirestoreReviewDto>>> del data source
- * a un Flow<List<ResenaDetalladaUI>> que consume la UI.
- *
- * NOTA sobre Flows (explicado por el profesor):
- *   - No lanzamos excepciones en try-catch, porque cuando el Flow se cancela
- *     no es una excepción sino que el flujo simplemente para.
- *   - Los errores se manejan con .catch { } en el ViewModel.
- *   - El Flow se cancela automáticamente cuando el ViewModel se destruye.
  */
 class FirestoreReviewLiveRepository @Inject constructor(
     private val liveDataSource: FirestoreReviewLiveDataSource,
-    private val albumRepository: FirestoreAlbumRepository
+    private val albumDataSource: FirestoreAlbumRemoteDataSource,  // ← Cambiar a FirestoreAlbumRemoteDataSource
+    private val userRepository: FirestoreUserRepository
 ) {
 
     /**
@@ -33,60 +28,93 @@ class FirestoreReviewLiveRepository @Inject constructor(
      */
     fun listenReviewsByAlbum(albumId: String): Flow<List<ResenaDetalladaUI>> =
         liveDataSource.listenReviewsByAlbum(albumId).map { pairs ->
-            pairs.map { (docId, dto) ->
-                ResenaDetalladaUI(
-                    id                   = docId.hashCode(),
-                    albumId              = albumId.hashCode(),
-                    autorNombre          = dto.user.name.ifBlank { "Usuario" },
-                    autorUsuario         = "@${dto.user.username}",
-                    autorFotoUrl         = dto.user.profileImage ?: "",
-                    albumNombre          = "",
-                    albumArtista         = "",
-                    albumImagenUrl       = "",
-                    calificacion         = dto.rating,
-                    texto                = dto.content,
-                    likes                = 0,
-                    comentarios          = 0,
-                    fecha                = formatTimestamp(dto.createdAt),
-                    autorFirestoreUserId = dto.userId,
-                    autorUserId          = 1,
-                    firestoreDocId       = docId
-                )
+            // Obtener información del álbum directamente del data source
+            val albumInfo: FirestoreAlbumDto? = try {
+                albumDataSource.getAlbumById(albumId)
+            } catch (e: Exception) {
+                null
             }
+
+            pairs.mapNotNull { (docId, dto) ->
+                try {
+                    val userInfo = userRepository.getUserById(dto.userId).getOrNull()
+
+                    ResenaDetalladaUI(
+                        id = docId,
+                        albumId = albumId,
+                        autorNombre = userInfo?.name ?: dto.user.name.ifBlank { "Usuario" },
+                        autorUsuario = userInfo?.username?.let { "@$it" } ?: dto.user.username,
+                        autorFotoUrl = userInfo?.profileImage ?: dto.user.profileImage ?: "",
+                        albumNombre = albumInfo?.title ?: "",  // ← title de FirestoreAlbumDto
+                        albumArtista = albumInfo?.artist ?: "",  // ← artist de FirestoreAlbumDto
+                        albumImagenUrl = albumInfo?.coverImage ?: "",  // ← coverImage de FirestoreAlbumDto
+                        calificacion = dto.rating,
+                        texto = dto.content,
+                        likes = dto.likesCount,
+                        comentarios = 0,
+                        fecha = formatTimestamp(dto.createdAt),
+                        autorFirestoreUserId = dto.userId,
+                        autorUserId = 0,
+                        firestoreDocId = docId
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }.sortedByDescending { it.fecha }
         }
 
-    /**
-     * Escucha el feed "siguiendo": reviews de usuarios a los que sigo.
-     * Se actualiza en tiempo real cuando cualquier seguido publica o edita.
-     */
     fun listenFeedByAuthors(authorIds: List<String>): Flow<List<ResenaDetalladaUI>> =
         liveDataSource.listenReviewsByAuthors(authorIds).map { pairs ->
-            pairs.map { (docId, dto) ->
-                ResenaDetalladaUI(
-                    id                   = docId.hashCode(),
-                    albumId              = dto.albumId.hashCode(),
-                    autorNombre          = dto.user.name.ifBlank { "Usuario" },
-                    autorUsuario         = "@${dto.user.username}",
-                    autorFotoUrl         = dto.user.profileImage ?: "",
-                    albumNombre          = "",
-                    albumArtista         = "",
-                    albumImagenUrl       = "",
-                    calificacion         = dto.rating,
-                    texto                = dto.content,
-                    likes                = 0,
-                    comentarios          = 0,
-                    fecha                = formatTimestamp(dto.createdAt),
-                    autorFirestoreUserId = dto.userId,
-                    autorUserId          = 1,
-                    firestoreDocId       = docId
-                )
+            // Obtener todos los álbumes del data source
+            val albumsMap: Map<String, FirestoreAlbumDto> = try {
+                albumDataSource.getAllAlbums()
+            } catch (e: Exception) {
+                emptyMap()
             }
+
+            pairs.mapNotNull { (docId, dto) ->
+                try {
+                    val albumInfo = albumsMap[dto.albumId]
+                    val userInfo = userRepository.getUserById(dto.userId).getOrNull()
+
+                    ResenaDetalladaUI(
+                        id = docId,
+                        albumId = dto.albumId,
+                        autorNombre = userInfo?.name ?: dto.user.name.ifBlank { "Usuario" },
+                        autorUsuario = userInfo?.username?.let { "@$it" } ?: dto.user.username,
+                        autorFotoUrl = userInfo?.profileImage ?: dto.user.profileImage ?: "",
+                        albumNombre = albumInfo?.title ?: "",
+                        albumArtista = albumInfo?.artist ?: "",
+                        albumImagenUrl = albumInfo?.coverImage ?: "",
+                        calificacion = dto.rating,
+                        texto = dto.content,
+                        likes = dto.likesCount,
+                        comentarios = 0,
+                        fecha = formatTimestamp(dto.createdAt),
+                        autorFirestoreUserId = dto.userId,
+                        autorUserId = 0,
+                        firestoreDocId = docId
+                    )
+                } catch (e: Exception) {
+                    null
+                }
+            }.sortedByDescending { it.fecha }
         }
 
     private fun formatTimestamp(ts: Long): String {
         if (ts == 0L) return ""
         return try {
-            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(ts))
+            val now = System.currentTimeMillis()
+            val diff = now - ts
+
+            when {
+                diff < 60000 -> "Hace ${diff / 1000} segundos"
+                diff < 3600000 -> "Hace ${diff / 60000} minutos"
+                diff < 86400000 -> "Hace ${diff / 3600000} horas"
+                else -> {
+                    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(ts))
+                }
+            }
         } catch (e: Exception) { "" }
     }
 }

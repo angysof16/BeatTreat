@@ -33,7 +33,7 @@ fun AlbumDetalleScreen(
     onBackClick: () -> Unit = {},
     onVerResenasClick: () -> Unit = {},
     onEscribirResenaClick: (Int) -> Unit = {},
-    onResenaClick: (resenaId: Int, albumId: Int) -> Unit = { _, _ -> },
+    onResenaClick: (resenaId: String, albumId: Int) -> Unit = { _, _ -> },
     onAutorClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: AlbumDetalleViewModel
@@ -130,7 +130,7 @@ fun AlbumDetalleScreen(
         onVerResenasClick     = onVerResenasClick,
         onFavoritoClick       = { viewModel.toggleFavorito() },
         onEscribirResenaClick = { onEscribirResenaClick(albumId) },
-        onResenaClick         = { resena -> onResenaClick(resena.id, albumId) },
+        onResenaClick         = { resena -> onResenaClick(resena.id, albumId) },  // ← resena.id es String
         onAutorClick          = onAutorClick,
         onEliminarResena      = { resena -> resenaAEliminar = resena },
         onEditarResena        = { resena -> viewModel.abrirEditar(resena) },

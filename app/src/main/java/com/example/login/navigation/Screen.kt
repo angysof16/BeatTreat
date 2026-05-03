@@ -1,3 +1,4 @@
+// navigation/Screen.kt - versión completa corregida
 package com.example.login.navigation
 
 sealed class Screen(val route: String) {
@@ -15,7 +16,6 @@ sealed class Screen(val route: String) {
     object CrearPlaylist : Screen("crear_playlist")
     object EditarPerfil  : Screen("editar_perfil")
     object MiPerfil      : Screen("mi_perfil")
-
     object FeedSiguiendo : Screen("feed_siguiendo")
 
     // ── Pantallas con argumentos ──────────────────────────────────────────────
@@ -25,12 +25,13 @@ sealed class Screen(val route: String) {
     }
 
     object Resena : Screen("resena/{albumId}") {
-        fun createRoute(albumId: Int) = "resena/$albumId"
+        fun createRoute(albumId: String) = "resena/$albumId"  // ← Sobrecarga para String
+        fun createRoute(albumId: Int) = "resena/$albumId"     // ← Sobrecarga para Int
     }
 
-    // Ahora Comentarios lleva resenaId Y albumId para poder buscar la reseña
-    // desde el backend sin necesitar Parcelable
     object Comentarios : Screen("comentarios/{resenaId}/{albumId}") {
+        fun createRoute(resenaId: String, albumId: String) = "comentarios/$resenaId/$albumId"
+        fun createRoute(resenaId: String, albumId: Int) = "comentarios/$resenaId/$albumId"
         fun createRoute(resenaId: Int, albumId: Int) = "comentarios/$resenaId/$albumId"
     }
 

@@ -21,9 +21,6 @@ data class RegisterUserDto(
     val bio: String? = null
 )
 
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: data/dto/FirestoreAlbumDto.kt
-// ──────────────────────────────────────────────────────────────────────────────
 data class FirestoreAlbumDto(
     val title: String = "",
     val artist: String = "",
@@ -33,15 +30,13 @@ data class FirestoreAlbumDto(
     val description: String = ""
 )
 
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: data/dto/FirestoreReviewDto.kt
-// ──────────────────────────────────────────────────────────────────────────────
 data class FirestoreReviewDto(
     val userId: String = "",
     val albumId: String = "",
     val rating: Float = 0f,
     val content: String = "",
     val createdAt: Long = 0L,
+    val likesCount: Int = 0,
     val user: FirestoreReviewUserDto = FirestoreReviewUserDto()
 )
 

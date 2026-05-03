@@ -9,8 +9,10 @@ data class PerfilUI(
     val fotoPerfilUrl: String,
     val fotoBannerUrl: String,
     val siguiendo: Int,
-    val seguidores: Int
+    val seguidores: Int,
+    val bio: String = ""
 )
+
 
 data class AlbumPerfilUI(
     val id: Int,

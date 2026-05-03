@@ -13,7 +13,8 @@ object PerfilData {
         fotoPerfilUrl = "",
         fotoBannerUrl = "",
         siguiendo     = 127,
-        seguidores    = 89
+        seguidores    = 89,
+        bio = ""
     )
 
     val albumesFavoritos = listOf(

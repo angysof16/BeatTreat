@@ -36,7 +36,6 @@ class ProfileViewModel @Inject constructor(
     private val firestoreUserRepository: FirestoreUserRepository,
     private val firestoreReviewRepository: FirestoreReviewRepository,
     private val firestoreAlbumRepository: FirestoreAlbumRepository,
-    // FIX: inyección del repositorio de follows para contadores reales
     private val followRepository: FollowRepository
 ) : ViewModel() {
 
@@ -47,6 +46,10 @@ class ProfileViewModel @Inject constructor(
         get() = firebaseAuth.currentUser?.uid ?: ""
 
     init {
+        cargarPerfil()
+        cargarResenasFirestore()
+    }
+    fun refresh() {
         cargarPerfil()
         cargarResenasFirestore()
     }

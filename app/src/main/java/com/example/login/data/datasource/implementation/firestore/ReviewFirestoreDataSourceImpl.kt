@@ -26,7 +26,8 @@ class ReviewFirestoreDataSourceImpl @Inject constructor(
     }
 
     override suspend fun createReview(dto: FirestoreReviewDto): String {
-        val ref = db.collection(REVIEWS_COLLECTION).add(dto).await()
+        val reviewWithLikes = dto.copy(likesCount = 0)  // ← Inicializar likesCount
+        val ref = db.collection(REVIEWS_COLLECTION).add(reviewWithLikes).await()
         return ref.id
     }
 

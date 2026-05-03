@@ -4,6 +4,7 @@
 package com.example.login.data.repository
 
 import com.example.login.data.datasource.FirestoreAlbumRemoteDataSource
+import com.example.login.data.dto.FirestoreAlbumDto
 import com.example.login.ui.AlbumDetalle.AlbumDetalleUI
 import com.example.login.ui.AlbumDetalle.CancionDetalleUI
 import com.example.login.ui.Home.AlbumHomeUI
@@ -67,6 +68,15 @@ class FirestoreAlbumRepository @Inject constructor(
                 canciones            = emptyList()
             )
             Result.success(ui)
+        } catch (e: Exception) {
+            Result.failure(Exception("Álbum no encontrado: ${e.message}"))
+        }
+    }
+
+    suspend fun getAlbumDtoById(albumId: String): Result<FirestoreAlbumDto> {
+        return try {
+            val dto = dataSource.getAlbumById(albumId)
+            Result.success(dto)
         } catch (e: Exception) {
             Result.failure(Exception("Álbum no encontrado: ${e.message}"))
         }

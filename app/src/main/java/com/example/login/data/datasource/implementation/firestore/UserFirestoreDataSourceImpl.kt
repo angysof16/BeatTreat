@@ -1,6 +1,4 @@
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: data/datasource/implementation/firestore/UserFirestoreDataSourceImpl.kt
-// ──────────────────────────────────────────────────────────────────────────────
+// data/datasource/implementation/firestore/UserFirestoreDataSourceImpl.kt
 package com.example.login.data.datasource.implementation.firestore
 
 import com.example.login.data.datasource.FirestoreUserRemoteDataSource
@@ -35,9 +33,20 @@ class UserFirestoreDataSourceImpl @Inject constructor(
     }
 
     override suspend fun updateUser(userId: String, dto: FirestoreUserDto) {
-        db.collection(USERS_COLLECTION)
-            .document(userId)
-            .set(dto)
-            .await()
+        // CAMBIAR: usar update() en lugar de set() para no sobrescribir
+        val updates = mutableMapOf<String, Any>()
+
+        if (dto.username.isNotBlank()) updates["username"] = dto.username
+        if (dto.name.isNotBlank()) updates["name"] = dto.name
+        dto.bio?.let { updates["bio"] = it }
+        dto.profileImage?.let { if (it.isNotBlank()) updates["profileImage"] = it }
+        dto.country?.let { if (it.isNotBlank()) updates["country"] = it }
+
+        if (updates.isNotEmpty()) {
+            db.collection(USERS_COLLECTION)
+                .document(userId)
+                .update(updates)
+                .await()
+        }
     }
 }

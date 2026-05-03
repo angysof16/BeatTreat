@@ -199,27 +199,28 @@ fun AppNavegacion(
 
         // ── 9. Reseñas ────────────────────────────────────────────────────────
         composable(
-            route     = Screen.Resena.route,
-            arguments = listOf(navArgument("albumId") { type = NavType.IntType })
+            route = Screen.Resena.route,
+            arguments = listOf(navArgument("albumId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val albumId = backStackEntry.arguments?.getInt("albumId") ?: 0
+            val albumId = backStackEntry.arguments?.getString("albumId") ?: "0"
             val viewModel: ResenaViewModel = hiltViewModel()
-            LaunchedEffect(albumId) { viewModel.cargarResenas(albumId) }
             ResenaScreen(
-                viewModel             = viewModel,
-                albumId               = albumId,
-                onBackClick           = { navController.popBackStack() },
-                onResenaClick         = { resena ->
+                viewModel = viewModel,
+                albumId = albumId,
+                onBackClick = { navController.popBackStack() },
+                onResenaClick = { resena ->
+                    // resena.id es String, albumId es String
                     navController.navigate(Screen.Comentarios.createRoute(resena.id, albumId))
                 },
                 onAutorClick = { firestoreUserId ->
                     navController.navigate(Screen.PerfilOtroUsuario.createRoute(firestoreUserId))
                 },
                 onEscribirResenaClick = {
-                    navController.navigate(Screen.EscribirResena.createRoute(albumId))
+                    navController.navigate(Screen.EscribirResena.createRoute(albumId.toIntOrNull() ?: 0))
                 }
             )
         }
+
 
         // ── 10. Escribir Reseña ───────────────────────────────────────────────
         composable(
@@ -287,46 +288,49 @@ fun AppNavegacion(
 
         // ── 13. Comentarios ───────────────────────────────────────────────────
         composable(
-            route     = Screen.Comentarios.route,
+            route = Screen.Comentarios.route,
             arguments = listOf(
-                navArgument("resenaId") { type = NavType.IntType },
-                navArgument("albumId")  { type = NavType.IntType }
+                navArgument("resenaId") { type = NavType.StringType },  // ← Cambiar a StringType
+                navArgument("albumId") { type = NavType.StringType }    // ← Cambiar a StringType
             )
         ) { backStackEntry ->
-            val resenaId = backStackEntry.arguments?.getInt("resenaId") ?: 0
-            val albumId  = backStackEntry.arguments?.getInt("albumId")  ?: 0
+            val resenaId = backStackEntry.arguments?.getString("resenaId") ?: ""
+            val albumId = backStackEntry.arguments?.getString("albumId") ?: "0"
             val viewModel: ComentariosViewModel = hiltViewModel()
             LaunchedEffect(resenaId, albumId) {
                 viewModel.cargarComentarios(resenaId, albumId)
             }
             ComentariosScreen(
-                viewModel  = viewModel,
-                resenaId   = resenaId,
-                albumId    = albumId,
+                viewModel = viewModel,
+                resenaId = resenaId,
+                albumId = albumId,
                 onBackClick = { navController.popBackStack() }
             )
         }
 
         // ── 14. Detalle de Álbum ──────────────────────────────────────────────
         composable(
-            route     = Screen.AlbumDetalle.route,
+            route = Screen.AlbumDetalle.route,
             arguments = listOf(navArgument("albumId") { type = NavType.IntType })
         ) { backStackEntry ->
             val albumId = backStackEntry.arguments?.getInt("albumId") ?: 0
             val viewModel: AlbumDetalleViewModel = hiltViewModel()
             LaunchedEffect(albumId) { viewModel.cargarAlbum(albumId) }
             AlbumDetalleScreen(
-                viewModel             = viewModel,
-                albumId               = albumId,
-                onBackClick           = { navController.popBackStack() },
-                onVerResenasClick     = { navController.navigate(Screen.Resena.createRoute(albumId)) },
+                viewModel = viewModel,
+                albumId = albumId,
+                onBackClick = { navController.popBackStack() },
+                onVerResenasClick = {
+                    navController.navigate(Screen.Resena.createRoute(albumId.toString()))
+                },
                 onEscribirResenaClick = { id ->
                     navController.navigate(Screen.EscribirResena.createRoute(id))
                 },
-                onResenaClick         = { resenaId, albId ->
-                    navController.navigate(Screen.Comentarios.createRoute(resenaId, albId))
+                onResenaClick = { resenaId, albId ->
+                    // resenaId es String, albId es Int
+                    navController.navigate(Screen.Comentarios.createRoute(resenaId, albId.toString()))
                 },
-                onAutorClick          = { firestoreUserId ->
+                onAutorClick = { firestoreUserId ->
                     navController.navigate(Screen.PerfilOtroUsuario.createRoute(firestoreUserId))
                 }
             )
@@ -398,10 +402,13 @@ fun AppNavegacion(
         // ── 19. Editar Perfil ─────────────────────────────────────────────────
         composable(Screen.EditarPerfil.route) {
             val viewModel: EditarPerfilViewModel = hiltViewModel()
+            val profileViewModel: ProfileViewModel = hiltViewModel()
+
             EditarPerfilScreen(
-                viewModel      = viewModel,
-                onBackClick    = { navController.popBackStack() },
-                onGuardarClick = { navController.popBackStack() }
+                viewModel = viewModel,
+                onBackClick = { navController.popBackStack() },
+                onGuardarClick = { navController.popBackStack() },
+                onPerfilActualizado = { profileViewModel.refrescarPerfil() }
             )
         }
 
@@ -449,14 +456,14 @@ fun AppNavegacion(
         composable(Screen.FeedSiguiendo.route) {
             val viewModel: FeedSiguiendoViewModel = hiltViewModel()
             FeedSiguiendoScreen(
-                viewModel     = viewModel,
-                onAutorClick  = { userId ->
+                viewModel = viewModel,
+                onAutorClick = { userId ->
                     navController.navigate(Screen.PerfilOtroUsuario.createRoute(userId))
                 },
                 onResenaClick = { resena ->
-                    navController.navigate(
-                        Screen.Comentarios.createRoute(resena.id, resena.albumId)
-                    )
+                    // resena.id es String, resena.albumId puede ser String o Int
+                    // Usamos resena.id (que es String) para la navegación
+                    navController.navigate(Screen.Comentarios.createRoute(resena.id, resena.albumId.toString()))
                 }
             )
         }

@@ -1,9 +1,6 @@
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: data/repository/FirestoreUserRepository.kt
-// ──────────────────────────────────────────────────────────────────────────────
+// data/repository/FirestoreUserRepository.kt (CORREGIDO)
 package com.example.login.data.repository
 
-import com.example.login.data.datasource.AuthRemoteDataSource
 import com.example.login.data.datasource.FirestoreUserRemoteDataSource
 import com.example.login.data.dto.FirestoreUserDto
 import com.example.login.data.dto.RegisterUserDto
@@ -14,11 +11,8 @@ import javax.inject.Inject
 
 class FirestoreUserRepository @Inject constructor(
     private val userDataSource: FirestoreUserRemoteDataSource,
-    private val authDataSource: AuthRemoteDataSource,
     private val firebaseAuth: FirebaseAuth
 ) {
-
-    // ── Registro ─────────────────────────────────────────────────────────────
 
     suspend fun registerUser(
         name: String,
@@ -32,9 +26,9 @@ class FirestoreUserRepository @Inject constructor(
 
             val dto = RegisterUserDto(
                 username = username,
-                name     = name,
-                country  = country,
-                bio      = bio
+                name = name,
+                country = country,
+                bio = bio
             )
             userDataSource.registerUser(userId, dto)
             Result.success(Unit)
@@ -42,8 +36,6 @@ class FirestoreUserRepository @Inject constructor(
             Result.failure(e)
         }
     }
-
-    // ── Obtener mi perfil ─────────────────────────────────────────────────────
 
     suspend fun getMyProfile(): Result<PerfilUI> {
         return try {
@@ -54,23 +46,22 @@ class FirestoreUserRepository @Inject constructor(
             val photoUrl = firebaseAuth.currentUser?.photoUrl?.toString() ?: ""
 
             val perfil = PerfilUI(
-                id            = 0,
-                nombre        = dto.name.ifBlank { "Usuario" },
-                usuario       = "@${dto.username}",
+                id = 0,
+                nombre = dto.name.ifBlank { "Usuario" },
+                usuario = "@${dto.username}",
                 fotoPerfilUrl = dto.profileImage ?: photoUrl,
                 fotoBannerUrl = "",
-                siguiendo     = 0,
-                seguidores    = 0
+                siguiendo = 0,
+                seguidores = 0,
+                bio = dto.bio ?: ""  // ← AÑADIR BIO
             )
-            // Sincroniza con PerfilData global para que el resto de la app lo use
+            // Sincroniza con PerfilData global
             PerfilData.perfilActual = perfil
             Result.success(perfil)
         } catch (e: Exception) {
             Result.failure(Exception("Error al cargar perfil: ${e.message}"))
         }
     }
-
-    // ── Obtener otro usuario ──────────────────────────────────────────────────
 
     suspend fun getUserById(userId: String): Result<FirestoreUserDto> {
         return try {
@@ -80,8 +71,6 @@ class FirestoreUserRepository @Inject constructor(
             Result.failure(Exception("Usuario no encontrado: ${e.message}"))
         }
     }
-
-    // ── Actualizar perfil ─────────────────────────────────────────────────────
 
     suspend fun updateProfile(
         name: String,
@@ -94,17 +83,18 @@ class FirestoreUserRepository @Inject constructor(
                 ?: throw Exception("No hay sesión activa")
 
             val dto = FirestoreUserDto(
-                username     = username,
-                name         = name,
-                bio          = bio,
+                username = username,
+                name = name,
+                bio = bio,  // ← AHORA GUARDA LA BIO
                 profileImage = profileImage
             )
             userDataSource.updateUser(userId, dto)
 
-            // Actualiza también PerfilData global
+            // Actualiza también PerfilData global con la bio
             PerfilData.perfilActual = PerfilData.perfilActual.copy(
-                nombre  = name,
-                usuario = "@$username"
+                nombre = name,
+                usuario = "@$username",
+                bio = bio ?: ""  // ← ACTUALIZAR BIO
             )
             Result.success(Unit)
         } catch (e: Exception) {

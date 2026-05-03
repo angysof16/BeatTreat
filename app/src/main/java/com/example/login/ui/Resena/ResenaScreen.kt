@@ -31,13 +31,14 @@ import com.example.login.ui.theme.BeatTreatTheme
 
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
+// ui/Resena/ResenaScreen.kt - actualizar parámetros
+// ui/Resena/ResenaScreen.kt
 @Composable
 fun ResenaScreen(
-    albumId: Int,
+    albumId: String,
     onBackClick: () -> Unit = {},
     onResenaClick: (ResenaDetalladaUI) -> Unit = {},
     onEscribirResenaClick: () -> Unit = {},
-    // ← FIX: String en lugar de Int para poder pasar el UID real de Firebase
     onAutorClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ResenaViewModel
@@ -46,13 +47,13 @@ fun ResenaScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     ResenaScreenContent(
-        uiState               = uiState,
-        onBackClick           = onBackClick,
-        onResenaClick         = onResenaClick,
-        onLikeClick           = { viewModel.toggleLikeResena(it) },
+        uiState = uiState,
+        onBackClick = onBackClick,
+        onResenaClick = onResenaClick,
+        onLikeClick = { resena -> viewModel.toggleLikeResena(resena) },  // ← Pasar ResenaDetalladaUI
         onEscribirResenaClick = onEscribirResenaClick,
-        onAutorClick          = onAutorClick,
-        modifier              = modifier
+        onAutorClick = onAutorClick,
+        modifier = modifier
     )
 }
 
@@ -61,9 +62,8 @@ fun ResenaScreenContent(
     uiState: ResenaUIState,
     onBackClick: () -> Unit,
     onResenaClick: (ResenaDetalladaUI) -> Unit,
-    onLikeClick: (Int) -> Unit,
+    onLikeClick: (ResenaDetalladaUI) -> Unit,  // ← Cambiar a ResenaDetalladaUI
     onEscribirResenaClick: () -> Unit,
-    // ← FIX: String
     onAutorClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -73,11 +73,11 @@ fun ResenaScreenContent(
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
                 Text(
-                    text       = if (uiState.albumNombre.isNotBlank()) uiState.albumNombre else "Reseñas",
-                    color      = Color.White,
-                    fontSize   = 28.sp,
+                    text = if (uiState.albumNombre.isNotBlank()) uiState.albumNombre else "Reseñas",
+                    color = Color.White,
+                    fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier   = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
             }
 
@@ -86,11 +86,10 @@ fun ResenaScreenContent(
             } else {
                 items(uiState.resenas) { resena ->
                     ResenaDetalladaCard(
-                        resena       = resena,
-                        isLiked      = resena.id in uiState.resenasLikeadas,
-                        onClick      = { onResenaClick(resena) },
-                        onLikeClick  = { onLikeClick(resena.id) },
-                        // ← FIX: usamos autorFirestoreUserId (UID real) en lugar del Int
+                        resena = resena,
+                        isLiked = resena.firestoreDocId in uiState.resenasLikeadas,  // ← Usar firestoreDocId
+                        onClick = { onResenaClick(resena) },
+                        onLikeClick = { onLikeClick(resena) },  // ← Pasar resena completa
                         onAutorClick = {
                             if (resena.autorFirestoreUserId.isNotBlank()) {
                                 onAutorClick(resena.autorFirestoreUserId)

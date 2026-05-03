@@ -1,8 +1,8 @@
 package com.example.login.ui.Resena
 
 data class ResenaDetalladaUI(
-    val id: Int,
-    val albumId: Int,
+    val id: String = "",
+    val albumId: String = "",
     val autorNombre: String,
     val autorUsuario: String,
     val autorFotoUrl: String,
@@ -14,10 +14,8 @@ data class ResenaDetalladaUI(
     val likes: Int,
     val comentarios: Int,
     val fecha: String,
-    val autorUserId: Int = 0,
     val autorFirestoreUserId: String = "",
-    val autorFotoRes: Int = 0,
-    val albumRes: Int = 0,
+    val autorUserId: Int = 0,
     val firestoreDocId: String = ""
 )
 

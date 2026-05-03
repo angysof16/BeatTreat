@@ -235,6 +235,18 @@ fun PerfilInfo(perfil: PerfilUI, onSiguiendoClick: () -> Unit, onSeguidoresClick
     Column(modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
         Text(perfil.nombre, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Text(perfil.usuario, color = Color.LightGray, fontSize = 14.sp)
+
+        // ← MOSTRAR LA BIO AQUÍ
+        if (perfil.bio.isNotBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = perfil.bio,
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 13.sp,
+                lineHeight = 18.sp
+            )
+        }
+
         Spacer(modifier = Modifier.height(12.dp))
         Row {
             Text("${perfil.siguiendo} Siguiendo", color = Color.White, fontSize = 14.sp, modifier = Modifier.clickable { onSiguiendoClick() })

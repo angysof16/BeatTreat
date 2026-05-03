@@ -36,10 +36,12 @@ import com.example.login.ui.theme.BeatTreatTheme
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
 // ── Stateful ──
+// ui/EditarPerfil/EditarPerfilScreen.kt - la parte del callback
 @Composable
 fun EditarPerfilScreen(
     onBackClick: () -> Unit = {},
     onGuardarClick: () -> Unit = {},
+    onPerfilActualizado: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: EditarPerfilViewModel
 ) {
@@ -53,6 +55,7 @@ fun EditarPerfilScreen(
 
     LaunchedEffect(uiState.guardadoExitoso) {
         if (uiState.guardadoExitoso) {
+            onPerfilActualizado()
             onGuardarClick()
             viewModel.resetGuardado()
         }
