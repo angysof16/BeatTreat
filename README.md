@@ -62,7 +62,7 @@ El proyecto aplica los siguientes principios de Jetpack Compose:
 ### Estructura de carpetas
 
 ```
-com.example.login/
+com.example.beattreat/
 ├── MainActivity.kt
 ├── navigation/
 │   └── AppNavegacion.kt

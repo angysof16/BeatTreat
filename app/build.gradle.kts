@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.login"
+    namespace = "com.example.beattreat"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.login"
+        applicationId = "com.example.beattreat"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

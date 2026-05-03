@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Login</string>
+    <string name="app_name">BeatTreat</string>
     <string name="logo_beattreat">Logo BeatTreat</string>
     <string name="buscar">Buscar</string>
     <string name="perfil">Perfil</string>
