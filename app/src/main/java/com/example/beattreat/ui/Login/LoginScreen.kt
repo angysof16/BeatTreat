@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -78,6 +79,7 @@ fun LoginScreenContent(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .testTag("loginScreen")
     ) {
         Column(
             modifier              = Modifier.fillMaxSize().padding(horizontal = 32.dp),
@@ -89,7 +91,7 @@ fun LoginScreenContent(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 TabItem(texto = "Sign In", seleccionado = uiState.selectedTab == 0, onClick = { onTabChange(0) })
-                TabItem(texto = "Sign Up", seleccionado = uiState.selectedTab == 1, onClick = { onTabChange(1) })
+                TabItem(texto = "Sign Up", seleccionado = uiState.selectedTab == 1, onClick = { onTabChange(1) }, modifier = Modifier.testTag("btnRegistro"))
             }
 
             Spacer(modifier = Modifier.height(36.dp))
@@ -126,6 +128,7 @@ fun LoginScreenContent(
                         .clip(RoundedCornerShape(10.dp))
                         .background(BeatTreatColors.Error.copy(alpha = 0.15f))
                         .padding(horizontal = 14.dp, vertical = 10.dp)
+                        .testTag("errorMessage")
                 ) {
                     Text(
                         text     = uiState.errorMessage,

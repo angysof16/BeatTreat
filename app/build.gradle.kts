@@ -108,7 +108,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     //Adicionales
-    testImplementation("io.mockk:mockk:1.13.11")
+    testImplementation("io.mockk:mockk:1.13.14")
 
 //Coroutines test
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
@@ -133,4 +133,7 @@ dependencies {
 
 // Para UI / instrumented tests (androidTest)
     androidTestImplementation("io.mockk:mockk-android:1.13.14")
+
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+
 }

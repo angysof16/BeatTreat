@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -97,6 +98,7 @@ fun RegistroScreenContent(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .testTag("registroScreen")
     ) {
         Column(
             modifier            = Modifier
@@ -125,7 +127,8 @@ fun RegistroScreenContent(
                 value         = uiState.nombre,
                 onValueChange = onNombreChange,
                 placeholder   = "Nombre completo *",
-                icon          = Icons.Filled.Person
+                icon          = Icons.Filled.Person,
+                modifier      = Modifier.testTag("nombreField")
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -133,7 +136,8 @@ fun RegistroScreenContent(
                 value         = uiState.username,
                 onValueChange = onUsernameChange,
                 placeholder   = "Nombre de usuario *",
-                icon          = Icons.Filled.AlternateEmail
+                icon          = Icons.Filled.AlternateEmail,
+                modifier      = Modifier.testTag("usuarioField")
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -141,7 +145,8 @@ fun RegistroScreenContent(
                 value         = uiState.email,
                 onValueChange = onEmailChange,
                 placeholder   = "Email *",
-                icon          = Icons.Filled.MailOutline
+                icon          = Icons.Filled.MailOutline,
+                modifier      = Modifier.testTag("emailField")
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -150,7 +155,8 @@ fun RegistroScreenContent(
                 onValueChange        = onPasswordChange,
                 placeholder          = "Contraseña * (mín. 6 caracteres)",
                 icon                 = Icons.Filled.Lock,
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                modifier             = Modifier.testTag("passwordField")
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -159,7 +165,8 @@ fun RegistroScreenContent(
                 value         = uiState.country,
                 onValueChange = onCountryChange,
                 placeholder   = "País (opcional)",
-                icon          = Icons.Filled.Place
+                icon          = Icons.Filled.Place,
+                modifier      = Modifier.testTag("paisField")
             )
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -168,7 +175,8 @@ fun RegistroScreenContent(
                 onValueChange = onBioChange,
                 placeholder   = "Biografía (opcional)",
                 icon          = Icons.Filled.AccountCircle,
-                maxLines      = 3
+                maxLines      = 3,
+                modifier      = Modifier.testTag("bioField")
             )
 
             // ── Mensaje de error ──
@@ -180,6 +188,7 @@ fun RegistroScreenContent(
                         .clip(RoundedCornerShape(10.dp))
                         .background(BeatTreatColors.Error.copy(alpha = 0.15f))
                         .padding(horizontal = 14.dp, vertical = 10.dp)
+                        .testTag("errorMessage")
                 ) {
                     Text(
                         text     = uiState.errorMessage,
@@ -194,7 +203,7 @@ fun RegistroScreenContent(
             Button(
                 onClick  = onRegistroClick,
                 enabled  = !uiState.isLoading,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp).testTag("btnRegistrar"),
                 shape    = RoundedCornerShape(28.dp),
                 colors   = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
