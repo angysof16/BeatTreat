@@ -13,10 +13,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Prueba unitaria del FirestoreUserRepository.
- * El datasource está mockeado — no hay conexión real a Firebase.
- */
+
 class UserRepositoryTest {
 
     private val mockDataSource  = mockk<FirestoreUserRemoteDataSource>()

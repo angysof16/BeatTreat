@@ -5,11 +5,7 @@ import android.content.Context
 import androidx.test.runner.AndroidJUnitRunner
 import dagger.hilt.android.testing.HiltTestApplication
 
-/**
- * Custom test runner que usa HiltTestApplication.
- * Se registra en build.gradle (androidTest):
- *   testInstrumentationRunner = "com.example.beattreat.HiltTestRunner"
- */
+
 class HiltTestRunner : AndroidJUnitRunner() {
     override fun newApplication(
         cl: ClassLoader?,

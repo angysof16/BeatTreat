@@ -9,14 +9,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Sprint 12 — Prueba de integración del UserFirestoreDataSource.
- * Se conecta al emulador de Firestore (10.0.2.2:8080).
- *
- * Estructura igual a la del profesor:
- *  @Before → conectar emulador, limpiar colección, cargar datos falsos
- *  @Test   → pruebas reales contra el emulador
- */
+
 class FirebaseUserDatasourceTest {
 
     private val db = FirebaseFirestore.getInstance()

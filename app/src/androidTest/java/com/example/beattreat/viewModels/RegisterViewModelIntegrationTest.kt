@@ -23,12 +23,6 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Sprint 12 — Prueba de integración del RegistroViewModel.
- *
- * Conecta a Auth y Firestore emuladores reales (igual que el profe).
- * No usa mockk — todo es conexión real al emulador.
- *
- * Estructura igual a RegisterViewModelIntegrationTest del profesor:
  *  - Opción 1: esperar con flow.first { condicion }
  *  - Opción 2: pasar dispatcher + advanceUntilIdle
  *  - Opción 3: llamar directamente suspend functions

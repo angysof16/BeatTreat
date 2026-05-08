@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -91,6 +92,7 @@ fun HomeScreenContent(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .testTag("homeScreen")
     ) {
         TopBarHome(
             fotoPerfilUrl = uiState.fotoPerfilUrl,
@@ -114,7 +116,7 @@ fun HomeScreenContent(
             uiState.errorMessage?.let { msg ->
                 item {
                     Column(
-                        modifier = Modifier.fillParentMaxSize().padding(32.dp),
+                        modifier = Modifier.fillParentMaxSize().padding(32.dp).testTag("errorMessage"),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {

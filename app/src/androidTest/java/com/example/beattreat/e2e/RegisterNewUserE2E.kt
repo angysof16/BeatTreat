@@ -23,15 +23,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-/**
- * Sprint 12 — Prueba E2E de registro de nuevo usuario.
- *
- * Igual que el profesor: usa HiltAndroidRule + createAndroidComposeRule
- * con testTags en la UI para interactuar con ella.
- *
- * REQUISITO: los Composables deben tener los Modifier.testTag correspondientes.
- * Ver sección "testTags requeridos" al final de este archivo.
- */
+
 @HiltAndroidTest
 class RegisterNewUserE2E {
 
@@ -48,11 +40,10 @@ class RegisterNewUserE2E {
     fun setup() {
         hiltRule.inject()
 
-        // Conectar a los emuladores (igual que el profe)
         try {
             FirebaseAuth.getInstance().useEmulator("10.0.2.2", 9099)
             FirebaseFirestore.getInstance().useEmulator("10.0.2.2", 8080)
-        } catch (e: Exception) { /* ya configurados */ }
+        } catch (e: Exception) {  }
 
         val auth      = FirebaseAuth.getInstance()
         val firestore = FirebaseFirestore.getInstance()

@@ -14,15 +14,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Sprint 12 — Prueba de integración del FirestoreUserRepository.
- * Conecta al emulador de Firestore (10.0.2.2:8080).
- * Auth está mockeada (no necesitamos el emulador de Auth aquí).
- *
- * Estructura idéntica al profesor:
- *  @Before → emulador, limpiar, seed de datos
- *  @Test   → pruebas reales
- */
+
 class UserRepositoryIntegrationTest {
 
     val db = FirebaseFirestore.getInstance()
