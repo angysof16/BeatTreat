@@ -22,6 +22,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            isDebuggable = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -36,12 +39,18 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    packaging {
+        excludes += "/META-INF/LICENSE.md"
+        excludes += "/META-INF/LICENSE-notice.md"
+    }
+
     kotlinOptions {
         jvmTarget = "11"
     }
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -97,4 +106,31 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    //Adicionales
+    testImplementation("io.mockk:mockk:1.13.11")
+
+//Coroutines test
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
+
+//Alternativa a los asserts tradicionales
+    testImplementation("com.google.truth:truth:1.4.2")
+
+    androidTestImplementation("com.google.truth:truth:1.1.5")
+
+    androidTestImplementation("com.google.dagger:hilt-android-testing:2.52")
+    kspAndroidTest("com.google.dagger:hilt-compiler:2.52")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
+    testImplementation(kotlin("test"))
+
+    // e2e
+// AndroidX Test - Instrumented
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+// ActivityScenario
+    androidTestImplementation("androidx.test:core:1.5.0")
+
+// Para UI / instrumented tests (androidTest)
+    androidTestImplementation("io.mockk:mockk-android:1.13.14")
 }
