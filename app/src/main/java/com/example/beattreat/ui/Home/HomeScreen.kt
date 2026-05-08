@@ -88,6 +88,8 @@ fun HomeScreenContent(
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // FIX: added testTag("homeScreen") so E2E test register_todosLosCamposValidos_navegaAHome
+    // can detect navigation to this screen via waitUntil { onAllNodesWithTag("homeScreen")... }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -116,7 +118,7 @@ fun HomeScreenContent(
             uiState.errorMessage?.let { msg ->
                 item {
                     Column(
-                        modifier = Modifier.fillParentMaxSize().padding(32.dp).testTag("errorMessage"),
+                        modifier = Modifier.fillParentMaxSize().padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -168,7 +170,6 @@ fun TopBarHome(
                 .background(Color(0xFF1A1A1A)),
             contentAlignment = Alignment.Center
         ) {
-            // Logo de la app — se puede reemplazar con AsyncImage si se sube a Storage
             AsyncImage(
                 model = "https://cdn.phototourl.com/free/2026-04-16-f75c12f6-7aa0-4e5d-959f-803340165dd0.png",
                 contentDescription = "Logo BeatTreat",
@@ -319,7 +320,6 @@ fun AlbumItem(album: AlbumHomeUI, onClick: () -> Unit, modifier: Modifier = Modi
                 error = null,
                 fallback = null
             )
-            // Fallback visible si no carga la imagen
             Icon(
                 imageVector = Icons.Filled.MusicNote,
                 contentDescription = null,

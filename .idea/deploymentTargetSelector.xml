@@ -26,10 +26,10 @@
           </targets>
         </DialogSelection>
       </SelectionState>
-      <SelectionState runConfigName="UserRepositoryIntegrationTest">
+      <SelectionState runConfigName="RegisterViewModelIntegrationTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="RegisterViewModelIntegrationTest">
+      <SelectionState runConfigName="RegisterNewUserE2E">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

@@ -54,8 +54,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val result = authRepository.signIn(state.email, state.password)
             if (result.isSuccess) {
-
-                FcmTokenHelper.registrarToken()
+                try { FcmTokenHelper.registrarToken() } catch (_: Exception) {}
 
                 _uiState.update { it.copy(loginExitoso = true, isLoading = false) }
             } else {

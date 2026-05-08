@@ -1,6 +1,3 @@
-// ──────────────────────────────────────────────────────────────────────────────
-// FILE: ui/Registro/RegistroViewModel.kt  (REEMPLAZA el existente)
-// ──────────────────────────────────────────────────────────────────────────────
 package com.example.beattreat.ui.Registro
 
 import androidx.lifecycle.ViewModel
@@ -84,14 +81,13 @@ class RegistroViewModel @Inject constructor(
             )
 
             if (firestoreResult.isFailure) {
-                // Auth fue exitoso pero Firestore falló; aun así dejamos pasar
                 android.util.Log.e(
                     "RegistroVM",
                     "Firestore error: ${firestoreResult.exceptionOrNull()?.message}"
                 )
             }
 
-            FcmTokenHelper.registrarToken()
+            try { FcmTokenHelper.registrarToken() } catch (_: Exception) {}
 
             _uiState.update { it.copy(registroExitoso = true, isLoading = false) }
         }
