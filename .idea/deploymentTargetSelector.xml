@@ -32,6 +32,9 @@
       <SelectionState runConfigName="RegisterNewUserE2E">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="register_emailYaRegistrado_muestraMensajeDeError()">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
     </selectionStates>
   </component>
 </project>

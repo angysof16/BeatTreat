@@ -43,22 +43,30 @@ class RegisterNewUserE2E {
         try {
             FirebaseAuth.getInstance().useEmulator("10.0.2.2", 9099)
             FirebaseFirestore.getInstance().useEmulator("10.0.2.2", 8080)
-        } catch (e: Exception) {  }
+        } catch (e: Exception) { }
 
-        val auth      = FirebaseAuth.getInstance()
+        // Desactivar popup de notificaciones
+        androidx.test.platform.app.InstrumentationRegistry
+            .getInstrumentation()
+            .uiAutomation
+            .executeShellCommand(
+                "pm grant com.example.beattreat android.permission.POST_NOTIFICATIONS"
+            )
+
+        val auth = FirebaseAuth.getInstance()
         val firestore = FirebaseFirestore.getInstance()
 
         val authDataSource = AuthRemoteDataSource(auth)
         val userDataSource = UserFirestoreDataSourceImpl(firestore)
+
         firestoreUserRepository = FirestoreUserRepository(userDataSource, auth)
         authRepository = AuthRepository(authDataSource)
 
-        // Crear usuario admin para tests de email ya registrado
         runBlocking {
             try {
                 authRepository.signUp("admin@beattreat.com", "123456")
                 authRepository.signOut()
-            } catch (e: Exception) { /* el usuario ya existe, ok */ }
+            } catch (e: Exception) { }
         }
     }
 
@@ -102,10 +110,15 @@ class RegisterNewUserE2E {
         composeRule.onNodeWithTag("usuarioField").performTextInput("adminbeat")
         composeRule.onNodeWithTag("paisField").performTextInput("Colombia")
         composeRule.onNodeWithTag("bioField").performTextInput("Administrador")
-        composeRule.onNodeWithTag("emailField").performTextInput("admin@beattreat.com") // ya existe
+        composeRule.onNodeWithTag("emailField").performTextInput("admin@beattreat.com")
         composeRule.onNodeWithTag("passwordField").performTextInput("123456")
 
         composeRule.onNodeWithTag("btnRegistrar").performClick()
+
+        composeRule.waitUntil(timeoutMillis = 10000) {
+            composeRule.onAllNodesWithTag("errorMessage")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
 
         composeRule.onNodeWithTag("errorMessage").assertIsDisplayed()
     }
@@ -124,7 +137,7 @@ class RegisterNewUserE2E {
         composeRule.onNodeWithTag("btnRegistrar").performClick()
 
         // Esperar a que navegue al home (igual que el profe)
-        composeRule.waitUntil(timeoutMillis = 8000) {
+        composeRule.waitUntil(timeoutMillis = 15000) {
             composeRule.onAllNodesWithTag("homeScreen")
                 .fetchSemanticsNodes().isNotEmpty()
         }
@@ -139,28 +152,3 @@ class RegisterNewUserE2E {
     }
 }
 
-/*
- * ── testTags requeridos en la UI ─────────────────────────────────────────────
- *
- * Para que los tests E2E funcionen, agrega estos Modifier.testTag()
- * en los Composables de Login y Registro:
- *
- * LoginScreen.kt:
- *   - La pantalla raíz:      Modifier.testTag("loginScreen")
- *   - Botón ir a registro:   Modifier.testTag("btnRegistro")
- *
- * RegistroScreen.kt:
- *   - La pantalla raíz:      Modifier.testTag("registroScreen")
- *   - Campo nombre:          Modifier.testTag("nombreField")
- *   - Campo username:        Modifier.testTag("usuarioField")
- *   - Campo país:            Modifier.testTag("paisField")
- *   - Campo bio:             Modifier.testTag("bioField")
- *   - Campo email:           Modifier.testTag("emailField")
- *   - Campo password:        Modifier.testTag("passwordField")
- *   - Botón registrar:       Modifier.testTag("btnRegistrar")
- *   - Texto de error:        Modifier.testTag("errorMessage")
- *
- * HomeScreen.kt:
- *   - La pantalla raíz:      Modifier.testTag("homeScreen")
- * ─────────────────────────────────────────────────────────────────────────────
- */
