@@ -72,7 +72,7 @@ object FirestoreSeedHelper {
             }
             android.util.Log.d("FirestoreSeed", "✅ ${sampleAlbums.size} álbumes insertados en Firestore")
         } catch (e: Exception) {
-            android.util.Log.e("FirestoreSeed", "❌ Error al hacer seed: ${e.message}")
+            android.util.Log.e("FirestoreSeed", "Error al hacer seed: ${e.message}")
         }
     }
 }

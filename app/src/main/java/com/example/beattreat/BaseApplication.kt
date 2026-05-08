@@ -3,7 +3,6 @@ package com.example.beattreat
 import android.app.Application
 import android.util.Log
 import com.example.beattreat.util.FirestoreSeedHelper
-import com.google.firebase.BuildConfig
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth

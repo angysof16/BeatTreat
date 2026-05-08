@@ -101,6 +101,7 @@ class FirebaseUserDatasourceTest {
 
         // Verificar que el documento existe
         val userResult = dataSource.getUserById(userId)
+
         assertThat(userResult).isNotNull()
         assertThat(userResult.name).isEqualTo("Nuevo Fan BeatTreat")
         assertThat(userResult.username).isEqualTo("newbeatfan")
