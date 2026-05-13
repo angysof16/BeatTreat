@@ -29,6 +29,7 @@ import coil.compose.AsyncImage
 import com.example.beattreat.R
 import com.example.beattreat.ui.theme.BeatTreatColors
 import com.example.beattreat.ui.theme.BeatTreatTheme
+import androidx.compose.ui.platform.testTag
 
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
@@ -68,7 +69,12 @@ fun ResenaScreenContent(
     onAutorClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .testTag("resenaScreen")
+    ) {
         TopBarResena(onBackClick = onBackClick, onEscribirClick = onEscribirResenaClick)
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -141,7 +147,10 @@ fun TopBarResena(onBackClick: () -> Unit, onEscribirClick: () -> Unit, modifier:
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier.testTag("btnBack")
+            ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(26.dp))
             }
             Text("BeatTreat", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Normal,
@@ -162,7 +171,11 @@ fun ResenaDetalladaCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable { onClick() },
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .testTag("resenaCard")
+            .clickable { onClick() },
         colors   = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
         shape    = RoundedCornerShape(12.dp)
     ) {
@@ -272,7 +285,10 @@ fun ResenaFooter(resena: ResenaDetalladaUI, isLiked: Boolean, onLikeClick: () ->
         verticalAlignment     = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onLikeClick) {
+            IconButton(
+                onClick = onLikeClick,
+                modifier = Modifier.testTag("btnLike")
+            ) {
                 Icon(
                     imageVector        = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                     contentDescription = "Like",
@@ -280,7 +296,12 @@ fun ResenaFooter(resena: ResenaDetalladaUI, isLiked: Boolean, onLikeClick: () ->
                     modifier           = Modifier.size(20.dp)
                 )
             }
-            Text(resena.likes.toString(), color = Color.White, fontSize = 14.sp)
+            Text(
+                resena.likes.toString(),
+                modifier = Modifier.testTag("likesCount"),
+                color = Color.White,
+                fontSize = 14.sp
+            )
             Spacer(modifier = Modifier.width(16.dp))
             Icon(Icons.Filled.MusicNote, contentDescription = "Comentarios", tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))

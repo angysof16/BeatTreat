@@ -59,7 +59,7 @@ import androidx.compose.runtime.getValue
 import com.google.firebase.auth.FirebaseAuth
 import com.example.beattreat.ui.FeedSiguiendo.FeedSiguiendoScreen
 import com.example.beattreat.ui.FeedSiguiendo.FeedSiguiendoViewModel
-
+import androidx.compose.ui.platform.testTag
 @Composable
 fun AppNavegacion(
     navController: NavHostController,

@@ -32,7 +32,7 @@ import coil.compose.AsyncImage
 import com.example.beattreat.R
 import com.example.beattreat.ui.theme.BeatTreatColors
 import com.example.beattreat.ui.theme.BeatTreatTheme
-
+import androidx.compose.ui.platform.testTag
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
 // ── Stateful ──
@@ -108,7 +108,12 @@ fun ProfileScreenContent(
         )
     }
 
-    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .testTag("perfilScreen")
+    ) {
         TopBarProfile(onSearchClick = onSearchClick, onCerrarSesionClick = { mostrarDialogo = true })
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {

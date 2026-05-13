@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,6 +27,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.example.beattreat.ui.theme.BeatTreatColors
 import com.example.beattreat.ui.theme.BeatTreatTheme
+import androidx.compose.ui.platform.testTag
 
 @Composable
 fun PerfilOtroUsuarioScreen(
@@ -89,7 +91,9 @@ fun PerfilOtroUsuarioScreenContent(
 
             uiState.usuario != null -> {
                 LazyColumn(
-                    modifier       = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("perfilOtroUsuarioScreen"),
                     contentPadding = PaddingValues(bottom = 100.dp)
                 ) {
                     item {
@@ -157,8 +161,16 @@ fun TopBarOtroUsuario(onBackClick: () -> Unit, modifier: Modifier = Modifier) {
             .padding(horizontal = 8.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onBackClick) {
-            Icon(Icons.Filled.ArrowBack, "Volver", tint = Color.White, modifier = Modifier.size(26.dp))
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier.testTag("btnBack")
+        ) {
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                "Volver",
+                tint = Color.White,
+                modifier = Modifier.size(26.dp)
+            )
         }
         Text(
             "Perfil", color = Color.White, fontSize = 20.sp,
@@ -213,8 +225,19 @@ fun HeaderOtroUsuario(
         }
 
         Spacer(Modifier.height(12.dp))
-        Text(usuario.nombre,   color = Color.White,              fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Text(usuario.username, color = BeatTreatColors.Purple60, fontSize = 14.sp)
+        Text(
+            usuario.nombre,
+            modifier = Modifier.testTag("nombreOtroUsuario"),
+            color = Color.White,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            usuario.username,
+            modifier = Modifier.testTag("usernameOtroUsuario"),
+            color = BeatTreatColors.Purple60,
+            fontSize = 14.sp
+        )
 
         // Contadores de seguidores/siguiendo
         Spacer(Modifier.height(12.dp))
@@ -222,7 +245,10 @@ fun HeaderOtroUsuario(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     "${usuario.followersCount}",
-                    color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp
+                    modifier = Modifier.testTag("seguidoresCount"),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
                 )
                 Text("Seguidores", color = Color.White.copy(alpha = 0.5f), fontSize = 12.sp)
             }
@@ -243,9 +269,9 @@ fun HeaderOtroUsuario(
         // Botón seguir/dejar de seguir
         if (puedeFollow) {
             Spacer(Modifier.height(16.dp))
-            // FIX: botón deshabilitado mientras isFollowLoading para evitar doble tap
             Box(
                 modifier = Modifier
+                    .testTag("btnFollow")
                     .clip(RoundedCornerShape(24.dp))
                     .background(
                         when {

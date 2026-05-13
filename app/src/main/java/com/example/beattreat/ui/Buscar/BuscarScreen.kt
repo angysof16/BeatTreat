@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.beattreat.ui.theme.BeatTreatColors
 import com.example.beattreat.ui.theme.BeatTreatTheme
+import androidx.compose.ui.platform.testTag
 
 // ── Stateful ──
 @Composable
@@ -59,6 +60,7 @@ fun BuscarScreenContent(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .testTag("buscar_screen")
     ) {
         // ── TopBar con campo de búsqueda ──
         Row(
@@ -68,16 +70,20 @@ fun BuscarScreenContent(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier.testTag("buscar_back_button")
+            ) {
                 Icon(Icons.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
             }
             TextField(
                 value         = uiState.query,
                 onValueChange = onQueryChange,
                 placeholder   = { Text("Buscar álbumes, artistas...", color = Color.White.copy(alpha = 0.6f)) },
-                modifier      = Modifier
+                modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(24.dp)),
+                    .clip(RoundedCornerShape(24.dp))
+                    .testTag("buscar_textfield"),
                 colors        = TextFieldDefaults.colors(
                     focusedContainerColor   = Color.White.copy(alpha = 0.15f),
                     unfocusedContainerColor = Color.White.copy(alpha = 0.15f),
@@ -93,7 +99,10 @@ fun BuscarScreenContent(
                 },
                 trailingIcon  = {
                     if (uiState.query.isNotEmpty()) {
-                        IconButton(onClick = onLimpiarClick) {
+                        IconButton(
+                            onClick = onLimpiarClick,
+                            modifier = Modifier.testTag("buscar_clear_button")
+                        ) {
                             Icon(Icons.Filled.Close, contentDescription = "Limpiar", tint = Color.White)
                         }
                     }
@@ -102,7 +111,9 @@ fun BuscarScreenContent(
         }
 
         LazyColumn(
-            modifier       = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("buscar_results_list"),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -122,6 +133,7 @@ fun BuscarScreenContent(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text     = "Busca tus álbumes y artistas favoritos",
+                            modifier = Modifier.testTag("buscar_empty_state"),
                             color    = Color.White.copy(alpha = 0.4f),
                             fontSize = 15.sp
                         )
@@ -146,6 +158,7 @@ fun BuscarScreenContent(
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text     = "Sin resultados para \"${uiState.query}\"",
+                            modifier = Modifier.testTag("buscar_no_results"),
                             color    = Color.White.copy(alpha = 0.5f),
                             fontSize = 15.sp
                         )
@@ -159,10 +172,12 @@ fun BuscarScreenContent(
                 item {
                     Text(
                         text       = "Artistas",
+                        modifier   = Modifier
+                            .padding(vertical = 8.dp)
+                            .testTag("buscar_artistas_section"),
                         color      = Color.White,
                         fontSize   = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier   = Modifier.padding(vertical = 8.dp)
                     )
                 }
                 items(uiState.resultadosArtistas) { artista ->
@@ -178,10 +193,12 @@ fun BuscarScreenContent(
                 item {
                     Text(
                         text       = "Álbumes",
+                        modifier   = Modifier
+                            .padding(vertical = 8.dp)
+                            .testTag("buscar_albumes_section"),
                         color      = Color.White,
                         fontSize   = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier   = Modifier.padding(vertical = 8.dp)
                     )
                 }
                 items(uiState.resultadosAlbumes) { album ->
@@ -203,7 +220,8 @@ fun ResultadoArtistaItem(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier          = modifier
+        modifier = modifier
+            .testTag("buscar_artista_item")
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(BeatTreatColors.SurfaceVariant)
@@ -221,7 +239,12 @@ fun ResultadoArtistaItem(
             Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Text(text = nombre, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        Text(
+            text = nombre,
+            modifier = Modifier.testTag("buscar_artista_nombre"),
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium)
     }
 }
 
@@ -233,7 +256,8 @@ fun ResultadoAlbumItem(
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier          = modifier
+        modifier = modifier
+            .testTag("buscar_album_item")
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(BeatTreatColors.SurfaceVariant)
@@ -252,8 +276,16 @@ fun ResultadoAlbumItem(
         }
         Spacer(modifier = Modifier.width(12.dp))
         Column {
-            Text(text = nombre,  color = Color.White,                    fontSize = 15.sp, fontWeight = FontWeight.Medium)
-            Text(text = artista, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+            Text(
+                text = nombre,
+                modifier = Modifier.testTag("buscar_album_nombre"),
+                color = Color.White,
+                fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            Text(
+                text = artista,
+                modifier = Modifier.testTag("buscar_album_artista"),
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 13.sp)
         }
         Spacer(modifier = Modifier.weight(1f))
         Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Color.White.copy(alpha = 0.3f))

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.beattreat.ui.Resena.ResenaDetalladaUI
 import com.example.beattreat.ui.theme.BeatTreatColors
+import androidx.compose.ui.platform.testTag
 
 // ── Stateful ──────────────────────────────────────────────────────────────────
 @Composable
@@ -53,7 +54,12 @@ fun FeedSiguiendoContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .testTag("feedSiguiendoScreen")
+    ) {
         when {
             // ── Cargando ──
             uiState.isLoading -> {
@@ -207,6 +213,7 @@ fun FeedReviewCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
+            .testTag("feedReviewCard")
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = BeatTreatColors.SurfaceVariant),
         shape  = RoundedCornerShape(14.dp)

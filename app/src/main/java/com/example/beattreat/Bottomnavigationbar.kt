@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.beattreat.navigation.Screen
@@ -57,6 +58,7 @@ fun BottomNavigationBar(
     ) {
         BottomNavItem(
             icon               = Icons.Filled.Home,
+            modifier           = Modifier.testTag("navHome"),
             contentDescription = "Inicio",
             isSelected         = rutaActual == Screen.Home.route,
             onClick            = onHomeClick
@@ -87,6 +89,7 @@ fun BottomNavigationBar(
         // ── SPRINT 3: Feed de usuarios que sigo (en tiempo real) ──
         BottomNavItem(
             icon               = Icons.Filled.People,
+            modifier           = Modifier.testTag("navFeedSiguiendo"),
             contentDescription = "Siguiendo",
             isSelected         = rutaActual == "feed_siguiendo",
             onClick            = onFeedSiguiendoClick

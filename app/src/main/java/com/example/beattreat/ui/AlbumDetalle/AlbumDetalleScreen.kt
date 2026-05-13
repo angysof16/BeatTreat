@@ -28,6 +28,7 @@ import coil.compose.AsyncImage
 import com.example.beattreat.ui.Resena.ResenaDetalladaUI
 import com.example.beattreat.ui.theme.BeatTreatColors
 import com.example.beattreat.ui.theme.BeatTreatTheme
+import androidx.compose.ui.platform.testTag
 
 // ── Stateful ──
 @Composable
@@ -163,7 +164,10 @@ fun AlbumDetalleScreenContent(
     val album = uiState.album
 
     LazyColumn(
-        modifier       = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .testTag("albumDetalleScreen"),
         contentPadding = PaddingValues(bottom = 100.dp)
     ) {
         item {
@@ -366,7 +370,10 @@ fun AlbumPortadaHeader(album: AlbumDetalleUI, esFavorito: Boolean, onBackClick: 
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(BeatTreatColors.Purple60.copy(alpha = 0.3f), Color(0xFF1A1A1A)))))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(colorStops = arrayOf(0.0f to Color.Black.copy(alpha = 0.4f), 0.55f to Color.Transparent, 1.0f to Color(0xFF121212)))))
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp).align(Alignment.TopStart), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBackClick) {
+            IconButton(
+                onClick = onBackClick,
+                modifier = Modifier.testTag("btnBack")
+            ) {
                 Box(Modifier.size(38.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)), contentAlignment = Alignment.Center) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White, modifier = Modifier.size(22.dp))
                 }
@@ -386,9 +393,22 @@ fun AlbumPortadaHeader(album: AlbumDetalleUI, esFavorito: Boolean, onBackClick: 
 @Composable
 fun AlbumInfoSection(album: AlbumDetalleUI, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
-        Text(album.nombre, color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 30.sp)
+        Text(
+            album.nombre,
+            modifier = Modifier.testTag("albumNombre"),
+            color = Color.White,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.ExtraBold,
+            lineHeight = 30.sp
+        )
         Spacer(Modifier.height(4.dp))
-        Text(album.artista, color = BeatTreatColors.Purple60, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        Text(
+            album.artista,
+            modifier = Modifier.testTag("albumArtista"),
+            color = BeatTreatColors.Purple60,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
+        )
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { ChipInfo(album.año); ChipInfo(album.genero); ChipInfo(album.duracionTotal) }
         Spacer(Modifier.height(16.dp))
@@ -432,10 +452,21 @@ fun EstrellasCalificacion(calificacion: Float, modifier: Modifier = Modifier) {
 @Composable
 fun BotonVerResenas(totalResenas: Int, calificacion: Float, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .testTag("btnVerResenas")
             .clip(RoundedCornerShape(14.dp))
-            .background(Brush.horizontalGradient(listOf(BeatTreatColors.Purple60, Color(0xFF8B5CF6))))
-            .clickable { onClick() }.padding(horizontal = 20.dp, vertical = 16.dp),
+            .background(
+                Brush.horizontalGradient(
+                    listOf(
+                        BeatTreatColors.Purple60,
+                        Color(0xFF8B5CF6)
+                    )
+                )
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

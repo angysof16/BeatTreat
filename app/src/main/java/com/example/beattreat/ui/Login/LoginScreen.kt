@@ -100,7 +100,10 @@ fun LoginScreenContent(
                 value         = uiState.email,
                 onValueChange = onEmailChange,
                 placeholder   = { Text("Email", color = BeatTreatColors.TextGray) },
-                modifier      = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .testTag("emailField"),
                 colors        = campoColores(),
                 singleLine    = true
             )
@@ -111,7 +114,10 @@ fun LoginScreenContent(
                 onValueChange         = onPasswordChange,
                 placeholder           = { Text("Password", color = BeatTreatColors.TextGray) },
                 visualTransformation  = PasswordVisualTransformation(),
-                modifier              = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .testTag("passwordField"),
                 colors                = campoColores(),
                 singleLine            = true
             )
@@ -142,7 +148,10 @@ fun LoginScreenContent(
 
             Button(
                 onClick  = onLoginClick,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .testTag("btnLogin"),
                 shape    = RoundedCornerShape(28.dp),
                 colors   = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {

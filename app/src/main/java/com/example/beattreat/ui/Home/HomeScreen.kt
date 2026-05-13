@@ -199,7 +199,10 @@ fun TopBarHome(
                 modifier = Modifier.weight(1f)
             )
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onSearchClick) {
+                IconButton(
+                    onClick = onSearchClick,
+                    modifier = Modifier.testTag("btnBuscar")
+                ) {
                     Icon(Icons.Filled.Search, contentDescription = "Buscar", tint = Color.White, modifier = Modifier.size(28.dp))
                 }
                 FotoPerfilTopBar(fotoPerfilUrl = fotoPerfilUrl, onClick = onProfileClick)
@@ -307,7 +310,11 @@ fun ArtistaSection(
 // ── Item de Álbum ──
 @Composable
 fun AlbumItem(album: AlbumHomeUI, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.clickable { onClick() }) {
+    Column(
+        modifier = modifier
+            .clickable { onClick() }
+            .testTag("albumItem")
+    ) {
         Box(
             modifier         = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)).background(BeatTreatColors.SurfaceVariant),
             contentAlignment = Alignment.Center
