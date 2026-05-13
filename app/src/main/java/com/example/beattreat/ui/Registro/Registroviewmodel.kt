@@ -2,11 +2,12 @@ package com.example.beattreat.ui.Registro
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.beattreat.data.injection.IoDispatcher
 import com.example.beattreat.data.repository.AuthRepository
 import com.example.beattreat.data.repository.FirestoreUserRepository
 import com.example.beattreat.util.FcmTokenHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class RegistroViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val firestoreUserRepository: FirestoreUserRepository
+    private val firestoreUserRepository: FirestoreUserRepository,
+    @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegistroUIState())
@@ -58,7 +60,7 @@ class RegistroViewModel @Inject constructor(
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(dispatcher) {
             // Paso 1: crear cuenta en Firebase Auth
             val authResult = authRepository.signUp(state.email, state.password)
 

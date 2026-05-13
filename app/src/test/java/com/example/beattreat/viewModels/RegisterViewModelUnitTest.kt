@@ -30,7 +30,7 @@ class RegisterViewModelUnitTest {
         Dispatchers.setMain(testDispatcher)
         authRepository = mockk()
         firestoreUserRepository = mockk()
-        viewModel = RegistroViewModel(authRepository, firestoreUserRepository)
+        viewModel = RegistroViewModel(authRepository, firestoreUserRepository, testDispatcher)
     }
 
     @After

@@ -10,7 +10,7 @@ import org.junit.Before
 import org.junit.Test
 
 
-class FirebaseUserDatasourceTest {
+class  FirebaseUserDatasourceTest {
 
     private val db = FirebaseFirestore.getInstance()
     private lateinit var dataSource: UserFirestoreDataSourceImpl
