@@ -1,3 +1,6 @@
+// createReview ahora acepta latitude y longitude opcionales
+// getLast24hReviewsWithLocation: obtiene reviews de las últimas 24h con coordenadas
+
 package com.example.beattreat.data.repository
 
 import com.example.beattreat.data.datasource.FirestoreReviewRemoteDataSource
@@ -49,7 +52,6 @@ class FirestoreReviewRepository @Inject constructor(
     suspend fun getReviewsByUser(userId: String): Result<List<ResenaDetalladaUI>> {
         return try {
             val pairs     = dataSource.getReviewsByUser(userId)
-            // Carga el mapa de álbumes una sola vez para enriquecer todas las reseñas
             val albumsMap = firestoreAlbumRepository.getAllAlbumsRaw().getOrDefault(emptyMap())
 
             val reviews = pairs.map { (docId, dto) ->
@@ -87,12 +89,32 @@ class FirestoreReviewRepository @Inject constructor(
         }
     }
 
-    suspend fun createReview(albumId: String, rating: Float, content: String): Result<Unit> {
+    /**
+     * Crea un review en Firestore.
+     *
+     * ahora acepta coordenadas opcionales. Si el usuario otorgó
+     * permiso de ubicación, se guardan junto al review para mostrarlo
+     * en el mapa de las últimas 24h.
+     *
+     * @param albumId   ID del álbum en Firestore
+     * @param rating    Calificación (1.0 - 5.0)
+     * @param content   Texto del review
+     * @param latitude  Latitud GPS (null si no hay permiso o GPS inactivo)
+     * @param longitude Longitud GPS (null si no hay permiso o GPS inactivo)
+     */
+    suspend fun createReview(
+        albumId: String,
+        rating: Float,
+        content: String,
+        latitude: Double? = null,
+        longitude: Double? = null
+    ): Result<Unit> {
         return try {
             val currentUser = firebaseAuth.currentUser
                 ?: throw Exception("Debes iniciar sesión para escribir una reseña")
             val userId  = currentUser.uid
             val userDto = userRepository.getUserById(userId).getOrNull()
+
             val dto = FirestoreReviewDto(
                 userId    = userId,
                 albumId   = albumId,
@@ -103,7 +125,11 @@ class FirestoreReviewRepository @Inject constructor(
                     name         = userDto?.name?.takeIf { it.isNotBlank() } ?: currentUser.displayName ?: "Usuario",
                     username     = userDto?.username?.takeIf { it.isNotBlank() } ?: "",
                     profileImage = userDto?.profileImage ?: currentUser.photoUrl?.toString()
-                )
+                ),
+
+                // nuevoo - guardar coordenadas si están disponibles
+                latitude  = latitude,
+                longitude = longitude
             )
             dataSource.createReview(dto)
             Result.success(Unit)

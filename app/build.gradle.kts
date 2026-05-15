@@ -97,6 +97,18 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    // Google Maps Compose
+    // implementation("com.google.maps.android:maps-compose:4.3.3")
+    // Google Play Services Maps (SDK nativo requerido por maps-compose)
+    // implementation("com.google.android.gms:play-services-maps:18.2.0")
+    // FusedLocationProviderClient (obtiene coordenadas GPS)
+    // implementation("com.google.android.gms:play-services-location:21.2.0")
+
+    // OSMDroid - OpenStreetMap para Android
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+    // FusedLocationProviderClient (coordenadas GPS)
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+
 
     // Tests
     testImplementation(libs.junit)

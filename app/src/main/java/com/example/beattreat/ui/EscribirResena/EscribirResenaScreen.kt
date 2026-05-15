@@ -31,6 +31,13 @@ import com.example.beattreat.data.dto.AlbumDto
 import com.example.beattreat.ui.theme.BeatTreatColors
 import com.example.beattreat.ui.theme.BeatTreatTheme
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
 private fun etiquetaCalificacion(valor: Int) = when (valor) {
@@ -51,6 +58,15 @@ fun EscribirResenaScreen(
     viewModel: EscribirResenaViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // launcher para pedir permiso de ubicación
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        // con o sin permiso se publica - LocationHelper maneja el caso sin permiso
+        viewModel.publicarResena(context)
+    }
 
     LaunchedEffect(uiState.publicadoExitoso) {
         if (uiState.publicadoExitoso) {
@@ -60,13 +76,27 @@ fun EscribirResenaScreen(
     }
 
     EscribirResenaScreenContent(
-        uiState              = uiState,
-        onTextoChange        = { viewModel.onTextoChange(it) },
+        uiState = uiState,
+        onTextoChange = { viewModel.onTextoChange(it) },
         onCalificacionChange = { viewModel.onCalificacionChange(it) },
-        onAlbumSeleccionado  = { viewModel.onAlbumSeleccionado(it) },
-        onBackClick          = onBackClick,
-        onPublicarClick      = { viewModel.publicarResena() },
-        modifier             = modifier
+        onAlbumSeleccionado = { viewModel.onAlbumSeleccionado(it) },
+        onBackClick = onBackClick,
+        onPublicarClick = {
+            // Verificar si ya tiene el permiso
+            val tienePermiso = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (tienePermiso) {
+                // Ya tiene permiso - publicar directamente con ubicación
+                viewModel.publicarResena(context)
+            } else {
+                // Pedir permiso - el launcher llama a publicarResena al terminar
+                locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        },
+        modifier = modifier
     )
 }
 

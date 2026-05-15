@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Data source para escuchar reviews en tiempo real con Flow.
  *
- * Exactamente como explicó el profesor:
  *   - En vez de retornar List<FirestoreReviewDto> (datos estáticos),
  *     retornamos Flow<List<FirestoreReviewDto>> (datos en vivo).
  *   - Internamente usa addSnapshotListener de Firestore.

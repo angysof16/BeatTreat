@@ -1,10 +1,18 @@
+// publicarResena() ahora acepta un Context para obtener
+// las coordenadas GPS antes de guardar el review en Firestore.
+
+// Si el GPS no está disponible o el permiso fue denegado,
+// el review se publica igual pero sin coordenadas (no aparece en el mapa).
+
 package com.example.beattreat.ui.EscribirResena
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.beattreat.data.repository.AlbumRepository
 import com.example.beattreat.data.repository.FirestoreAlbumRepository
 import com.example.beattreat.data.repository.FirestoreReviewRepository
+import com.example.beattreat.util.LocationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,16 +25,13 @@ import javax.inject.Inject
 class EscribirResenaViewModel @Inject constructor(
     private val firestoreReviewRepository: FirestoreReviewRepository,
     private val firestoreAlbumRepository: FirestoreAlbumRepository,
-    private val albumRepository: AlbumRepository  // kept for album list selector (REST)
+    private val albumRepository: AlbumRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EscribirResenaUIState())
     val uiState: StateFlow<EscribirResenaUIState> = _uiState.asStateFlow()
 
-    // Maps "Title — Artist" label -> firestoreId
     private val labelToFirestoreId = mutableMapOf<String, String>()
-
-    // Pending album hash id (set before albums load)
     private var albumIdPendiente: Int = 0
 
     init {
@@ -43,7 +48,6 @@ class EscribirResenaViewModel @Inject constructor(
                     labelToFirestoreId["${dto.title} — ${dto.artist}"] = firestoreId
                 }
 
-                // Also build AlbumDto list for the selector UI (reuse existing UI structure)
                 val dtoList = albumsMap.entries.map { (firestoreId, dto) ->
                     com.example.beattreat.data.dto.AlbumDto(
                         id          = firestoreId.hashCode(),
@@ -59,9 +63,9 @@ class EscribirResenaViewModel @Inject constructor(
                 }
 
                 _uiState.update { state ->
-                    val idToUse = if (albumIdPendiente != 0) albumIdPendiente else state.albumId
-                    val entry = if (idToUse != 0) albumsMap.entries.find { it.key.hashCode() == idToUse } else null
-                    val etiqueta = entry?.let { "${it.value.title} — ${it.value.artist}" } ?: state.albumSeleccionado
+                    val idToUse    = if (albumIdPendiente != 0) albumIdPendiente else state.albumId
+                    val entry      = if (idToUse != 0) albumsMap.entries.find { it.key.hashCode() == idToUse } else null
+                    val etiqueta   = entry?.let { "${it.value.title} — ${it.value.artist}" } ?: state.albumSeleccionado
                     val firestoreId = entry?.key ?: state.firestoreAlbumId
 
                     state.copy(
@@ -82,18 +86,10 @@ class EscribirResenaViewModel @Inject constructor(
 
     fun preSeleccionarAlbum(albumId: Int) {
         if (albumId == 0) return
-
-        val albumsMap = labelToFirestoreId
-        if (albumsMap.isNotEmpty()) {
-            // Find the entry whose hashCode matches
-            val entry = labelToFirestoreId.entries.find { it.key.hashCode() == albumId }
-                ?: labelToFirestoreId.entries.find { it.value.hashCode() == albumId }
-
-            // Alternatively search by albumId in dtos
-            val dto = _uiState.value.albumesBackend.find { it.id == albumId }
+        if (labelToFirestoreId.isNotEmpty()) {
+            val dto      = _uiState.value.albumesBackend.find { it.id == albumId }
             val etiqueta = dto?.let { "${it.title} — ${it.artist}" } ?: ""
             val firestoreId = if (etiqueta.isNotBlank()) labelToFirestoreId[etiqueta] ?: "" else ""
-
             _uiState.update {
                 it.copy(
                     albumId           = albumId,
@@ -119,26 +115,27 @@ class EscribirResenaViewModel @Inject constructor(
     fun onAlbumSeleccionado(albumLabel: String) {
         val state = _uiState.value
         if (state.albumFijado) return
-
-        val dto = state.albumesBackend.find { "${it.title} — ${it.artist}" == albumLabel }
+        val dto         = state.albumesBackend.find { "${it.title} — ${it.artist}" == albumLabel }
         val firestoreId = labelToFirestoreId[albumLabel] ?: ""
-
         if (dto != null) {
             _uiState.update {
-                it.copy(
-                    albumSeleccionado = albumLabel,
-                    albumId           = dto.id,
-                    firestoreAlbumId  = firestoreId
-                )
+                it.copy(albumSeleccionado = albumLabel, albumId = dto.id, firestoreAlbumId = firestoreId)
             }
         } else {
-            _uiState.update {
-                it.copy(albumSeleccionado = albumLabel, errorMessage = "No se pudo identificar el álbum.")
-            }
+            _uiState.update { it.copy(albumSeleccionado = albumLabel, errorMessage = "No se pudo identificar el álbum.") }
         }
     }
 
-    fun publicarResena() {
+    /**
+     * Publica el review guardando las coordenadas GPS actuales
+     * Obtiene la ubicación del dispositivo (LocationHelper)
+     * → Si falla o el usuario denegó el permiso, lat/lng = null
+     * Llama a [FirestoreReviewRepository.createReview] con la ubicación
+     *
+     * ahora pasa context como parametro para acceder al FusedLocationProviderClient
+     * pasa desde la Composable usando LocalContext.current
+     */
+    fun publicarResena(context: Context) {
         val state = _uiState.value
         if (state.isLoading || state.publicadoExitoso) return
 
@@ -151,11 +148,20 @@ class EscribirResenaViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            // intentar obtener ubicación (no bloquea si falla)
+            val location = LocationHelper.getCurrentLocation(context)
+            val latitude  = location?.latitude
+            val longitude = location?.longitude
+
             val result = firestoreReviewRepository.createReview(
-                albumId = state.firestoreAlbumId,
-                rating  = state.calificacion,
-                content = state.textoResena
+                albumId   = state.firestoreAlbumId,
+                rating    = state.calificacion,
+                content   = state.textoResena,
+                latitude  = latitude,
+                longitude = longitude
             )
+
             if (result.isSuccess) {
                 _uiState.update { it.copy(publicadoExitoso = true, isLoading = false) }
             } else {
