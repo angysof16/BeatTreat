@@ -16,7 +16,9 @@ data class ResenaDetalladaUI(
     val fecha: String,
     val autorFirestoreUserId: String = "",
     val autorUserId: Int = 0,
-    val firestoreDocId: String = ""
+    val firestoreDocId: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )
 
 data class ComentarioUI(
