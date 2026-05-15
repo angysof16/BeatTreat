@@ -1,6 +1,3 @@
-// listenFeedMapItems: filtra reviews de las últimas 24h con coordenadas
-// y los convierte a ReviewMapItem para renderizar en el mapa.
-
 package com.example.beattreat.data.repository
 
 import com.example.beattreat.data.datasource.FirestoreAlbumRemoteDataSource
@@ -15,14 +12,6 @@ import java.util.Locale
 import javax.inject.Inject
 import com.example.beattreat.ui.FeedSiguiendo.ReviewMapItem
 
-/**
-Repositorio de reviews en tiempo real.
-
-Sprint 4: agrega [listenFeedMapItems] que expone los mismos datos del feed
-pero filtrados por las últimas 24h y con coordenadas válidas, listos
-para ser pintados como marcadores en Google Maps.
-*/
-
 class FirestoreReviewLiveRepository @Inject constructor(
     private val liveDataSource: FirestoreReviewLiveDataSource,
     private val albumDataSource: FirestoreAlbumRemoteDataSource,
@@ -30,14 +19,9 @@ class FirestoreReviewLiveRepository @Inject constructor(
 ) {
 
     companion object {
-        /** 24 horas en milisegundos */
         private const val MILLIS_24H = 24L * 60L * 60L * 1_000L
-
-        /** maximo de caracteres del texto en el InfoWindow */
         private const val MAX_TEXTO_PREVIEW = 120
     }
-
-    // ── Lista de reviews ──────────────────────────────────────────
 
     fun listenReviewsByAlbum(albumId: String): Flow<List<ResenaDetalladaUI>> =
         liveDataSource.listenReviewsByAlbum(albumId).map { pairs ->
@@ -65,7 +49,9 @@ class FirestoreReviewLiveRepository @Inject constructor(
                         fecha                = formatTimestamp(dto.createdAt),
                         autorFirestoreUserId = dto.userId,
                         autorUserId          = 0,
-                        firestoreDocId       = docId
+                        firestoreDocId       = docId,
+                        latitude             = dto.latitude,
+                        longitude            = dto.longitude
                     )
                 } catch (e: Exception) { null }
             }.sortedByDescending { it.fecha }
@@ -98,35 +84,23 @@ class FirestoreReviewLiveRepository @Inject constructor(
                         fecha                = formatTimestamp(dto.createdAt),
                         autorFirestoreUserId = dto.userId,
                         autorUserId          = 0,
-                        firestoreDocId       = docId
+                        firestoreDocId       = docId,
+                        latitude             = dto.latitude,
+                        longitude            = dto.longitude
                     )
                 } catch (e: Exception) { null }
             }.sortedByDescending { it.fecha }
         }
 
-    // ── Flow de marcadores para el mapa ─────────────────────────────
-
-    /**
-     * Escucha el feed de [authorIds] y muestra solo los reviews que cumplen ambas condiciones:
-     *   1. Fueron publicados en las últimas 24 horas.
-     *   2. Tienen coordenadas GPS válidas (latitude != null && longitude != null).
-     *
-     * El Flow se actualiza automáticamente si llega un nuevo review con ubicación.
-     */
     fun listenFeedMapItems(authorIds: List<String>): Flow<List<ReviewMapItem>> =
         liveDataSource.listenReviewsByAuthors(authorIds).map { pairs ->
             val cutoff    = System.currentTimeMillis() - MILLIS_24H
             val albumsMap = try { albumDataSource.getAllAlbums() } catch (e: Exception) { emptyMap() }
 
             pairs.mapNotNull { (docId, dto) ->
-                //  últimas 24 horas
                 if (dto.createdAt < cutoff) return@mapNotNull null
-
-                // coordenadas válidas
                 val lat = dto.latitude  ?: return@mapNotNull null
                 val lng = dto.longitude ?: return@mapNotNull null
-
-                // rangos geográficos validos
                 if (lat !in -90.0..90.0 || lng !in -180.0..180.0) return@mapNotNull null
 
                 val albumInfo = albumsMap[dto.albumId]
@@ -151,13 +125,10 @@ class FirestoreReviewLiveRepository @Inject constructor(
                     fecha          = formatTimestamp(dto.createdAt),
                     likes          = dto.likesCount
                 )
+            }.sortedByDescending { pair ->
+                pairs.find { it.first == pair.firestoreDocId }?.second?.createdAt ?: 0L
             }
-                // Ordenados por más reciente primero
-                .sortedByDescending { pair ->
-                    pairs.find { it.first == pair.firestoreDocId }?.second?.createdAt ?: 0L
-                }
         }
-
 
     private fun formatTimestamp(ts: Long): String {
         if (ts == 0L) return ""

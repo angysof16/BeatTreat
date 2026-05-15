@@ -1,6 +1,3 @@
-// createReview ahora acepta latitude y longitude opcionales
-// getLast24hReviewsWithLocation: obtiene reviews de las últimas 24h con coordenadas
-
 package com.example.beattreat.data.repository
 
 import com.example.beattreat.data.datasource.FirestoreReviewRemoteDataSource
@@ -40,7 +37,9 @@ class FirestoreReviewRepository @Inject constructor(
                     fecha                = formatTimestamp(dto.createdAt),
                     autorFirestoreUserId = dto.userId,
                     autorUserId          = if (dto.userId.isNotBlank()) 1 else 0,
-                    firestoreDocId       = docId
+                    firestoreDocId       = docId,
+                    latitude             = dto.latitude,
+                    longitude            = dto.longitude
                 )
             }
             Result.success(reviews)
@@ -72,7 +71,9 @@ class FirestoreReviewRepository @Inject constructor(
                     fecha                = formatTimestamp(dto.createdAt),
                     autorFirestoreUserId = dto.userId,
                     autorUserId          = if (dto.userId.isNotBlank()) 1 else 0,
-                    firestoreDocId       = docId
+                    firestoreDocId       = docId,
+                    latitude             = dto.latitude,
+                    longitude            = dto.longitude
                 )
             }
             Result.success(reviews)
@@ -89,19 +90,6 @@ class FirestoreReviewRepository @Inject constructor(
         }
     }
 
-    /**
-     * Crea un review en Firestore.
-     *
-     * ahora acepta coordenadas opcionales. Si el usuario otorgó
-     * permiso de ubicación, se guardan junto al review para mostrarlo
-     * en el mapa de las últimas 24h.
-     *
-     * @param albumId   ID del álbum en Firestore
-     * @param rating    Calificación (1.0 - 5.0)
-     * @param content   Texto del review
-     * @param latitude  Latitud GPS (null si no hay permiso o GPS inactivo)
-     * @param longitude Longitud GPS (null si no hay permiso o GPS inactivo)
-     */
     suspend fun createReview(
         albumId: String,
         rating: Float,
@@ -126,8 +114,6 @@ class FirestoreReviewRepository @Inject constructor(
                     username     = userDto?.username?.takeIf { it.isNotBlank() } ?: "",
                     profileImage = userDto?.profileImage ?: currentUser.photoUrl?.toString()
                 ),
-
-                // nuevoo - guardar coordenadas si están disponibles
                 latitude  = latitude,
                 longitude = longitude
             )

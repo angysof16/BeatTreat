@@ -29,6 +29,7 @@ import com.example.beattreat.ui.Resena.ResenaDetalladaUI
 import com.example.beattreat.ui.theme.BeatTreatColors
 import com.example.beattreat.ui.theme.BeatTreatTheme
 import androidx.compose.ui.platform.testTag
+import com.example.beattreat.ui.Resena.BotonVerUbicacion
 
 // ── Stateful ──
 @Composable
@@ -335,6 +336,15 @@ fun ResenaItemCompleto(
                     Spacer(Modifier.width(4.dp))
                     Text("Ver comentarios", color = Color.White.copy(alpha = 0.5f), fontSize = 11.sp)
                 }
+            }
+            // Al final del Column dentro de ResenaItemCompleto, después del bloque Row del footer:
+            if (resena.latitude != null && resena.longitude != null) {
+                BotonVerUbicacion(
+                    latitude    = resena.latitude,
+                    longitude   = resena.longitude,
+                    autorNombre = resena.autorNombre,
+                    albumNombre = resena.albumNombre.ifBlank { resena.albumId }
+                )
             }
         }
     }

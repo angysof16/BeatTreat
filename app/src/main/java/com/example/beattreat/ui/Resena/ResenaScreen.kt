@@ -30,6 +30,7 @@ import com.example.beattreat.R
 import com.example.beattreat.ui.theme.BeatTreatColors
 import com.example.beattreat.ui.theme.BeatTreatTheme
 import androidx.compose.ui.platform.testTag
+import com.example.beattreat.ui.Resena.BotonVerUbicacion
 
 private val JaroFont = FontFamily(Font(R.font.jaro_regular, FontWeight.Normal))
 
@@ -279,37 +280,49 @@ fun ResenaEstrellas(calificacion: Float, modifier: Modifier = Modifier) {
 
 @Composable
 fun ResenaFooter(resena: ResenaDetalladaUI, isLiked: Boolean, onLikeClick: () -> Unit, modifier: Modifier = Modifier) {
-    Row(
-        modifier              = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment     = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(
-                onClick = onLikeClick,
-                modifier = Modifier.testTag("btnLike")
-            ) {
-                Icon(
-                    imageVector        = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = "Like",
-                    tint               = if (isLiked) Color.Red else Color.White,
-                    modifier           = Modifier.size(20.dp)
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier              = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment     = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onLikeClick,
+                    modifier = Modifier.testTag("btnLike")
+                ) {
+                    Icon(
+                        imageVector        = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint               = if (isLiked) Color.Red else Color.White,
+                        modifier           = Modifier.size(20.dp)
+                    )
+                }
+                Text(
+                    resena.likes.toString(),
+                    modifier = Modifier.testTag("likesCount"),
+                    color = Color.White,
+                    fontSize = 14.sp
                 )
+                Spacer(modifier = Modifier.width(16.dp))
+                Icon(Icons.Filled.MusicNote, contentDescription = "Comentarios", tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("${resena.comentarios}", color = Color.White, fontSize = 14.sp)
             }
-            Text(
-                resena.likes.toString(),
-                modifier = Modifier.testTag("likesCount"),
-                color = Color.White,
-                fontSize = 14.sp
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Icon(Icons.Filled.MusicNote, contentDescription = "Comentarios", tint = Color.White.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("${resena.comentarios}", color = Color.White, fontSize = 14.sp)
+            Text(resena.fecha, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
         }
-        Text(resena.fecha, color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
+
+        if (resena.latitude != null && resena.longitude != null) {
+            BotonVerUbicacion(
+                latitude    = resena.latitude,
+                longitude   = resena.longitude,
+                autorNombre = resena.autorNombre,
+                albumNombre = resena.albumNombre.ifBlank { resena.albumId }
+            )
+        }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
