@@ -289,20 +289,28 @@ fun AppNavegacion(
         composable(
             route = Screen.Comentarios.route,
             arguments = listOf(
-                navArgument("resenaId") { type = NavType.StringType },  // ← Cambiar a StringType
-                navArgument("albumId") { type = NavType.StringType }    // ← Cambiar a StringType
+                navArgument("resenaId") { type = NavType.StringType },
+                navArgument("albumId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val resenaId = backStackEntry.arguments?.getString("resenaId") ?: ""
             val albumId = backStackEntry.arguments?.getString("albumId") ?: "0"
             val viewModel: ComentariosViewModel = hiltViewModel()
+
+            // ComentariosScreen ya NO tiene su propio LaunchedEffect.
+            // Antes había dos LaunchedEffect haciendo la misma llamada:
+            //   1. Este LaunchedEffect en AppNavegacion
+            //   2. Otro en ComentariosScreen (ELIMINADO)
+            // La doble llamada cancelaba el Flow antes de que cargarResena
+            // terminara, dejando resena = null y reviewId = "" al enviar.
             LaunchedEffect(resenaId, albumId) {
                 viewModel.cargarComentarios(resenaId, albumId)
             }
+
             ComentariosScreen(
                 viewModel = viewModel,
-                resenaId = resenaId,
-                albumId = albumId,
+                resenaId  = resenaId,
+                albumId   = albumId,
                 onBackClick = { navController.popBackStack() }
             )
         }

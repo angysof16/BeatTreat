@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -66,11 +67,24 @@ fun ComentariosScreen(
     modifier: Modifier = Modifier,
     viewModel: ComentariosViewModel
 ) {
-    LaunchedEffect(resenaId, albumId) {
-        viewModel.cargarComentarios(resenaId, albumId)
-    }
+    // BUG FIX: se elimina el LaunchedEffect interno que duplicaba la llamada.
+    // AppNavegacion ya llama cargarComentarios(resenaId, albumId) desde su propio
+    // LaunchedEffect antes de navegar a esta pantalla. Tener dos LaunchedEffect
+    // causaba una condición de carrera: el segundo cancelaba el Flow del primero
+    // antes de que cargarResena terminara, dejando resena = null y por tanto
+    // reviewId = "" al intentar enviar un comentario.
+    //
+    // El ViewModel ahora guarda currentReviewId internamente para que
+    // enviarComentario funcione aunque la reseña no se haya cargado aún.
 
     val uiState by viewModel.uiState.collectAsState()
+
+    // Mostrar error en Logcat para debugging (sin romper la UI)
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let {
+            android.util.Log.e("ComentariosScreen", "Error: $it")
+        }
+    }
 
     ComentariosScreenContent(
         uiState                 = uiState,
@@ -99,6 +113,22 @@ fun ComentariosScreenContent(
     ) {
         TopBarComentarios(onBackClick = onBackClick)
 
+        // Mostrar error si existe
+        if (uiState.errorMessage != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(BeatTreatColors.Error.copy(alpha = 0.15f))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text     = uiState.errorMessage,
+                    color    = BeatTreatColors.Error,
+                    fontSize = 13.sp
+                )
+            }
+        }
+
         LazyColumn(
             modifier       = Modifier.weight(1f),
             contentPadding = PaddingValues(16.dp),
@@ -115,9 +145,29 @@ fun ComentariosScreenContent(
                         modifier   = Modifier.padding(vertical = 4.dp)
                     )
                 }
+            } ?: run {
+                // Si la reseña aún no cargó, mostramos el título igual
+                item {
+                    Text(
+                        text       = "Comentarios",
+                        color      = Color.White,
+                        fontSize   = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier   = Modifier.padding(vertical = 4.dp)
+                    )
+                }
             }
 
-            if (uiState.comentarios.isEmpty()) {
+            if (uiState.isLoading) {
+                item {
+                    Box(
+                        modifier         = Modifier.fillParentMaxWidth().padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = BeatTreatColors.Purple60)
+                    }
+                }
+            } else if (uiState.comentarios.isEmpty()) {
                 item { SinComentarios() }
             } else {
                 items(uiState.comentarios) { comentario ->
@@ -135,7 +185,8 @@ fun ComentariosScreenContent(
         InputComentario(
             texto         = uiState.nuevoComentario,
             onTextoChange = onNuevoComentarioChange,
-            onEnviarClick = onEnviarComentario
+            onEnviarClick = onEnviarComentario,
+            enviando      = uiState.enviando
         )
     }
 }
@@ -320,11 +371,14 @@ fun ComentarioLikeRow(
     }
 }
 
+// BUG FIX: se agrega parámetro `enviando` para deshabilitar el botón
+// mientras el comentario se está publicando, evitando duplicados.
 @Composable
 fun InputComentario(
     texto: String,
     onTextoChange: (String) -> Unit,
     onEnviarClick: () -> Unit,
+    enviando: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -347,16 +401,26 @@ fun InputComentario(
                 unfocusedTextColor      = Color.White,
                 cursorColor             = MaterialTheme.colorScheme.primary
             ),
-            singleLine = true
+            singleLine = true,
+            enabled    = !enviando
         )
         Spacer(modifier = Modifier.width(8.dp))
+        val puedeEnviar = texto.isNotBlank() && !enviando
         Box(
             modifier         = Modifier.size(44.dp).clip(CircleShape)
-                .background(if (texto.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                .background(if (puedeEnviar) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = onEnviarClick, enabled = texto.isNotBlank()) {
-                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar comentario", tint = Color.White, modifier = Modifier.size(20.dp))
+            if (enviando) {
+                CircularProgressIndicator(
+                    modifier    = Modifier.size(20.dp),
+                    color       = Color.White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                IconButton(onClick = onEnviarClick, enabled = puedeEnviar) {
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Enviar comentario", tint = Color.White, modifier = Modifier.size(20.dp))
+                }
             }
         }
     }

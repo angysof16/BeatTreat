@@ -18,7 +18,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
@@ -253,11 +256,13 @@ fun BannerControles(onPrevious: () -> Unit, onNext: () -> Unit, modifier: Modifi
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = onPrevious) {
-            Icon(Icons.Filled.ArrowForward, contentDescription = "Anterior",
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Anterior",
                 tint = Color.White, modifier = Modifier.size(28.dp))
         }
         IconButton(onClick = onNext) {
-            Icon(Icons.Filled.ArrowForward, contentDescription = "Siguiente",
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Siguiente",
                 tint = Color.White, modifier = Modifier.size(28.dp))
         }
     }
