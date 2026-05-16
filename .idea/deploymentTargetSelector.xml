@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DIALOG" />
-        <DropdownSelection timestamp="2026-05-15T13:00:50.300142900Z">
+        <DropdownSelection timestamp="2026-05-15T15:37:17.415800700Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="Default" identifier="serial=192.168.1.6:35101;connection=d610a5d8" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\sofig\.android\avd\Pixel_7.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,7 +15,27 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="Default" identifier="serial=10.195.49.209:41657;connection=618ddd59" />
+                <DeviceId pluginId="Default" identifier="serial=192.168.1.21:38799;connection=c843b4e5" />
+              </handle>
+            </Target>
+            <Target type="DEFAULT_BOOT">
+              <handle>
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\sofig\.android\avd\Pixel_7.avd" />
+              </handle>
+            </Target>
+          </targets>
+        </DialogSelection>
+      </SelectionState>
+      <SelectionState runConfigName="LoginAndFollowE2E">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="LoginFollowFeedE2E">
+        <option name="selectionMode" value="DIALOG" />
+        <DialogSelection>
+          <targets>
+            <Target type="DEFAULT_BOOT">
+              <handle>
+                <DeviceId pluginId="Default" identifier="serial=10.195.49.209:46585;connection=ecfebd8d" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">

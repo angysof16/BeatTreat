@@ -9,5 +9,6 @@ data class ComentariosUIState(
     val nuevoComentario: String = "",
     val comentariosLikeados: Set<Int> = emptySet(),
     val isLoading: Boolean = false,
+    val enviando: Boolean = false,
     val errorMessage: String? = null
 )

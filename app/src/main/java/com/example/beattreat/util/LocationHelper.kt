@@ -1,9 +1,3 @@
-// Utilidad que obtiene las coordenadas GPS actuales del dispositivo
-// Se usa al publicar un review para guardar la ubicación en Firestore
-
-// Requiere permiso de ubicacion que se pide en EscribirResenaScreen antes de publicar
-// Si el usuario lo deniega, latitude/longitude quedan en null y el review se publica igualmente, pero sin aparecer en el mapa
-// ──────────────────────────────────────────────────────────────────────────────
 package com.example.beattreat.util
 
 import android.annotation.SuppressLint
